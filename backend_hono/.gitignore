@@ -6,3 +6,4 @@ public/img/*
 src/static/prompt.ts
 src/static/model.ts
 error-code.ts
+*.db
