@@ -4,7 +4,6 @@
   "version": "0.1.0",
   "identifier": "com.snowman6.rewrite",
   "build": {
-    "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:5173",
     "beforeBuildCommand": "bun run build ../../frontend_svelte",
     "frontendDist": "../../frontend_svelte/build"
