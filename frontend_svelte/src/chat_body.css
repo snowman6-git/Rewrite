@@ -7,12 +7,14 @@
 	flex-direction: column;
 }
 
-#chat_body h5, h6{
+#chat_body h5,
+h6 {
 	opacity: 0.5;
 }
 
-#chat_body img{
-	width: 12.5rem; height: auto;
+#chat_body img {
+	width: 12.5rem;
+	height: auto;
 }
 #chat_body table {
 	border-collapse: collapse;

@@ -6,21 +6,20 @@
 		model_list: object;
 	}>();
 	let menuHeight = $state(0);
-
 </script>
 
 <!-- 나중에 메뉴열때마다 리스트업 다시하게 만들기 -->
-<div id="model_menu" 
+<div
+	id="model_menu"
 	// 모델 메뉴의 높이를 측정하여 애니메이션에 활용
 	bind:clientHeight={menuHeight}
 	transition:fly={{ y: menuHeight, duration: 200, easing: cubicOut }}
-	>
+>
 	<div id="model_list">
 		{#each model_list as model (model.id)}
 			<ModelBlock {model} />
 		{/each}
 	</div>
-
 </div>
 
 <style>

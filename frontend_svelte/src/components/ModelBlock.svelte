@@ -10,7 +10,8 @@
 	onclick={() => {
 		$selectedModel = model;
 		$isModel_menu_open = false;
-	}}>
+	}}
+>
 	<div id="model_name">{model.name}</div>
 	<div id="model_desc">{model.desc}</div>
 	<div id="model_hardware">{model.hardware}</div>
