@@ -5,6 +5,7 @@
 	overflow-y: scroll;
 	display: flex;
 	flex-direction: column;
+	margin-bottom: 1rem;
 }
 
 #chat_body h5,

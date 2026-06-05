@@ -21,7 +21,12 @@ const config = {
 	kit: {
 		adapter: adapter({
 			fallback: 'index.html'
-		})
+		}),
+		alias: {
+            '$components': 'src/components',
+            '$api': 'src/lib/api',
+            // '$assets': 'src/assets',
+        }
 	}
 };
 

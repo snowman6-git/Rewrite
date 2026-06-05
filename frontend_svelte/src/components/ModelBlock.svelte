@@ -1,15 +1,17 @@
 <script lang="ts">
-	import { isModel_menu_open, selectedModel } from '../menu_store';
+    // 이미 여기서 모델리스트를 받아올 수 있는데 상위요소에서 굳이 받고 each할 필요있는지 고민하기
+	import { modelsState } from '$lib/states/models.svelte';
+	import { getContext } from 'svelte';
 	let { model } = $props<{
 		model: object;
 	}>();
+	let isModel_menu_open = getContext<{ isOpen: boolean; title: string }>('model_menu');
 </script>
-
 <button
 	class="model"
 	onclick={() => {
-		$selectedModel = model;
-		$isModel_menu_open = false;
+		modelsState.selectedModel = model;
+		isModel_menu_open.isOpen = false;
 	}}
 >
 	<div id="model_name">{model.name}</div>
@@ -33,9 +35,5 @@
 		border: 0.2rem solid transparent;
 		padding-top: 0.5rem;
 		padding-bottom: 0.5rem;
-		/* border-bottom: 0.1rem solid rgba(255, 255, 255, 0.5); */
 	}
-	/* .model:hover #model_name{
-        font-size: 1.5rem;
-    } */
 </style>

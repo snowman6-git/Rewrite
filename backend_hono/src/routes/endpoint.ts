@@ -40,6 +40,17 @@ export async function chat_listup(c: Context) {
   return c.json(chat_list)
 }
 
+export async function world_memory(c: Context) {
+  let memory = await chat_history_load()
+  memory = memory.slice(2) // 1. 특정 인덱스(3) 이후만 잘라냄
+  .map(memory => ({
+    role: memory.role,
+    content: memory.content,
+  }));
+
+  return c.json(memory);
+}
+
 export async function models(c: Context) {
   let models_api = await axios.get(`${LLM_API_URL}/models`, {
     headers: {

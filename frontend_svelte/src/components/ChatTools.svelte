@@ -1,26 +1,23 @@
 <script lang="ts">
-	import { logic_plus } from '../api_options';
-	let { user_input, chat, isModelResponding } = $props<{
-		user_input: string;
-		chat: () => Promise<void>;
-		isModelResponding: boolean;
-	}>();
+	import { logic_plus } from '../routes/book/api_options';
+	import { chatState } from '$lib/states/chat.svelte';
+
 </script>
 
 <div id="chat_tools">
-	<label id="logic_plus_label" class:active={$logic_plus}>
+	<label id="logic_plus_label" class:active={chatState.logic_plus}>
 		<div id="logic_plus_icon"></div>
-		<button id="logic_plus_btn" onclick={() => ($logic_plus = !$logic_plus)}>Logic+</button>
+		<button id="logic_plus_btn" onclick={() => (chatState.logic_plus = !chatState.logic_plus)}>Logic+</button>
 	</label>
 	<!-- 리턴이 없는 보이드 함수라 이런식 -->
 
 	<!-- 유저인풋도 있고, 모델이 응답도 안할때 활성화  -->
 	<button
-		class:active={user_input.trim() !== '' && !isModelResponding}
-		disabled={isModelResponding}
+		class:active={chatState.user_input.trim() !== '' && !chatState.isModelResponding}
+		disabled={chatState.isModelResponding}
 		title="send"
 		id="send_btn"
-		onclick={() => chat()}
+		onclick={() => {chatState.sendMessage()}}
 	></button>
 </div>
 

@@ -2,11 +2,13 @@
 	let isHammenu_open = $state(false);
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
+	
 	import WorldEdit from './views/WorldEdit.svelte';
 	import Persona from './views/Persona.svelte';
+	import Memory from './views/Memory.svelte';
 
 	let menu_now = $state(0);
-	let menus = ['설정', '월드에딧', '페르소나'];
+	let menus = ['설정', '월드에딧', '페르소나', '메모리'];
 </script>
 
 <button
@@ -40,6 +42,8 @@
 			<WorldEdit />
 		{:else if menu_now == 2}
 			<Persona />
+		{:else if menu_now == 3}
+			<Memory/>
 		{:else}
 			<!-- 나쁘진 않아보이는데, 인덱스로 구현하려는 시도로 너무 많은걸 쓰진 않았는지 고민할것 -->
 			<div class="btn_case">

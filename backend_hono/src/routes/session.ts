@@ -6,18 +6,18 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const db = new Database(":memory:");
-db.query(` 
-    CREATE TABLE IF NOT EXISTS chat_history (
-        id TEXT NOT NULL,
-        sender TEXT NOT NULL,
-        content TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-`).run();
+// const db = new Database(":memory:");
+// db.query(` 
+//     CREATE TABLE IF NOT EXISTS chat_history (
+//         id TEXT NOT NULL,
+//         sender TEXT NOT NULL,
+//         content TEXT NOT NULL,
+//         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+//     );
+// `).run();
 let chat_history: Array<object> = [
-    { role: "system", content: `${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
-    { role: "assistant", content: `${assistant_prompt}` },
+    // { role: "system", content: `${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
+    // { role: "assistant", content: `${assistant_prompt}` },
 ]
 
 // 나중엔 세션기반으로 로드해야함, 지금은 고정세션이니 바로리턴

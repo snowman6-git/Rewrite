@@ -3,7 +3,7 @@
 @font-face {
 	font-family: 'NxMaple';
 	/* 사용할 이름 정의 */
-	src: url('lib/assets/Maplestory OTF Light.otf') format('opentype');
+	src: url('$lib/assets/Maplestory OTF Light.otf') format('opentype');
 }
 
 main,
