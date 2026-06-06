@@ -2,7 +2,7 @@
 	let isHammenu_open = $state(false);
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	
+
 	import WorldEdit from './views/WorldEdit.svelte';
 	import Persona from './views/Persona.svelte';
 	import Memory from './views/Memory.svelte';
@@ -22,6 +22,7 @@
 {#if isHammenu_open}
 	<div id="overlay" onclick={() => (isHammenu_open = false)}></div>
 	<div id="side_menu" transition:fly={{ x: 100, duration: 200, easing: cubicOut }}>
+
 		<div id="header">
 			<!-- 현재 메뉴 따라서 이름 동적변경 -->
 			<div style="font-size: 1.4rem;">{menus[menu_now]}</div>
@@ -43,7 +44,7 @@
 		{:else if menu_now == 2}
 			<Persona />
 		{:else if menu_now == 3}
-			<Memory/>
+			<Memory />
 		{:else}
 			<!-- 나쁘진 않아보이는데, 인덱스로 구현하려는 시도로 너무 많은걸 쓰진 않았는지 고민할것 -->
 			<div class="btn_case">
@@ -102,15 +103,13 @@
 	#side_menu {
 		padding: 1rem;
 		width: 30rem;
-		height: 100%;
+		height: 100dvh;
 		backdrop-filter: blur(0.2rem);
 		background-color: rgba(0, 0, 0, 0.65);
 		position: fixed;
-		z-index: 999;
 		top: 0;
 		right: 0;
-		display: flex;
-		flex-direction: column;
+		z-index: 999;
 	}
 	@media (orientation: portrait) {
 		#side_menu {

@@ -8,7 +8,7 @@ import { streamText } from "hono/streaming";
 // 굳이 TS로 해야할지 고민하기
 import { MODEL_DISPLAY_CONFIG } from "../static/model";
 
-import { chat_history_add, chat_history_load } from "./session";
+import { add_chat_history, load_chat_history, reset_chat_history } from "./session";
 
 dotenv.config();
 const LLM_API_URL = process.env.LLM_API_URL;
@@ -28,8 +28,8 @@ interface ChatInfo {
 
 // 차후 세션의 분리와 함께 해당 함수의 세션 분간용 인자를 통해 수정
 export async function chat_listup(c: Context) {
-  let load_chat_history = await chat_history_load()
-  const chat_list = load_chat_history.slice(2).map((chat: ChatInfo) => {
+  let loaded_chat_history = await load_chat_history()
+  const chat_list = loaded_chat_history.slice(2).map((chat: ChatInfo) => {
   return {
     // 테스트를 위해 임시 생성, 프/백 둘다 다른값으로 계속 생성중이니 알고 있을것
     id: crypto.randomUUID(),
@@ -41,14 +41,18 @@ export async function chat_listup(c: Context) {
 }
 
 export async function world_memory(c: Context) {
-  let memory = await chat_history_load()
+  let memory = await load_chat_history()
   memory = memory.slice(2) // 1. 특정 인덱스(3) 이후만 잘라냄
   .map(memory => ({
     role: memory.role,
     content: memory.content,
   }));
-
   return c.json(memory);
+}
+
+export async function reset_world_memory(c: Context) {
+  await reset_chat_history(); //나중엔 성공여부도 확인
+  return c.json({ message: "World memory reset successfully" });
 }
 
 export async function models(c: Context) {
@@ -85,7 +89,7 @@ export async function chat(c: Context) {
     thinking_tokens = 560;
   }
   // 유저입력을 추가
-  await chat_history_add(id, "user", chat);
+  await add_chat_history(id, "user", chat);
   const requestBody = {
     model: model,
     // Advance parameters
@@ -98,7 +102,7 @@ export async function chat(c: Context) {
     stream: true, // 반드시 true로 설정
     is_input: true,
     // 채팅기록을 불러옴, 이때 방금 막 추가한 메세지도 불러와 사용됌
-    messages: await chat_history_load()
+    messages: await load_chat_history()
   };
 
   const response = await fetch(`${LLM_API_URL}/v1/chat/completions`, { // 엔드포인트 확인
@@ -141,6 +145,6 @@ export async function chat(c: Context) {
       }
     }
     // 스트림데이터 수신 종료후, LLM의 최종응답을 저장
-    chat_history_add(id, "assistant", llm_response_result);
+    await add_chat_history(id, "assistant", llm_response_result);
   });
 }

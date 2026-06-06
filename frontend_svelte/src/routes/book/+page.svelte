@@ -1,23 +1,21 @@
 <script lang="ts">
-	import "$lib/assets/chat_body.css";
+	import '$lib/assets/chat_body.css';
 
-    import { onMount, setContext, tick } from 'svelte';
-    import { modelsState } from '$lib/states/models.svelte';
-    import { chatState } from '$lib/states/chat.svelte';
-    onMount(() => {
-        modelsState.loadModels();
-        chatState.loadHistory();
-    });
+	import { onMount, setContext, tick } from 'svelte';
+	import { modelsState } from '$lib/states/models.svelte';
+	import { chatState } from '$lib/states/chat.svelte';
+	onMount(() => {
+		modelsState.loadModels();
+		chatState.loadHistory();
+	});
 	let book_title = $state('테스트북123MKii-Alpha'); //나중에 서버에서 받아오기
-	let user_input = $state<string>('');
-    let isModel_menu_open = $state({
-        isOpen: false,
-    });
-    setContext('model_menu', isModel_menu_open);
+	let isModel_menu_open = $state({
+		isOpen: false
+	});
+	setContext('model_menu', isModel_menu_open);
 
-    import { marked } from 'marked';
+	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
-
 
 	// 컴포넌트
 	import ModelListMenu from '$components/ModelListMenu.svelte';
@@ -27,12 +25,9 @@
 
 	let isDesktopMode = $state(false);
 	onMount(() => {
-        isDesktopMode = window.matchMedia('(pointer: fine)').matches;
-    });
-
+		isDesktopMode = window.matchMedia('(pointer: fine)').matches;
+	});
 	let chat_body: HTMLDivElement;
-	// 안봐도 나중에 최적화가 필요한 WWW
-	// 인풋에도 해당 기능 주기
 	$effect(() => {
 		// messages 배열의 내용이 바뀌는 것을 Svelte가 감지합니다.
 		chatState.list.map((m) => m.content);
@@ -40,7 +35,7 @@
 			// 화면이 실제 업데이트될 때까지 아주 잠시(tick) 기다린 후 스크롤
 			tick().then(() => {
 				chat_body.scrollTo({
-					top: chat_body.scrollHeight,
+					top: chat_body.scrollHeight
 					// behavior: 'smooth' // 부드럽게 스크롤 (원치 않으면 'auto')
 				});
 			});
@@ -59,14 +54,15 @@
 		}
 	}
 	function open_model_menu() {
+		// 메뉴열면 재시작
+		modelsState.loadModels();
 		isModel_menu_open.isOpen = !isModel_menu_open.isOpen;
 	}
-	
 </script>
+
 <svlte:head>
 	<title>{book_title}</title>
 </svlte:head>
-<!-- 어디든엔터라면채팅을넣어 모바일 생각해서 잠시 끄고, 버튼만 쓰기 -->
 <svelte:window on:keydown={handleGlobalKeyDown} />
 
 <div id="main">
@@ -79,16 +75,19 @@
 			{#if modelsState.isLoading}
 				<button id="model_menu_btn" disabled>Loading...</button>
 			{:else}
-				<button id="model_menu_btn" onclick={open_model_menu}>{modelsState.selectedModel?.name || '모델 선택'}</button>
+				<button id="model_menu_btn" onclick={open_model_menu}
+					>{modelsState.selectedModel?.name || '모델 선택'}</button
+				>
 			{/if}
 			<button
 				title=""
 				id="force_menu"
 				onclick={() => (isModel_menu_open.isOpen = false)}
 				class:disable={isModel_menu_open.isOpen}
-			> </button>
-            {#if isModel_menu_open.isOpen}
-            <ModelListMenu model_list={modelsState.list} />
+			>
+			</button>
+			{#if isModel_menu_open.isOpen}
+				<ModelListMenu model_list={modelsState.list} />
 			{/if}
 			<HamMenu />
 		</div>
@@ -97,24 +96,16 @@
 	<div id="chat_body" bind:this={chat_body}>
 		{#each chatState.list as msg (msg.id)}
 			{@html marked(DOMPurify.sanitize(msg.content))}
-        <!-- 잠깐만 구분선용으로 쓰기 -->
-			<!-- <div style="opacity: 0.5; font-size: 0.8rem; font-weight: bold;">[{msg.sender}]</div> -->
-			<!-- 비정제 HTML marked가 스타일링함 -->
-
-			<!-- {msg.content} -->
-
-			<!-- 테스트용 -->
-			<!-- {msg.content} -->
-			<!-- {@html msg.content} -->
 		{/each}
 	</div>
 	<div id="chat_input">
 		{#if modelsState.isLoading}
 			<textarea id="user_input" placeholder="불러오는중..."></textarea>
-        {:else}
-            <textarea id="user_input" placeholder="텍스트 입력" bind:value={chatState.user_input}></textarea>
+		{:else}
+			<textarea id="user_input" placeholder="텍스트 입력" autocomplete="off" bind:value={chatState.user_input}
+			></textarea>
 		{/if}
-		<ChatTools/>
+		<ChatTools />
 	</div>
 </div>
 
@@ -191,13 +182,5 @@
 		text-overflow: ellipsis;
 	}
 
-	@media (orientation: portrait) {
-		#chat_input {
-			width: 90dvw;
-			margin-bottom: 0;
-			border-bottom: 0;
-			border-radius: 0.5rem 0.5rem 0 0;
-			bottom: 0;
-		}
-	}
+
 </style>

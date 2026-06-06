@@ -1,25 +1,37 @@
 <script lang="ts">
 	import axios from 'axios';
 	import { PUBLIC_API_URL } from '$env/static/public';
+	import { chatState } from '$lib/states/chat.svelte';
 
-	let system_prompt = $state('');
+	let world_memory = $state('');
 
-	async function load_system_prompt() {
-		let request_system_prompt = await axios.get(`${PUBLIC_API_URL}/world_memory`, {});
-		system_prompt = request_system_prompt.data;
+	async function load_world_memory() {
+		let request_world_memory = await axios.get(`${PUBLIC_API_URL}/world_memory`, {});
+		world_memory = request_world_memory.data;
+		console.log(world_memory);
+	}
+
+	// 세계 메모리 리셋 함수
+	async function reset_world_memory() {
+		let request_reset = await axios.post(`${PUBLIC_API_URL}/reset_world_memory`, {});
+		if (request_reset.status === 200) {
+			// 리셋하고나서 불러오기(앱은 F5가 안돼니까.)
+			chatState.loadHistory();
+		}
 	}
 </script>
 
-<div class="desc">세계의 규칙을 변경합니다.</div>
-{#await load_system_prompt()}
+<div class="desc">기록된 메모리를 수정, 삭제합니다.</div>
+
+<!-- 이따 생각하자 여긴 -->
+<!-- {#await load_world_memory()}
 	<textarea id="world_prompt">로딩중...</textarea>
 {:then}
-	<textarea bind:value={system_prompt} id="world_prompt"> </textarea>
-{/await}
+	
+{/await} -->
 
 <div id="btn_case">
-	<button>취소</button>
-	<button>저장</button>
+	<button onclick={reset_world_memory}>리셋</button>
 </div>
 
 <style>
