@@ -107,6 +107,8 @@
 		border-bottom: 0.2rem solid gray;
 	}
 	#side_menu {
+		display: flex;
+		flex-direction: column;
 		padding: 1rem;
 		width: 30rem;
 		height: 100%;
