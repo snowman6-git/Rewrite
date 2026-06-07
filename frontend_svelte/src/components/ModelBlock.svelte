@@ -1,5 +1,5 @@
 <script lang="ts">
-    // 이미 여기서 모델리스트를 받아올 수 있는데 상위요소에서 굳이 받고 each할 필요있는지 고민하기
+	// 이미 여기서 모델리스트를 받아올 수 있는데 상위요소에서 굳이 받고 each할 필요있는지 고민하기
 	import { modelsState } from '$lib/states/models.svelte';
 	import { getContext } from 'svelte';
 	let { model } = $props<{
@@ -7,6 +7,7 @@
 	}>();
 	let isModel_menu_open = getContext<{ isOpen: boolean; title: string }>('model_menu');
 </script>
+
 <button
 	class="model"
 	onclick={() => {

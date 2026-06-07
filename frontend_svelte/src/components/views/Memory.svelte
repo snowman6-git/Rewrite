@@ -2,11 +2,18 @@
 	import axios from 'axios';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import { chatState } from '$lib/states/chat.svelte';
+	import { modelsState } from '$lib/states/models.svelte';
 
 	let world_memory = $state('');
 
 	async function load_world_memory() {
-		let request_world_memory = await axios.get(`${PUBLIC_API_URL}/world_memory`, {});
+		let request_world_memory = await axios.post(
+			`${PUBLIC_API_URL}/world_memory`,
+			{
+				model: modelsState.selectedModel?.name
+			},
+			{}
+		);
 		world_memory = request_world_memory.data;
 		console.log(world_memory);
 	}
@@ -24,11 +31,9 @@
 <div class="desc">기록된 메모리를 수정, 삭제합니다.</div>
 
 <!-- 이따 생각하자 여긴 -->
-<!-- {#await load_world_memory()}
+{#await load_world_memory()}
 	<textarea id="world_prompt">로딩중...</textarea>
-{:then}
-	
-{/await} -->
+{/await}
 
 <div id="btn_case">
 	<button onclick={reset_world_memory}>리셋</button>

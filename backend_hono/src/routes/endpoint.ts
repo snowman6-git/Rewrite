@@ -9,6 +9,7 @@ import { streamText } from "hono/streaming";
 import { MODEL_DISPLAY_CONFIG } from "../static/model";
 
 import { add_chat_history, load_chat_history, reset_chat_history } from "./session";
+import { getTokenLength } from "./api/memory_manager";
 
 dotenv.config();
 const LLM_API_URL = process.env.LLM_API_URL;
@@ -39,6 +40,20 @@ export async function chat_listup(c: Context) {
 
   return c.json(chat_list)
 }
+
+export async function getTokenSize(c: Context) {
+  try {
+    const { model, text } = await c.req.json();
+    const response = await axios.post(`${LLM_API_URL}/tokenize`, {
+      model: model, //나중에 백에서 동적기입
+      content: text,
+      add_special: false
+    });
+    return response.data.tokens
+  } catch (error) {
+    console.error("Tokenize 에러:", error);
+  }
+}  
 
 export async function world_memory(c: Context) {
   let memory = await load_chat_history()

@@ -102,7 +102,11 @@
 		{#if modelsState.isLoading}
 			<textarea id="user_input" placeholder="불러오는중..."></textarea>
 		{:else}
-			<textarea id="user_input" placeholder="텍스트 입력" autocomplete="off" bind:value={chatState.user_input}
+			<textarea
+				id="user_input"
+				placeholder="텍스트 입력"
+				autocomplete="off"
+				bind:value={chatState.user_input}
 			></textarea>
 		{/if}
 		<ChatTools />
@@ -181,6 +185,4 @@
 		font-size: 1rem;
 		text-overflow: ellipsis;
 	}
-
-
 </style>

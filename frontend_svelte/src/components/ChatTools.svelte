@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { logic_plus } from '../routes/book/api_options';
 	import { chatState } from '$lib/states/chat.svelte';
-
 </script>
 
 <div id="chat_tools">
 	<label id="logic_plus_label" class:active={chatState.logic_plus}>
 		<div id="logic_plus_icon"></div>
-		<button id="logic_plus_btn" onclick={() => (chatState.logic_plus = !chatState.logic_plus)}>Logic+</button>
+		<button id="logic_plus_btn" onclick={() => (chatState.logic_plus = !chatState.logic_plus)}
+			>Logic+</button
+		>
 	</label>
 	<!-- 리턴이 없는 보이드 함수라 이런식 -->
 
@@ -17,7 +18,9 @@
 		disabled={chatState.isModelResponding}
 		title="send"
 		id="send_btn"
-		onclick={() => {chatState.sendMessage()}}
+		onclick={() => {
+			chatState.sendMessage();
+		}}
 	></button>
 </div>
 

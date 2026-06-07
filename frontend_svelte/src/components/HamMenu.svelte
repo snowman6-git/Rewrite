@@ -22,7 +22,6 @@
 {#if isHammenu_open}
 	<div id="overlay" onclick={() => (isHammenu_open = false)}></div>
 	<div id="side_menu" transition:fly={{ x: 100, duration: 200, easing: cubicOut }}>
-
 		<div id="header">
 			<!-- 현재 메뉴 따라서 이름 동적변경 -->
 			<div style="font-size: 1.4rem;">{menus[menu_now]}</div>
@@ -38,27 +37,34 @@
 			>
 			</button>
 		</div>
-
-		{#if menu_now == 1}
-			<WorldEdit />
-		{:else if menu_now == 2}
-			<Persona />
-		{:else if menu_now == 3}
-			<Memory />
-		{:else}
-			<!-- 나쁘진 않아보이는데, 인덱스로 구현하려는 시도로 너무 많은걸 쓰진 않았는지 고민할것 -->
-			<div class="btn_case">
-				{#each menus as menu, number (menu)}
-					{#if number > 0}
-						<button class="h_menu_option" onclick={() => (menu_now = number)}>{menu}</button>
-					{/if}
-				{/each}
-			</div>
-		{/if}
+		<div id="dynamic_menu_screen">
+			{#if menu_now == 1}
+				<WorldEdit />
+			{:else if menu_now == 2}
+				<Persona />
+			{:else if menu_now == 3}
+				<Memory />
+			{:else}
+				<!-- 나쁘진 않아보이는데, 인덱스로 구현하려는 시도로 너무 많은걸 쓰진 않았는지 고민할것 -->
+				<div class="btn_case">
+					{#each menus as menu, number (menu)}
+						{#if number > 0}
+							<button class="h_menu_option" onclick={() => (menu_now = number)}>{menu}</button>
+						{/if}
+					{/each}
+				</div>
+			{/if}
+		</div>
 	</div>
 {/if}
 
 <style>
+	#dynamic_menu_screen {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		height: 100%;
+	}
 	.btn_case {
 		width: 100%;
 		height: auto;
@@ -103,7 +109,7 @@
 	#side_menu {
 		padding: 1rem;
 		width: 30rem;
-		height: 100dvh;
+		height: 100%;
 		backdrop-filter: blur(0.2rem);
 		background-color: rgba(0, 0, 0, 0.65);
 		position: fixed;

@@ -2,7 +2,7 @@ import type { Msg } from '$lib/types';
 import { loadChatHistory } from '$lib/api/chat';
 import { PUBLIC_API_URL } from '$env/static/public';
 import { modelsState } from './models.svelte';
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from 'uuid';
 
 class ChatState {
 	list = $state<Msg[]>([]);
@@ -29,11 +29,11 @@ class ChatState {
 		// 빈 입력 방지 + 모델이 응답 중이면 씹기
 		if (this.user_input.trim() === '' || this.isModelResponding) return;
 		try {
-            this.list = [...this.list, { id: uuidv4(), sender: 'user', content: this.user_input }];
-    		this.list = [...this.list, { id: uuidv4(), sender: 'assistant', content: '' }];
+			this.list = [...this.list, { id: uuidv4(), sender: 'user', content: this.user_input }];
+			this.list = [...this.list, { id: uuidv4(), sender: 'assistant', content: '' }];
 			// 모델로드중으로 변경
 			this.isModelResponding = true;
-            const tempUserInput = this.user_input; // 현재 입력값을 임시 변수에 저장
+			const tempUserInput = this.user_input; // 현재 입력값을 임시 변수에 저장
 			this.user_input = ''; // 입력창 초기화
 
 			const response = await fetch(`${PUBLIC_API_URL}/chat`, {

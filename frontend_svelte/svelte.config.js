@@ -23,10 +23,10 @@ const config = {
 			fallback: 'index.html'
 		}),
 		alias: {
-            '$components': 'src/components',
-            '$api': 'src/lib/api',
-            // '$assets': 'src/assets',
-        }
+			$components: 'src/components',
+			$api: 'src/lib/api'
+			// '$assets': 'src/assets',
+		}
 	}
 };
 
