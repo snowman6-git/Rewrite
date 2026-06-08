@@ -58,12 +58,18 @@ export async function getTokenSize(c: Context) {
 
 export async function world_memory(c: Context) {
   let memory = await load_chat_history()
-  memory// = memory.slice(2) // 1. 특정 인덱스(3) 이후만 잘라냄
+  memory = memory.slice(2) // 1. 특정 인덱스(3) 이후만 잘라냄
   .map(memory => ({
     role: memory.role,
     content: memory.content,
   }));
   return c.json(memory);
+}
+
+// 이걸 대체 왜 다른데 빼서 따로 만들었더라...? 바로 수정.
+export async function world_edit(c: Context) {
+  let memory = await load_chat_history()
+  return c.text(`${memory[0]["content"]}`);
 }
 
 export async function reset_world_memory(c: Context) {

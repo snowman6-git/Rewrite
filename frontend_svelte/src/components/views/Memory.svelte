@@ -10,6 +10,7 @@
 	let world_memory: Array<JSON> = $state([]);
 	let world_memory_size: number = $state(0);
 
+	// 나중에 커지면 답 없으니까 디버그 모드용으로만 보기
 	async function load_world_memory() {
 		let request_world_memory = await axios.post(
 			`${PUBLIC_API_URL}/world_memory`,
@@ -18,7 +19,8 @@
 			},
 			{}
 		);
-
+		
+		// 이것도 나중엔 백엔드에서 처리하고 숫자값으로만 주기(성능문제)
 		for(let content of request_world_memory.data){
 			world_memory += content["content"]
 		}
@@ -45,6 +47,7 @@
 	<textarea id="world_prompt">{world_memory}</textarea>
 {/await}
 <br>
+<!-- 나중에 예약된 프롬프트(혹은 시스템)등의 이름으로, 얘는 표기하지 않고 크기만 기입 -->
 <div>{world_memory_size} / {modelsState.context_size} (<MinMaxPercent min={world_memory_size} max={modelsState.context_size}/>)</div>
 <div id="btn_case">
 	<button onclick={reset_world_memory}>리셋</button>
