@@ -8,4 +8,5 @@ export interface ModelInfo {
 	name: string;
 	desc: string;
 	status: string;
+	context_size: number;
 }

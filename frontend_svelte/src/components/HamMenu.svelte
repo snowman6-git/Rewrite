@@ -107,6 +107,7 @@
 		border-bottom: 0.2rem solid gray;
 	}
 	#side_menu {
+		/* 아무리 생각해도 이게 최선은 아닐거 같음, 다이나믹 메뉴의 정렬에 대해 다시 고민할것 */
 		display: flex;
 		flex-direction: column;
 		padding: 1rem;

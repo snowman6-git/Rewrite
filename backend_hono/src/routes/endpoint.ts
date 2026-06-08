@@ -49,15 +49,16 @@ export async function getTokenSize(c: Context) {
       content: text,
       add_special: false
     });
-    return response.data.tokens
+    let tokens = response.data.tokens
+    return c.text(tokens.length)
   } catch (error) {
-    console.error("Tokenize 에러:", error);
+    // console.error("Tokenize 에러:", error);
   }
 }  
 
 export async function world_memory(c: Context) {
   let memory = await load_chat_history()
-  memory = memory.slice(2) // 1. 특정 인덱스(3) 이후만 잘라냄
+  memory// = memory.slice(2) // 1. 특정 인덱스(3) 이후만 잘라냄
   .map(memory => ({
     role: memory.role,
     content: memory.content,
@@ -68,6 +69,16 @@ export async function world_memory(c: Context) {
 export async function reset_world_memory(c: Context) {
   await reset_chat_history(); //나중엔 성공여부도 확인
   return c.json({ message: "World memory reset successfully" });
+}
+
+// 차후 리스트 형식으로 여러가지 리턴해서 쓸지, 아니면 당장필요한 컨텍윈도만 할지 고민할것
+function args_only(args: string){
+  const index = args.indexOf("--ctx-size");
+  if (index !== -1 && index + 1 < args.length) {
+    const value = parseInt(args[index + 1], 10);
+    return isNaN(value) ? null : value;
+  }
+  return null;
 }
 
 export async function models(c: Context) {
@@ -88,7 +99,9 @@ export async function models(c: Context) {
     name: config?.aliases ?? model.id,
     desc: config?.desc ?? "설명 없음",
     status: model.status?.value ?? "알 수 없음", // 메모리에 올라왔는가, 안나오는 경우도 있으니 status?넣어서 후처리
-    hardware: config?.hardware ?? "권장사양없음"
+    hardware: config?.hardware ?? "권장사양없음",
+    context_size: args_only(model.status?.args)
+    
   };
   });
   return c.json(chat_list);

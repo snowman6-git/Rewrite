@@ -3,8 +3,12 @@
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import { chatState } from '$lib/states/chat.svelte';
 	import { modelsState } from '$lib/states/models.svelte';
+	import { getTokenSize } from '$api/memory';
+	import MinMaxPercent from '$components/MinMaxPercent.svelte';
+	
 
-	let world_memory = $state('');
+	let world_memory: Array<JSON> = $state([]);
+	let world_memory_size: number = $state(0);
 
 	async function load_world_memory() {
 		let request_world_memory = await axios.post(
@@ -14,8 +18,11 @@
 			},
 			{}
 		);
-		world_memory = request_world_memory.data;
-		console.log(world_memory);
+
+		for(let content of request_world_memory.data){
+			world_memory += content["content"]
+		}
+		world_memory_size = await getTokenSize(`${world_memory}`)
 	}
 
 	// 세계 메모리 리셋 함수
@@ -24,6 +31,7 @@
 		if (request_reset.status === 200) {
 			// 리셋하고나서 불러오기(앱은 F5가 안돼니까.)
 			chatState.loadHistory();
+			load_world_memory()
 		}
 	}
 </script>
@@ -33,8 +41,11 @@
 <!-- 이따 생각하자 여긴 -->
 {#await load_world_memory()}
 	<textarea id="world_prompt">로딩중...</textarea>
+{:then}
+	<textarea id="world_prompt">{world_memory}</textarea>
 {/await}
-
+<br>
+<div>{world_memory_size} / {modelsState.context_size} (<MinMaxPercent min={world_memory_size} max={modelsState.context_size}/>)</div>
 <div id="btn_case">
 	<button onclick={reset_world_memory}>리셋</button>
 </div>

@@ -15,6 +15,7 @@ dotenv.config();
 //         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 //     );
 // `).run();
+
 let chat_history: Array<object> = [
     { role: "system", content: `${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
     { role: "assistant", content: `${assistant_prompt}` },
@@ -22,8 +23,6 @@ let chat_history: Array<object> = [
 
 export async function reset_chat_history() {
     chat_history = [
-        { role: "system", content: `${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
-        { role: "assistant", content: `${assistant_prompt}` },
     ];
 }
 

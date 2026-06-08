@@ -1,12 +1,17 @@
 <script lang="ts">
 	import axios from 'axios';
 	import { PUBLIC_API_URL } from '$env/static/public';
+	import { getTokenSize } from '$api/memory';
+	import MinMaxPercent from '$components/MinMaxPercent.svelte';
+	import { modelsState } from '$lib/states/models.svelte';
 
 	let system_prompt = $state('');
+	let system_prompt_size = $state(0);
 
 	async function load_system_prompt() {
 		let request_system_prompt = await axios.get(`${PUBLIC_API_URL}/world_edit`, {});
 		system_prompt = request_system_prompt.data;
+		system_prompt_size = (await getTokenSize(system_prompt)) ?? 'no data';
 	}
 </script>
 
@@ -16,7 +21,8 @@
 {:then}
 	<textarea bind:value={system_prompt} id="world_prompt"> </textarea>
 {/await}
-
+<br>
+<div>글자수: {system_prompt.length} / 크기: {system_prompt_size} (<MinMaxPercent min={system_prompt_size} max={modelsState.context_size}/>)</div>
 <div id="btn_case">
 	<button>취소</button>
 	<button>저장</button>
