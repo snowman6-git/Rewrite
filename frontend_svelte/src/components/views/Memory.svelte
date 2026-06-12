@@ -5,7 +5,6 @@
 	import { modelsState } from '$lib/states/models.svelte';
 	import { getTokenSize } from '$api/memory';
 	import MinMaxPercent from '$components/MinMaxPercent.svelte';
-	
 
 	let world_memory: Array<JSON> = $state([]);
 	let world_memory_size: number = $state(0);
@@ -19,12 +18,12 @@
 			},
 			{}
 		);
-		
+
 		// 이것도 나중엔 백엔드에서 처리하고 숫자값으로만 주기(성능문제)
-		for(let content of request_world_memory.data){
-			world_memory += content["content"]
+		for (let content of request_world_memory.data) {
+			world_memory += content['content'];
 		}
-		world_memory_size = await getTokenSize(`${world_memory}`)
+		world_memory_size = await getTokenSize(`${world_memory}`);
 	}
 
 	// 세계 메모리 리셋 함수
@@ -33,7 +32,7 @@
 		if (request_reset.status === 200) {
 			// 리셋하고나서 불러오기(앱은 F5가 안돼니까.)
 			chatState.loadHistory();
-			load_world_memory()
+			load_world_memory();
 		}
 	}
 </script>
@@ -46,9 +45,14 @@
 {:then}
 	<textarea id="world_prompt">{world_memory}</textarea>
 {/await}
-<br>
+<br />
 <!-- 나중에 예약된 프롬프트(혹은 시스템)등의 이름으로, 얘는 표기하지 않고 크기만 기입 -->
-<div>{world_memory_size} / {modelsState.context_size} (<MinMaxPercent min={world_memory_size} max={modelsState.context_size}/>)</div>
+<div>
+	{world_memory_size} / {modelsState.context_size} (<MinMaxPercent
+		min={world_memory_size}
+		max={modelsState.context_size}
+	/>)
+</div>
 <div id="btn_case">
 	<button onclick={reset_world_memory}>리셋</button>
 </div>

@@ -7,7 +7,7 @@ class ModelsState {
 	selectedId = $state<string | null>(null);
 	isLoading = $state<boolean>(false);
 	selectedModel = $derived(this.list.find((model) => model.id === this.selectedId) || null);
-	context_size = $derived<number>(this.list[0]["context_size"] || 0);
+	context_size = $derived<number>(this.list[0]['context_size'] || 0);
 	async loadModels() {
 		this.isLoading = true;
 		try {
@@ -22,9 +22,7 @@ class ModelsState {
 			this.isLoading = false;
 		}
 	}
-    getCtxSize(){
-        
-    }
+	getCtxSize() {}
 	selectModel(id: string) {
 		this.selectedId = id;
 	}

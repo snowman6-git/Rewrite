@@ -2,13 +2,17 @@
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import ModelBlock from './ModelBlock.svelte';
-	let { model_list } = $props<{
-		model_list: object;
-	}>();
+	import { onMount } from 'svelte';
+	import { modelsState } from '$lib/states/models.svelte';
+
 	let menuHeight = $state(0);
+	// 열때마다 리로드 하게 해두긴했는데, 서빙엔진이 모델폴더 실시간 변화를 인지 못하는거 같음, 알아볼것
+	// 여차하면 나중에 통합 런쳐 만들때 재시작하게 하면 됌
+	onMount(() => {
+		modelsState.loadModels();
+	});
 </script>
 
-<!-- 나중에 메뉴열때마다 리스트업 다시하게 만들기 -->
 <div
 	id="model_menu"
 	// 모델 메뉴의 높이를 측정하여 애니메이션에 활용
@@ -16,7 +20,7 @@
 	transition:fly={{ y: menuHeight, duration: 200, easing: cubicOut }}
 >
 	<div id="model_list">
-		{#each model_list as model (model.id)}
+		{#each modelsState.list as model (model.id)}
 			<ModelBlock {model} />
 		{/each}
 	</div>

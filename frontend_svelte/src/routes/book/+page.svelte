@@ -14,14 +14,12 @@
 	});
 	setContext('model_menu', isModel_menu_open);
 
-	import { marked } from 'marked';
-	import DOMPurify from 'dompurify';
-
 	// 컴포넌트
 	import ModelListMenu from '$components/ModelListMenu.svelte';
 	import BackBtn from '$components/BackBtn.svelte';
 	import HamMenu from '$components/HamMenu.svelte';
 	import ChatTools from '$components/ChatTools.svelte';
+	import ChatBlock from '$components/ChatBlock.svelte';
 
 	let isDesktopMode = $state(false);
 	onMount(() => {
@@ -95,7 +93,7 @@
 
 	<div id="chat_body" bind:this={chat_body}>
 		{#each chatState.list as msg (msg.id)}
-			{@html marked(DOMPurify.sanitize(msg.content))}
+			<ChatBlock text={msg.content} />
 		{/each}
 	</div>
 	<div id="chat_input">

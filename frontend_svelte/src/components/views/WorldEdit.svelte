@@ -21,8 +21,13 @@
 {:then}
 	<textarea bind:value={system_prompt} id="world_prompt"> </textarea>
 {/await}
-<br>
-<div>글자수: {system_prompt.length} / 크기: {system_prompt_size} (<MinMaxPercent min={system_prompt_size} max={modelsState.context_size}/>)</div>
+<br />
+<div>
+	글자수: {system_prompt.length} / 크기: {system_prompt_size} (<MinMaxPercent
+		min={system_prompt_size}
+		max={modelsState.context_size}
+	/>)
+</div>
 <div id="btn_case">
 	<button>취소</button>
 	<button>저장</button>

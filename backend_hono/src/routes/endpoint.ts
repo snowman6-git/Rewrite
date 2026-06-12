@@ -107,7 +107,6 @@ export async function models(c: Context) {
     status: model.status?.value ?? "알 수 없음", // 메모리에 올라왔는가, 안나오는 경우도 있으니 status?넣어서 후처리
     hardware: config?.hardware ?? "권장사양없음",
     context_size: args_only(model.status?.args)
-    
   };
   });
   return c.json(chat_list);
