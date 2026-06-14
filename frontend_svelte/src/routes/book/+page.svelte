@@ -52,8 +52,6 @@
 		}
 	}
 	function open_model_menu() {
-		// 메뉴열면 재시작
-		modelsState.loadModels();
 		isModel_menu_open.isOpen = !isModel_menu_open.isOpen;
 	}
 </script>

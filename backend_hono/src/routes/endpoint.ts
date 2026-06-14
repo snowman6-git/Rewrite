@@ -8,24 +8,17 @@ import { streamText } from "hono/streaming";
 // 굳이 TS로 해야할지 고민하기
 import { MODEL_DISPLAY_CONFIG } from "../static/model";
 
+import { ModelInfo, ChatInfo } from "../types/index"
+
 import { add_chat_history, load_chat_history, reset_chat_history } from "./session";
-import { getTokenLength } from "./api/memory_manager";
+import { args_only } from "../lib/parser";
+import { memo } from "hono/jsx";
+
+
 
 dotenv.config();
 const LLM_API_URL = process.env.LLM_API_URL;
 const API_KEY = process.env.API_KEY;
-
-interface ModelInfo {
-  id: string;
-  status?: {
-    value: string;
-  };
-}
-
-interface ChatInfo {
-  sender: string;
-  content: string;
-}
 
 // 차후 세션의 분리와 함께 해당 함수의 세션 분간용 인자를 통해 수정
 export async function chat_listup(c: Context) {
@@ -41,9 +34,21 @@ export async function chat_listup(c: Context) {
   return c.json(chat_list)
 }
 
+// 지금은 백에서 컨택윈도를 얼마나 차지하는 용도로 쓸 것, 차후 프론트에서 텍스트를 주고 받는 식을 사용할지 고민(일단 오버헤드 생각해서 정적 분석만)
 export async function getTokenSize(c: Context) {
+  const { model } = await c.req.json();
+  let text: string = "";
   try {
-    const { model, text } = await c.req.json();
+    const target = c.req.param("target");
+    switch (target) {
+      case "memory": {
+        let memory = await load_chat_history()
+        for (let content of memory) {
+          text += content['content'];
+        }
+      }
+    }
+    
     const response = await axios.post(`${LLM_API_URL}/tokenize`, {
       model: model, //나중에 백에서 동적기입
       content: text,
@@ -52,7 +57,7 @@ export async function getTokenSize(c: Context) {
     let tokens = response.data.tokens
     return c.text(tokens.length)
   } catch (error) {
-    // console.error("Tokenize 에러:", error);
+    console.error("Tokenize 에러:", error);
   }
 }  
 
@@ -75,16 +80,6 @@ export async function world_edit(c: Context) {
 export async function reset_world_memory(c: Context) {
   await reset_chat_history(); //나중엔 성공여부도 확인
   return c.json({ message: "World memory reset successfully" });
-}
-
-// 차후 리스트 형식으로 여러가지 리턴해서 쓸지, 아니면 당장필요한 컨텍윈도만 할지 고민할것
-function args_only(args: string){
-  const index = args.indexOf("--ctx-size");
-  if (index !== -1 && index + 1 < args.length) {
-    const value = parseInt(args[index + 1], 10);
-    return isNaN(value) ? null : value;
-  }
-  return null;
 }
 
 export async function models(c: Context) {

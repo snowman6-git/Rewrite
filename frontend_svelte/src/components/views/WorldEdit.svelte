@@ -1,7 +1,6 @@
 <script lang="ts">
 	import axios from 'axios';
 	import { PUBLIC_API_URL } from '$env/static/public';
-	import { getTokenSize } from '$api/memory';
 	import MinMaxPercent from '$components/MinMaxPercent.svelte';
 	import { modelsState } from '$lib/states/models.svelte';
 
@@ -11,7 +10,6 @@
 	async function load_system_prompt() {
 		let request_system_prompt = await axios.get(`${PUBLIC_API_URL}/world_edit`, {});
 		system_prompt = request_system_prompt.data;
-		system_prompt_size = (await getTokenSize(system_prompt)) ?? 'no data';
 	}
 </script>
 

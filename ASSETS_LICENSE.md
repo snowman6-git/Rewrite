@@ -1,5 +1,5 @@
 ## 리소스 라이선스
-프로젝트에서 사용된 폰트 Maplestory OTF Light.otf의 지적 재산권을 포함한 모든 권리는 넥슨코리아에 있습니다.
+프로젝트에서 사용된 폰트 Maplestory OTF Light.woff2의 지적 재산권을 포함한 모든 권리는 넥슨코리아에 있습니다.
 해당 폰트의 [라이선스](https://brand.nexon.com/ko/ci-brand-guidelines/typeface)는 아래와 같습니다.
 
 프로젝트에서 사용된 SVG는 [SVG-Repo](https://www.svgrepo.com/collection/bigmug-interface-icons/)에게 저작권이 있습니다.

@@ -43,7 +43,7 @@ app.post("/reset_world_memory", reset_world_memory);
 app.post("/api/chat/send", chatSSE_announcement);
 app.post("/auto_report/:type", auto_report);
 app.post("/world_memory", world_memory);
-app.post("/getToken_size", getTokenSize);
+app.post("/getToken_size/:target", getTokenSize);
 
 export default {
   port: 3000,

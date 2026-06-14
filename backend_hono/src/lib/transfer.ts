@@ -1,10 +1,13 @@
 import axios from 'axios';
-import { PUBLIC_API_URL } from '$env/static/public';
-import { modelsState } from '$lib/states/models.svelte';
+import * as dotenv from "dotenv";
 
+dotenv.config();
+const LLM_API_URL = process.env.LLM_API_URL;
+
+// 토크나이저를 통해, 해당 텍스트의 크기 구하기
 export async function getTokenSize(text: string) {
 	const token_size = await axios.post(
-		`${PUBLIC_API_URL}/getToken_size`,
+		`${LLM_API_URL}/getToken_size`,
 		{
 			model: modelsState.selectedModel?.id,
 			text: text
