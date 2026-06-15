@@ -5,15 +5,6 @@
 	import { modelsState } from '$lib/states/models.svelte';
 	import MinMaxPercent from '$components/MinMaxPercent.svelte';
 	import { memoryTools } from '$lib/states/memory.svelte';
-	import { onMount } from 'svelte';
-
-	let usage_memory: number = $state<number>(0)
-
-	onMount(async() => {
-		usage_memory = await memoryTools.getMemoryUsage();
-	});
-
-
 
 	// 세계 메모리 리셋 함수
 	async function reset_world_memory() {
@@ -37,8 +28,8 @@
 <br />
 <!-- 나중에 예약된 프롬프트(혹은 시스템)등의 이름으로, 얘는 표기하지 않고 크기만 기입 -->
 <div>
-	{usage_memory} / {modelsState.context_size} (<MinMaxPercent
-		min={usage_memory}
+	{memoryTools.memory_usage} / {modelsState.context_size} (<MinMaxPercent
+		min={memoryTools.memory_usage}
 		max={modelsState.context_size}
 	/>)
 </div>

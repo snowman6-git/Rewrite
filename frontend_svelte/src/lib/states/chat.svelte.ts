@@ -3,6 +3,7 @@ import { loadChatHistory } from '$lib/api/chat';
 import { PUBLIC_API_URL } from '$env/static/public';
 import { modelsState } from './models.svelte';
 import { v4 as uuidv4 } from 'uuid';
+import { memoryTools } from './memory.svelte';
 
 class ChatState {
 	list = $state<Msg[]>([]);
@@ -70,6 +71,7 @@ class ChatState {
 			console.error('메시지 전송 실패:', error);
 		} finally {
 			this.isModelResponding = false;
+			memoryTools.getMemoryUsage()
 		}
 	}
 }

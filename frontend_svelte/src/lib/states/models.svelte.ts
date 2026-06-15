@@ -7,7 +7,8 @@ class ModelsState {
 	selectedId = $state<string | null>(null);
 	isLoading = $state<boolean>(false);
 	selectedModel = $derived(this.list.find((model) => model.id === this.selectedId) || null);
-	context_size = $derived<number>(this.list[0]['context_size'] || 0);
+	context_size = $state<number>(0);
+
 	async loadModels() {
 		this.isLoading = true;
 		try {
@@ -16,13 +17,14 @@ class ModelsState {
 				this.selectedId =
 					this.list.find((model) => model.status === 'loaded')?.id || this.list[0].id;
 			}
+			// 모델이 로드되고 컨텍사이즈를 찾아 할당으로 변경
+			this.context_size = this.list[0]['context_size'] ?? 0
 		} catch (error) {
 			console.error(error);
 		} finally {
 			this.isLoading = false;
 		}
 	}
-	getCtxSize() {}
 	selectModel(id: string) {
 		this.selectedId = id;
 	}

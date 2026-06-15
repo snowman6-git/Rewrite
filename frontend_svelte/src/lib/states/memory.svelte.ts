@@ -8,6 +8,7 @@ import { PUBLIC_API_URL } from '$env/static/public';
 class MemoryTools {
 	// 백엔드 요청에 모델이 필요하니 받아옴
 	selectedModel = modelsState.selectedModel
+	memory_usage = $state<number>(0);
 
 	async getMemoryUsage() {
 		const get_usage_memory_info = await axios.post(
@@ -17,8 +18,7 @@ class MemoryTools {
 			},
 			{}
 		)
-		const usage_memory = get_usage_memory_info.data
-		return usage_memory
+		this.memory_usage = get_usage_memory_info.data
 	}
 }
 export const memoryTools = new MemoryTools();

@@ -7,6 +7,7 @@
 	onMount(() => {
 		modelsState.loadModels();
 		chatState.loadHistory();
+		memoryTools.getMemoryUsage();
 	});
 	let book_title = $state('테스트북123MKii-Alpha'); //나중에 서버에서 받아오기
 	let isModel_menu_open = $state({
@@ -20,6 +21,7 @@
 	import HamMenu from '$components/HamMenu.svelte';
 	import ChatTools from '$components/ChatTools.svelte';
 	import ChatBlock from '$components/ChatBlock.svelte';
+	import { memoryTools } from '$lib/states/memory.svelte';
 
 	let isDesktopMode = $state(false);
 	onMount(() => {

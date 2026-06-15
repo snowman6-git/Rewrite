@@ -2,8 +2,6 @@ import { Database } from "bun:sqlite";
 import { getSystemPrompt, assistant_prompt, start_up_prompt } from "../static/prompt";
 import { Context } from "hono";
 
-
-
 import * as dotenv from "dotenv";
 dotenv.config();
 

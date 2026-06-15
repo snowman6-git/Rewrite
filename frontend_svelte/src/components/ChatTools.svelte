@@ -1,9 +1,23 @@
 <script lang="ts">
 	import { logic_plus } from '../routes/book/api_options';
 	import { chatState } from '$lib/states/chat.svelte';
+	import MinMaxPercent from './MinMaxPercent.svelte';
+
+	import { memoryTools } from '$lib/states/memory.svelte';
+	import { modelsState } from '$lib/states/models.svelte';
+
+	// let usage_mem = $state(await memoryTools.getMemoryUsage())
+	
 </script>
 
 <div id="chat_tools">
+	
+	<div>
+		<MinMaxPercent min={memoryTools.memory_usage} max={modelsState.context_size}/>
+		<progress value={memoryTools.memory_usage} max={modelsState.context_size}></progress>
+	
+	</div>
+	
 	<label id="logic_plus_label" class:active={chatState.logic_plus}>
 		<div id="logic_plus_icon"></div>
 		<button id="logic_plus_btn" onclick={() => (chatState.logic_plus = !chatState.logic_plus)}
