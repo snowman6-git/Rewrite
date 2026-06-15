@@ -14,7 +14,7 @@ class MemoryTools {
 		const get_usage_memory_info = await axios.post(
 			`${PUBLIC_API_URL}/getToken_size/memory`,
 			{
-				model: modelsState.selectedModel?.name
+				model: modelsState.selectedModel?.id
 			},
 			{}
 		)
