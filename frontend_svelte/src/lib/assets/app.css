@@ -1,8 +1,8 @@
 /* 모든 HTML 요소에 적용 */
 @font-face {
-    font-family: 'NxMaple';
-    /* 사용할 이름 정의 */
-    src: url('$lib/assets/Maplestory OTF Light.woff2') format('woff2');
+	font-family: 'NxMaple';
+	/* 사용할 이름 정의 */
+	src: url('$lib/assets/Maplestory OTF Light.woff2') format('woff2');
 }
 
 main,

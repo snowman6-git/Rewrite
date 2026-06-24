@@ -22,8 +22,8 @@ interface ChatHistory{
 }
 
 let chat_history: Array<ChatHistory> = [
-    { role: "system", content: `${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
-    { role: "assistant", content: `${assistant_prompt}` },
+    // { role: "system", content: `${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
+    // { role: "assistant", content: `${assistant_prompt}` },
 ]
 
 export async function reset_chat_history() {

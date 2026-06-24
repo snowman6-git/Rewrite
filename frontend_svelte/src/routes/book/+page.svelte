@@ -7,7 +7,6 @@
 	onMount(() => {
 		modelsState.loadModels();
 		chatState.loadHistory();
-		memoryTools.getMemoryUsage();
 	});
 	let book_title = $state('테스트북123MKii-Alpha'); //나중에 서버에서 받아오기
 	let isModel_menu_open = $state({
@@ -21,7 +20,6 @@
 	import HamMenu from '$components/HamMenu.svelte';
 	import ChatTools from '$components/ChatTools.svelte';
 	import ChatBlock from '$components/ChatBlock.svelte';
-	import { memoryTools } from '$lib/states/memory.svelte';
 
 	let isDesktopMode = $state(false);
 	onMount(() => {
@@ -85,7 +83,7 @@
 			>
 			</button>
 			{#if isModel_menu_open.isOpen}
-				<ModelListMenu model_list={modelsState.list} />
+				<ModelListMenu />
 			{/if}
 			<HamMenu />
 		</div>
@@ -93,7 +91,7 @@
 
 	<div id="chat_body" bind:this={chat_body}>
 		{#each chatState.list as msg (msg.id)}
-			<ChatBlock text={msg.content} />
+			<ChatBlock text={msg.content} live_token={msg.live_token!} />
 		{/each}
 	</div>
 	<div id="chat_input">
@@ -133,6 +131,7 @@
 		display: block;
 		/* background-color: rgba(0, 0, 0, 1); */
 		backdrop-filter: blur(0.2rem);
+		z-index: 999;
 		/* opacity: 0.5; */
 	}
 	#header {

@@ -18,6 +18,7 @@
 	<div id="model_name">{model.name}</div>
 	<div id="model_desc">{model.desc}</div>
 	<div id="model_hardware">{model.hardware}</div>
+	<div id="model_hardware">메모리: {model.context_size}</div>
 </button>
 
 <style>

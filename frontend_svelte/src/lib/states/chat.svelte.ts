@@ -31,17 +31,18 @@ class ChatState {
 		if (this.user_input.trim() === '' || this.isModelResponding) return;
 		try {
 			this.list = [...this.list, { id: uuidv4(), sender: 'user', content: this.user_input }];
-			this.list = [...this.list, { id: uuidv4(), sender: 'assistant', content: '' }];
+			this.list = [...this.list, { id: uuidv4(), sender: 'assistant', content: '', live_token: 0 }];
 			// 모델로드중으로 변경
 			this.isModelResponding = true;
 			const tempUserInput = this.user_input; // 현재 입력값을 임시 변수에 저장
 			this.user_input = ''; // 입력창 초기화
 
+			// 임의의 로딩메세지, 아무래도 랜덤하게 뜨게해서 뭐라도 하고 있음을 티내는게 로딩의 기본.
+			this.list[this.list.length - 1].content = '모델 호출중...';
 			const response = await fetch(`${PUBLIC_API_URL}/chat`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					temp_id: uuidv4(),
 					chat: tempUserInput,
 					model: modelsState.selectedModel?.id,
 					// 나중에 사이드메뉴에서 커스텀노트, 이미지 URL같이 다른 옵션 추가하기
@@ -52,26 +53,45 @@ class ChatState {
 			const reader = response.body?.getReader();
 			const decoder = new TextDecoder();
 			if (!reader) return;
+			// 끝났으니 비워야지
+			this.list[this.list.length - 1].content = '';
+
 			while (true) {
 				const { done, value } = await reader.read();
 				if (done) break;
-				for (const line of decoder.decode(value)) {
-					try {
-						// 응답정보는 나중에 추가할거면 하고 아님 말고 (EX TPS, Total_Tokens, Start_in)
-						this.list[this.list.length - 1].content += line;
-						this.list = [...this.list];
-					} catch (e) {
-						console.log(e);
-						continue;
+				try {
+					for (const streamData of decoder.decode(value, { stream: true }).split('\n')) {
+						// 빈거 거르기
+						if (streamData !== '') {
+							const streamData_json = JSON.parse(streamData.trim());
+							const input_token = streamData_json['input'];
+							const output_token = streamData_json['output'];
+
+							console.log(`라이브누적: ${input_token + output_token}`);
+							memoryTools.live_memory_usage = output_token;
+
+							this.list[this.list.length - 1].content += streamData_json['content'];
+							this.list[this.list.length - 1].live_token = output_token;
+							this.list = [...this.list];
+						}
 					}
+				} catch (e) {
+					console.log(e);
+					continue;
 				}
 			}
+			// memoryTools.memory_usage += input_token + output_token
 			this.isModelResponding = false; // 모델 응답 완료 표시
 		} catch (error) {
 			console.error('메시지 전송 실패:', error);
 		} finally {
+			// 모델이 답변을 종료
+
+			// 응답상태 종료
 			this.isModelResponding = false;
-			memoryTools.getMemoryUsage()
+			// 최종 사용토큰 메모리에 누적
+			memoryTools.memory_usage += this.list[this.list.length - 1].live_token!;
+			memoryTools.getMemoryUsage();
 		}
 	}
 }

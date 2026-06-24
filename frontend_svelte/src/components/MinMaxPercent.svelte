@@ -5,7 +5,11 @@
 	}>();
 </script>
 
-{((min / max) * 100).toFixed(2)}%
+{#if min != undefined && max != 0}
+	{((min / max) * 100).toFixed(2)}%
+{:else}
+	0.00%
+{/if}
 
 <style>
 </style>

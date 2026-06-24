@@ -13,6 +13,7 @@ import { ModelInfo, ChatInfo } from "../types/index"
 import { add_chat_history, load_chat_history, reset_chat_history } from "./session";
 import { args_only } from "../lib/parser";
 import { memo } from "hono/jsx";
+import { system_prompt } from "../api/session";
 
 
 
@@ -48,18 +49,22 @@ export async function getTokenSize(c: Context) {
         }
       }
     }
-    
     const response = await axios.post(`${LLM_API_URL}/tokenize`, {
+      // 문제가 생김, 우린 기본적으로 시작시 모델이 로드가 안돼있는데, 그럼 백에서 '로드된 모델' 로 토크나이징 할 수 없음
+      // 1. 스타팅시 아무모델이나 로드하고 시작하거나
+      // 2. 선호모델저장을 해서, 매 시작마다 폴더 서빙을 하더라도 로드를 하거나
       model: model, //나중에 백에서 동적기입
       content: text,
       add_special: false
     });
     let tokens = response.data.tokens
+    
+    // 돌아온 텍스트 -> 토큰의 길이 구해 int만 넘기기
     return c.text(tokens.length)
   } catch (error) {
     console.error("Tokenize 에러:", error);
   }
-}  
+}
 
 export async function world_memory(c: Context) {
   let memory = await load_chat_history()
@@ -73,8 +78,7 @@ export async function world_memory(c: Context) {
 
 // 이걸 대체 왜 다른데 빼서 따로 만들었더라...? 바로 수정.
 export async function world_edit(c: Context) {
-  let memory = await load_chat_history()
-  return c.text(`${memory[0]["content"]}`);
+  return c.text(`${system_prompt}`);
 }
 
 export async function reset_world_memory(c: Context) {
@@ -129,6 +133,9 @@ export async function chat(c: Context) {
     // streaming
     stream: true, // 반드시 true로 설정
     is_input: true,
+    // 누적토큰값 나오는게 있는듯, 이걸로 통합 ㄱ
+    return_progress: true,
+    timings_per_token: true,
     // 채팅기록을 불러옴, 이때 방금 막 추가한 메세지도 불러와 사용됌
     messages: await load_chat_history()
   };
@@ -142,6 +149,7 @@ export async function chat(c: Context) {
   })
 
 
+
   let llm_response_result = "";
   return streamText(c, async (stream) => {
     const reader = response.body?.getReader();
@@ -150,8 +158,8 @@ export async function chat(c: Context) {
 
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
 
+      if (done) break;
       const chunk = decoder.decode(value);
       for (const line of chunk.split('\n')) {
         const jsonStr = line.slice(6); //6개로 썰어야 시작종료 태그가 된다고 함
@@ -159,19 +167,22 @@ export async function chat(c: Context) {
         if (line.startsWith('data: ') && line.trim() !== 'data: [DONE]') {
           const data = JSON.parse(jsonStr);
           if (data.choices[0]?.finish_reason === 'stop') {
-            // let reasponse_info = {
-            //   tps: data.timings.predicted_per_second,
-            //   start_in: data.timings.predicted_ms,
-            // }
-            // await stream.write(``);
           } else {
             const content = data.choices[0]?.delta?.content || '';
             llm_response_result += content;
-            await stream.write(content);
+
+            const res = {
+              content: content,
+              input: data["timings"]["prompt_n"],
+              output: data["timings"]["predicted_n"]
+            }
+
+            await stream.write(JSON.stringify(res) + "\n");
           }
         }
       }
     }
+
     // 스트림데이터 수신 종료후, LLM의 최종응답을 저장
     await add_chat_history(id, "assistant", llm_response_result);
   });

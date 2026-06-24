@@ -15,20 +15,22 @@ dotenv.config();
 //     );
 // `).run();
 let chat_history: Array<object> = [
-    { role: "system", content: `${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
-    { role: "assistant", content: `${assistant_prompt}` },
+    // { role: "system", content: `${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
+    // { role: "assistant", content: `${assistant_prompt}` },
 ]
 
 export async function reset_chat_history() {
     chat_history = [
-        { role: "system", content: `${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
-        { role: "assistant", content: `${assistant_prompt}` },
+        { role: "system", content: `테스트만 할거니까, 100자 이내로 말해` },
+
+        // { role: "system", content: `${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
+        // { role: "assistant", content: `${assistant_prompt}` },
     ];
 }
 
 // 나중엔 세션기반으로 로드해야함, 지금은 고정세션이니 바로리턴
-export async function system_prompt(c: Context) {
-    return c.text(`${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}`)
+export async function system_prompt() {
+    // return `${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}`
 }
 
 

@@ -12,7 +12,6 @@
 		if (request_reset.status === 200) {
 			// 리셋하고나서 불러오기(앱은 F5가 안돼니까.)
 			chatState.loadHistory();
-			memoryTools.getMemoryUsage()
 		}
 	}
 </script>

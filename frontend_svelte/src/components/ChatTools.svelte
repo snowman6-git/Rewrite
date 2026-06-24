@@ -7,17 +7,9 @@
 	import { modelsState } from '$lib/states/models.svelte';
 
 	// let usage_mem = $state(await memoryTools.getMemoryUsage())
-	
 </script>
 
 <div id="chat_tools">
-	
-	<div>
-		<MinMaxPercent min={memoryTools.memory_usage} max={modelsState.context_size}/>
-		<progress value={memoryTools.memory_usage} max={modelsState.context_size}></progress>
-	
-	</div>
-	
 	<label id="logic_plus_label" class:active={chatState.logic_plus}>
 		<div id="logic_plus_icon"></div>
 		<button id="logic_plus_btn" onclick={() => (chatState.logic_plus = !chatState.logic_plus)}
@@ -25,6 +17,11 @@
 		>
 	</label>
 	<!-- 리턴이 없는 보이드 함수라 이런식 -->
+
+	<div id="mem_bar">
+		<MinMaxPercent min={memoryTools.memory_usage} max={modelsState.context_size} />
+		<progress value={memoryTools.memory_usage} max={modelsState.context_size}></progress>
+	</div>
 
 	<!-- 유저인풋도 있고, 모델이 응답도 안할때 활성화  -->
 	<button
@@ -39,6 +36,14 @@
 </div>
 
 <style>
+	#mem_bar {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		padding: 0rem 1rem 0rem 1rem;
+		gap: 0.5rem;
+	}
+
 	button,
 	#logic_plus_icon {
 		background-position: center;
@@ -86,6 +91,7 @@
 		opacity: 0.5;
 		width: 2.25rem;
 		height: 2.25rem;
+		aspect-ratio: 1/1;
 		border: 0.15rem solid white;
 		border-radius: 100%;
 		background-size: 70%;
