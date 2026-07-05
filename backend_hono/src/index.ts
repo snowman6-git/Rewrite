@@ -10,7 +10,6 @@ import { serveStatic } from "hono/bun";
 
 const app = new Hono();
 app.use(
-  // '*',
   cors({
     origin: "*",
     // ["http://localhost:5173", "http://192.168.0.72:5173"],
