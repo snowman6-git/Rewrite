@@ -10,10 +10,9 @@ import { MODEL_DISPLAY_CONFIG } from "../static/model";
 
 import { ModelInfo, ChatInfo } from "../types/index"
 
-import { add_chat_history, load_chat_history, reset_chat_history } from "./session";
 import { args_only } from "../lib/parser";
 import { memo } from "hono/jsx";
-import { system_prompt } from "../api/session";
+import { add_chat_history, load_chat_history, reset_chat_history } from "../api/session";
 
 
 
@@ -66,19 +65,10 @@ export async function getTokenSize(c: Context) {
   }
 }
 
+// GET하나 UPDATE하나 해서 보기만 하기 업데이트하기 이런거 추가
 export async function world_memory(c: Context) {
   let memory = await load_chat_history()
-  memory = memory.slice(2) // 1. 특정 인덱스(3) 이후만 잘라냄
-  .map(memory => ({
-    role: memory.role,
-    content: memory.content,
-  }));
-  return c.json(memory);
-}
-
-// 이걸 대체 왜 다른데 빼서 따로 만들었더라...? 바로 수정.
-export async function world_edit(c: Context) {
-  return c.text(`${system_prompt}`);
+  return c.json(memory[0]['content']);
 }
 
 export async function reset_world_memory(c: Context) {
@@ -105,7 +95,7 @@ export async function models(c: Context) {
     desc: config?.desc ?? "설명 없음",
     status: model.status?.value ?? "알 수 없음", // 메모리에 올라왔는가, 안나오는 경우도 있으니 status?넣어서 후처리
     hardware: config?.hardware ?? "권장사양없음",
-    context_size: args_only(model.status?.args)
+    // context_size: args_only(model.status?.args ?? "")
   };
   });
   return c.json(chat_list);
@@ -118,7 +108,7 @@ export async function chat(c: Context) {
   if (logic_plus == false) {
     thinking_tokens = 0;
   } else {
-    thinking_tokens = 560;
+    thinking_tokens = 1200;
   }
   // 유저입력을 추가
   await add_chat_history(id, "user", chat);
@@ -128,7 +118,7 @@ export async function chat(c: Context) {
     min_p: 0.5,
     temperature: 1.2,
     // token
-    max_tokens: 2000,
+    max_tokens: 3000,
     thinking_budget_tokens: thinking_tokens,
     // streaming
     stream: true, // 반드시 true로 설정
@@ -173,8 +163,8 @@ export async function chat(c: Context) {
 
             const res = {
               content: content,
-              input: data["timings"]["prompt_n"],
-              output: data["timings"]["predicted_n"]
+              // input: data["timings"]["prompt_n"],
+              // output: data["timings"]["predicted_n"]
             }
 
             await stream.write(JSON.stringify(res) + "\n");
