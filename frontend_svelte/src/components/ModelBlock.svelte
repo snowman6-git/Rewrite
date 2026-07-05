@@ -1,41 +1,111 @@
 <script lang="ts">
-	// 이미 여기서 모델리스트를 받아올 수 있는데 상위요소에서 굳이 받고 each할 필요있는지 고민하기
 	import { modelsState } from '$lib/states/models.svelte';
-	import { getContext } from 'svelte';
-	let { model } = $props<{
-		model: object;
-	}>();
-	let isModel_menu_open = getContext<{ isOpen: boolean; title: string }>('model_menu');
+	import { pageState } from '$lib/states/menus.svelte';
+
+	import type { ModelInfo } from '$lib/types';
+
+	let { model } = $props<{ model: ModelInfo }>();
+	let isSelected = $derived(model.id === modelsState.selectedModel?.id);
 </script>
 
 <button
-	class="model"
+	class="model-item"
+	class:selected={isSelected}
 	onclick={() => {
-		modelsState.selectedModel = model;
-		isModel_menu_open.isOpen = false;
+		modelsState.selectModel(model.id);
+		pageState.isModel_menu_open = false;
 	}}
 >
-	<div id="model_name">{model.name}</div>
-	<div id="model_desc">{model.desc}</div>
-	<div id="model_hardware">{model.hardware}</div>
-	<div id="model_hardware">메모리: {model.context_size}</div>
+	{#if isSelected}
+		<div class="check-icon">✓</div>
+	{/if}
+	<div class="model-info">
+		<div class="model-name">{model.name}</div>
+		<div class="model-desc">{model.desc}</div>
+	</div>
+	<div class="model-meta">
+		<span class="model-context">메모리: {model.context_size}</span>
+	</div>
 </button>
 
 <style>
-	#model_name {
-		font-size: 1.1rem;
+	.model-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		padding: var(--space-sm) var(--space-md);
+		border: 1px solid transparent;
+		border-radius: var(--radius-md);
+		background: transparent;
+		color: var(--color-text-primary);
+		text-align: left;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		gap: var(--space-sm);
 	}
-	#model_desc {
-		font-size: 0.85rem;
-		opacity: 0.5;
+
+	.model-item:hover {
+		background: var(--color-bg-hover);
+		border-color: var(--color-border);
 	}
-	#model_hardware {
-		font-size: 0.75rem;
-		opacity: 0.3;
+
+	.check-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #4ade80;
+		font-size: 0.875rem;
+		font-weight: 700;
+		flex-shrink: 0;
+		margin-right: var(--space-xs);
 	}
-	.model {
-		border: 0.2rem solid transparent;
-		padding-top: 0.5rem;
-		padding-bottom: 0.5rem;
+
+	.model-item:not(.selected) .check-icon {
+		display: none;
+	}
+
+	.model-info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.model-name {
+		font-size: var(--font-size-base);
+		font-weight: 500;
+		color: var(--color-text-primary);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.model-desc {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		margin-top: 2px;
+	}
+
+	.model-meta {
+		flex-shrink: 0;
+		text-align: right;
+	}
+
+	.model-context {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+		font-variant-numeric: tabular-nums;
+	}
+
+	@media (max-width: 640px) {
+		.model-item {
+			padding: var(--space-xs) var(--space-sm);
+		}
+
+		.model-name {
+			font-size: var(--font-size-sm);
+		}
 	}
 </style>

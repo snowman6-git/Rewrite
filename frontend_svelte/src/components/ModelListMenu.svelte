@@ -1,65 +1,66 @@
 <script lang="ts">
+	import ModelBlock from './ModelBlock.svelte';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import ModelBlock from './ModelBlock.svelte';
 	import { onMount } from 'svelte';
 	import { modelsState } from '$lib/states/models.svelte';
+	import { pageState } from '$lib/states/menus.svelte';
 
-	let menuHeight = $state(0);
-	// 열때마다 리로드 하게 해두긴했는데, 서빙엔진이 모델폴더 실시간 변화를 인지 못하는거 같음, 알아볼것
-	// 여차하면 나중에 통합 런쳐 만들때 재시작하게 하면 됌
 	onMount(() => {
 		modelsState.loadModels();
 	});
 </script>
 
 <div
-	id="model_menu"
-	// 모델 메뉴의 높이를 측정하여 애니메이션에 활용
-	bind:clientHeight={menuHeight}
-	transition:fly={{ y: menuHeight, duration: 200, easing: cubicOut }}
+	class="overlay"
+	role="presentation"
+	onclick={() => {
+		pageState.isModel_menu_open = false;
+	}}
+></div>
+<button
+	class="model-menu"
+	role="menu"
+	tabindex="-1"
+	in:fly={{ y: 100, duration: 250, easing: cubicOut }}
+	out:fly={{ y: 100, duration: 250, easing: cubicOut }}
 >
-	<div id="model_list">
+	<div class="model-list">
 		{#each modelsState.list as model (model.id)}
 			<ModelBlock {model} />
 		{/each}
 	</div>
-</div>
+</button>
 
 <style>
-	#model_menu {
-		width: 100%;
-		height: auto;
-		overflow-y: scroll;
-		position: absolute;
-		bottom: 0;
-		right: 0;
+	.overlay {
+		position: fixed;
+		top: 0;
 		left: 0;
-		display: flex;
-		justify-content: end;
-		align-items: center;
-		box-sizing: border-box;
-		flex-direction: column;
-		/* 표준 속성 */
-		user-select: none;
-		/* 구형 브라우저 지원 (Tauri는 필요 없으나 호환성용) */
-		-webkit-user-select: none; /* Safari, Chrome, Edge */
-		-moz-user-select: none; /* Firefox */
-		-ms-user-select: none;
-		z-index: 999;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.5);
+		z-index: 998;
+		backdrop-filter: blur(2px);
 	}
-	#model_list {
-		/* background-color: red; */
+
+	.model-menu {
+		z-index: 999;
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		user-select: none;
+		-webkit-user-select: none;
+	}
+	.model-list {
+		padding: 0.5rem;
 		display: flex;
 		flex-direction: column;
-		border: 0.2rem solid grey;
-		border-bottom: none;
-		box-sizing: border-box;
-		background-color: black;
+		border: 0.15rem solid var(--color-accent-primary);
 		border-radius: 1rem 1rem 0 0;
-		width: 100%;
-		height: auto;
-		padding: 0.5rem;
-		overflow-y: scroll;
+		border-bottom: none;
+		overflow: hidden;
+		box-shadow: var(--shadow-lg);
 	}
 </style>

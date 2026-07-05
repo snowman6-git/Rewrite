@@ -12,6 +12,15 @@ class MemoryTools {
 	memory_usage = $state<number>(0);
 	live_memory_usage = $state<number>(0);
 
+	// progress element 의 max=0 에러 방지
+	get safeMemoryUsage() {
+		return this.memory_usage || 0;
+	}
+
+	get safeContextSize() {
+		return modelsState.context_size || 1;
+	}
+
 	// async getMemoryUsage() {
 	// 	const get_usage_memory_info = await axios.post(
 	// 		`${PUBLIC_API_URL}/getToken_size/memory`,

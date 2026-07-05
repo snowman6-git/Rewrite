@@ -1,6 +1,6 @@
 export interface Msg {
 	id: string;
-	sender: string;
+	role: string;
 	content: string;
 	live_token?: number;
 }

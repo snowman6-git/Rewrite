@@ -5,65 +5,143 @@
 	import { modelsState } from '$lib/states/models.svelte';
 	import MinMaxPercent from '$components/MinMaxPercent.svelte';
 	import { memoryTools } from '$lib/states/memory.svelte';
+	import Btn from '$components/Common/Btn.svelte';
+	import BtnCase from '$components/Common/BtnCase.svelte';
+	import Desc from '$components/Common/Desc.svelte';
+	import { toast } from '$lib/stores/toast.svelte';
 
-	// 세계 메모리 리셋 함수
+	let is_resetting = $state(false);
+	let reset_status = $state<'idle' | 'success' | 'error'>('idle');
+
 	async function reset_world_memory() {
-		let request_reset = await axios.post(`${PUBLIC_API_URL}/reset_world_memory`, {});
-		if (request_reset.status === 200) {
-			// 리셋하고나서 불러오기(앱은 F5가 안돼니까.)
-			chatState.loadHistory();
+		is_resetting = true;
+		reset_status = 'idle';
+		try {
+			let request_reset = await axios.post(`${PUBLIC_API_URL}/reset_world_memory`, {});
+			if (request_reset.status === 200) {
+				reset_status = 'success';
+				chatState.loadHistory();
+				toast.success('메모리가 초기화되었습니다.');
+			} else {
+				reset_status = 'error';
+				toast.error('초기화 실패');
+			}
+		} catch {
+			reset_status = 'error';
+			toast.error('초기화 실패');
+		} finally {
+			is_resetting = false;
 		}
 	}
 </script>
 
-<div class="desc">기록된 메모리를 수정, 삭제합니다.</div>
+<div class="memory-view">
+	<Desc>기록된 메모리를 수정, 삭제합니다.</Desc>
 
-<!-- 차후 요약 메모리를 오브젝트로 받아 렌더링 -->
-<!-- {#await load_world_memory()}
-	<textarea id="world_prompt">로딩중...</textarea>
-{:then}
-	<textarea id="world_prompt">{world_memory}</textarea>
-{/await} -->
-<br />
-<!-- 나중에 예약된 프롬프트(혹은 시스템)등의 이름으로, 얘는 표기하지 않고 크기만 기입 -->
-<div>
-	{memoryTools.memory_usage} / {modelsState.context_size} (<MinMaxPercent
-		min={memoryTools.memory_usage}
-		max={modelsState.context_size}
-	/>)
-</div>
-<div id="btn_case">
-	<button onclick={reset_world_memory}>리셋</button>
+	<div class="usage-card">
+		<div class="usage-info">
+			<span class="usage-label">메모리 사용량</span>
+			<span class="usage-value">
+				{memoryTools.safeMemoryUsage} / {modelsState.context_size}
+			</span>
+		</div>
+		<div class="usage-bar">
+			<MinMaxPercent
+				class="usage-percent"
+				min={memoryTools.safeMemoryUsage}
+				max={memoryTools.safeContextSize}
+			/>
+			<progress
+				class="usage-progress"
+				value={memoryTools.safeMemoryUsage}
+				max={memoryTools.safeContextSize}
+			></progress>
+		</div>
+	</div>
+
+	<BtnCase>
+		<Btn variant="reset" disabled={is_resetting} onclick={reset_world_memory}>
+			{is_resetting ? '리셋중...' : '메모리 초기화'}
+		</Btn>
+	</BtnCase>
 </div>
 
 <style>
-	.desc {
-		margin-top: 0.5rem;
-		margin-bottom: 1rem;
-		opacity: 0.75;
-		font-size: 0.7rem;
-	}
-	#world_prompt {
-		text-align: start;
-		background-color: transparent;
-		outline: none;
-		padding: 0.5rem;
-		border: 0.2rem solid grey;
-		width: 100%;
-		height: 100%;
-	}
-	#btn_case {
-		margin-top: 1rem;
-		width: 100%;
+	.memory-view {
 		display: flex;
-		flex-direction: row;
-		gap: 1rem;
+		flex-direction: column;
+		gap: var(--space-lg);
+		padding: var(--space-md);
 	}
-	button {
-		width: 100%;
-		font-size: 1.2rem;
-		border: 0.2rem solid grey;
-		text-align: center;
-		padding: 0.5rem;
+
+	.usage-card {
+		padding: var(--space-md);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-bg-tertiary);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	.usage-info {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.usage-label {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+
+	.usage-value {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-primary);
+		font-weight: 500;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.usage-bar {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	.usage-progress {
+		flex: 1;
+		height: 6px;
+		border-radius: var(--radius-full);
+		overflow: hidden;
+		background: var(--color-bg-elevated);
+		border: none;
+		appearance: none;
+		-webkit-appearance: none;
+	}
+
+	.usage-progress::-webkit-progress-bar {
+		background: var(--color-bg-elevated);
+		border-radius: var(--radius-full);
+	}
+
+	.usage-progress::-webkit-progress-value {
+		background: var(--color-accent-gradient);
+		border-radius: var(--radius-full);
+	}
+
+	.usage-progress::-moz-progress-bar {
+		background: var(--color-accent-gradient);
+		border-radius: var(--radius-full);
+	}
+
+	@media (max-width: 640px) {
+		.memory-view {
+			padding: var(--space-sm);
+			gap: var(--space-md);
+		}
+
+		.usage-card {
+			padding: var(--space-sm);
+		}
 	}
 </style>

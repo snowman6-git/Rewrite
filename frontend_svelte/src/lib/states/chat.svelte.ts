@@ -30,15 +30,13 @@ class ChatState {
 		// 빈 입력 방지 + 모델이 응답 중이면 씹기
 		if (this.user_input.trim() === '' || this.isModelResponding) return;
 		try {
-			this.list = [...this.list, { id: uuidv4(), sender: 'user', content: this.user_input }];
-			this.list = [...this.list, { id: uuidv4(), sender: 'assistant', content: '', live_token: 0 }];
+			this.list = [...this.list, { id: uuidv4(), role: 'user', content: this.user_input }];
+			this.list = [...this.list, { id: uuidv4(), role: 'assistant', content: '', live_token: 0 }];
 			// 모델로드중으로 변경
 			this.isModelResponding = true;
 			const tempUserInput = this.user_input; // 현재 입력값을 임시 변수에 저장
 			this.user_input = ''; // 입력창 초기화
 
-			// 임의의 로딩메세지, 아무래도 랜덤하게 뜨게해서 뭐라도 하고 있음을 티내는게 로딩의 기본.
-			this.list[this.list.length - 1].content = '모델 호출중...';
 			const response = await fetch(`${PUBLIC_API_URL}/chat`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -53,8 +51,6 @@ class ChatState {
 			const reader = response.body?.getReader();
 			const decoder = new TextDecoder();
 			if (!reader) return;
-			// 끝났으니 비워야지
-			this.list[this.list.length - 1].content = '';
 
 			while (true) {
 				const { done, value } = await reader.read();
@@ -91,7 +87,6 @@ class ChatState {
 			this.isModelResponding = false;
 			// 최종 사용토큰 메모리에 누적
 			memoryTools.memory_usage += this.list[this.list.length - 1].live_token!;
-			memoryTools.getMemoryUsage();
 		}
 	}
 }

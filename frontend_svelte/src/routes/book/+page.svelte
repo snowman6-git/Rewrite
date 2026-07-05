@@ -1,185 +1,333 @@
 <script lang="ts">
-	import '$lib/assets/chat_body.css';
-
-	import { onMount, setContext, tick } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { modelsState } from '$lib/states/models.svelte';
 	import { chatState } from '$lib/states/chat.svelte';
+	import { pageState } from '$lib/states/menus.svelte';
+	import '$lib/assets/chat_body.css';
+
 	onMount(() => {
 		modelsState.loadModels();
 		chatState.loadHistory();
 	});
-	let book_title = $state('테스트북123MKii-Alpha'); //나중에 서버에서 받아오기
-	let isModel_menu_open = $state({
-		isOpen: false
-	});
-	setContext('model_menu', isModel_menu_open);
 
-	// 컴포넌트
+	let book_title = $state('테스트북123MKii-Alpha');
+
 	import ModelListMenu from '$components/ModelListMenu.svelte';
 	import BackBtn from '$components/BackBtn.svelte';
 	import HamMenu from '$components/HamMenu.svelte';
 	import ChatTools from '$components/ChatTools.svelte';
 	import ChatBlock from '$components/ChatBlock.svelte';
+	import ToastContainer from '$components/Common/ToastContainer.svelte';
 
 	let isDesktopMode = $state(false);
 	onMount(() => {
 		isDesktopMode = window.matchMedia('(pointer: fine)').matches;
 	});
+
 	let chat_body: HTMLDivElement;
+
 	$effect(() => {
-		// messages 배열의 내용이 바뀌는 것을 Svelte가 감지합니다.
 		chatState.list.map((m) => m.content);
 		if (chat_body) {
-			// 화면이 실제 업데이트될 때까지 아주 잠시(tick) 기다린 후 스크롤
 			tick().then(() => {
 				chat_body.scrollTo({
-					top: chat_body.scrollHeight
-					// behavior: 'smooth' // 부드럽게 스크롤 (원치 않으면 'auto')
+					top: chat_body.scrollHeight,
+					behavior: 'smooth'
 				});
 			});
 		}
 	});
 
 	function handleGlobalKeyDown(event: KeyboardEvent) {
-		// 쉬프트 엔터면 패스하기
 		if (isDesktopMode) {
 			if (event.key === 'Enter' && !event.shiftKey) {
 				chatState.sendMessage();
 				event.preventDefault();
 			}
-		} else {
-			return; // 모바일에서는 글로벌 엔터 이벤트를 무시합니다.
 		}
 	}
-	function open_model_menu() {
-		isModel_menu_open.isOpen = !isModel_menu_open.isOpen;
+
+	function toggle_model_menu() {
+		pageState.isModel_menu_open = !pageState.isModel_menu_open;
 	}
 </script>
 
-<svlte:head>
+<svelte:head>
 	<title>{book_title}</title>
-</svlte:head>
+</svelte:head>
 <svelte:window on:keydown={handleGlobalKeyDown} />
 
-<div id="main">
-	<div id="header">
-		<div id="header_left">
+<ToastContainer />
+
+<div class="app-layout">
+	<!-- Header -->
+	<header class="header">
+		<div class="header-left">
 			<BackBtn />
-			<div id="title">{book_title}</div>
+			<h1 class="book-title">{book_title}</h1>
 		</div>
-		<div id="header_right">
+		<div class="header-right">
 			{#if modelsState.isLoading}
-				<button id="model_menu_btn" disabled>Loading...</button>
+				<button class="model-btn" disabled aria-label="모델 로딩중">
+					<span class="loading-dots">
+						<span></span>
+						<span></span>
+						<span></span>
+					</span>
+				</button>
 			{:else}
-				<button id="model_menu_btn" onclick={open_model_menu}
-					>{modelsState.selectedModel?.name || '모델 선택'}</button
-				>
+				<button class="model-btn" onclick={toggle_model_menu}>
+					<span class="model-icon">◈</span>
+					<span class="model-name">{modelsState.selectedModel?.name || '모델 선택'}</span>
+				</button>
 			{/if}
-			<button
-				title=""
-				id="force_menu"
-				onclick={() => (isModel_menu_open.isOpen = false)}
-				class:disable={isModel_menu_open.isOpen}
-			>
-			</button>
-			{#if isModel_menu_open.isOpen}
-				<ModelListMenu />
-			{/if}
+
 			<HamMenu />
 		</div>
-	</div>
+	</header>
 
-	<div id="chat_body" bind:this={chat_body}>
+	<!-- Model Menu - rendered at root level -->
+	{#if pageState.isModel_menu_open}
+		<ModelListMenu />
+	{/if}
+
+	<!-- Chat Body -->
+	<div class="chat-body" bind:this={chat_body}>
 		{#each chatState.list as msg (msg.id)}
-			<ChatBlock text={msg.content} live_token={msg.live_token!} />
+			<ChatBlock
+				text={msg.content}
+				live_token={msg.live_token}
+				sender={msg.sender}
+				isResponding={chatState.isModelResponding &&
+					msg === chatState.list[chatState.list.length - 1]}
+			/>
 		{/each}
 	</div>
-	<div id="chat_input">
-		{#if modelsState.isLoading}
-			<textarea id="user_input" placeholder="불러오는중..."></textarea>
-		{:else}
-			<textarea
-				id="user_input"
-				placeholder="텍스트 입력"
-				autocomplete="off"
-				bind:value={chatState.user_input}
-			></textarea>
-		{/if}
+
+	<!-- Input Area -->
+	<div class="input-area">
+		<div class="input-wrapper">
+			{#if modelsState.isLoading}
+				<textarea class="user-input" placeholder="불러오는중..." disabled></textarea>
+			{:else}
+				<textarea
+					class="user-input"
+					placeholder="메시지를 입력하세요..."
+					autocomplete="off"
+					bind:value={chatState.user_input}
+					rows={1}
+				></textarea>
+			{/if}
+		</div>
 		<ChatTools />
 	</div>
 </div>
 
 <style>
-	#main {
+	/* Layout */
+	.app-layout {
 		width: 100dvw;
 		height: 100dvh;
 		display: flex;
 		flex-direction: column;
-		align-items: center;
+		background: var(--color-bg-primary);
+		overflow: hidden;
 	}
-	#force_menu {
-		width: 100dvw;
-		height: 100dvh;
-		position: fixed;
-		display: none;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		top: 0;
-	}
-	#force_menu.disable {
-		display: block;
-		/* background-color: rgba(0, 0, 0, 1); */
-		backdrop-filter: blur(0.2rem);
-		z-index: 999;
-		/* opacity: 0.5; */
-	}
-	#header {
-		width: 100dvw;
-		height: 3rem;
-		padding: 0.5rem 0.5rem 0.5rem 0.5rem;
-		/* padding-left: 0.5rem; padding-right: 0.5rem; */
-		border-bottom: 0.1rem solid gray;
+
+	/* Header */
+	.header {
+		height: var(--header-height);
+		padding: 0 var(--space-md);
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-		/* justify-content: space-around; */
+		justify-content: space-between;
+		border-bottom: 1px solid var(--color-border);
+		background: var(--color-bg-secondary);
+		backdrop-filter: blur(10px);
+		flex-shrink: 0;
+		z-index: 100;
+		gap: 1rem;
 	}
-	#header_right,
-	#header_left {
-		width: 50%;
-		height: 100%;
+
+	.header-left {
 		display: flex;
-		flex-direction: row;
 		align-items: center;
-		gap: 0.5rem;
+		gap: var(--space-sm);
+		min-width: 0;
+		flex: 1;
 	}
-	#title {
-		height: auto;
-		width: auto;
-		text-overflow: ellipsis;
+
+	.book-title {
+		font-size: var(--font-size-lg);
+		font-weight: 600;
+		color: var(--color-text-primary);
 		white-space: nowrap;
 		overflow: hidden;
-	}
-	#header_right {
-		justify-content: end;
-	}
-	#header_left {
-		font-size: 1.25rem;
-		font-weight: bold;
-		justify-content: start;
-	}
-	#model_menu_btn {
-		width: 80%;
-		height: 2rem;
-		max-width: 10rem;
-		text-align: center;
-		text-wrap: nowrap;
-		overflow: hidden;
-		background-color: transparent;
-		border: 0.2rem solid grey;
-		padding: 0.25rem;
-		font-size: 1rem;
 		text-overflow: ellipsis;
+		max-width: 100%;
+		min-width: 0;
+		flex-shrink: 1;
+	}
+
+	.header-right {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		flex-shrink: 0;
+	}
+
+	/* Model Button */
+	.model-btn {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		padding: var(--space-xs) var(--space-sm);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-full);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		font-size: var(--font-size-sm);
+		transition: all var(--transition-fast);
+		white-space: nowrap;
+		flex-shrink: 0;
+		max-width: 14rem;
+	}
+
+	.model-btn:hover:not(:disabled) {
+		background: var(--color-bg-hover);
+		border-color: var(--color-accent-primary);
+	}
+
+	.model-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.model-icon {
+		color: var(--color-accent-primary);
+		font-size: var(--font-size-sm);
+	}
+
+	/* 엣지 케이스지만, 모델이름이 너무너무너무 길면 제목을 잡아먹음, 멕스치를 정할지 고민하기 */
+	.model-name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	/* Loading Dots */
+	.loading-dots {
+		display: flex;
+		gap: 3px;
+	}
+	.loading-dots span {
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--color-accent-primary);
+		animation: loadingDot 1.4s ease-in-out infinite;
+	}
+	.loading-dots span:nth-child(2) {
+		animation-delay: 0.2s;
+	}
+	.loading-dots span:nth-child(3) {
+		animation-delay: 0.4s;
+	}
+	@keyframes loadingDot {
+		0%,
+		80%,
+		100% {
+			transform: scale(0.6);
+			opacity: 0.4;
+		}
+		40% {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+
+	/* Overlay - removed, now in ModelListMenu */
+
+	/* Chat Body */
+	.chat-body {
+		flex: 1;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		padding: var(--space-md);
+		gap: var(--space-sm);
+		min-height: 0;
+		scroll-behavior: smooth;
+	}
+
+	/* Input Area */
+	.input-area {
+		padding: var(--space-sm) var(--space-md) var(--space-md);
+		border-top: 1px solid var(--color-border);
+		background: var(--color-bg-secondary);
+		flex-shrink: 0;
+	}
+
+	.input-wrapper {
+		margin-bottom: var(--space-sm);
+	}
+
+	.user-input {
+		width: 100%;
+		min-height: 60px;
+		max-height: 15rem;
+		padding: var(--space-sm) var(--space-md);
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		color: var(--color-text-primary);
+		font-family: var(--font-family);
+		font-size: var(--font-size-base);
+		resize: none;
+		outline: none;
+		transition:
+			border-color var(--transition-fast),
+			box-shadow var(--transition-fast);
+		line-height: 1.5;
+	}
+
+	.user-input:focus {
+		border-color: var(--color-accent-primary);
+		box-shadow: 0 0 0 3px var(--color-accent-glow);
+	}
+
+	.user-input::placeholder {
+		color: var(--color-text-tertiary);
+	}
+
+	.user-input:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	/* Mobile */
+	@media (max-width: 640px) {
+		.header {
+			height: 3rem;
+			padding: 0 var(--space-sm);
+		}
+
+		.book-title {
+			font-size: var(--font-size-base);
+			max-width: 50vw;
+		}
+
+		.chat-body {
+			padding: var(--space-sm);
+		}
+
+		.input-area {
+			padding: var(--space-xs) var(--space-sm) var(--space-sm);
+		}
+
+		.user-input {
+			min-height: 2.2rem;
+			font-size: var(--font-size-sm);
+		}
 	}
 </style>

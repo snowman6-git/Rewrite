@@ -1,63 +1,187 @@
-/* 모든 HTML 요소에 적용 */
-@font-face {
-	font-family: 'NxMaple';
-	/* 사용할 이름 정의 */
-	src: url('$lib/assets/Maplestory OTF Light.woff2') format('woff2');
+/* ============================================================
+   AI Chat UI — Modern Dark Theme Design System
+   Font: NxMaple (unchanged)
+   Mobile-first, Tauri-ready
+   ============================================================ */
+
+/* ---------- CSS Variables (Design Tokens) ---------- */
+:root {
+	/* Colors — Neutral */
+	--color-bg-primary: #0a0a0a;
+	--color-bg-secondary: #111111;
+	--color-bg-tertiary: #1a1a1a;
+	--color-bg-elevated: #222222;
+	--color-bg-hover: #2a2a2a;
+	--color-bg-active: #333333;
+
+	/* Colors — Text */
+	--color-text-primary: #ededed;
+	--color-text-secondary: #a0a0a0;
+	--color-text-tertiary: #666666;
+	--color-text-inverse: #0a0a0a;
+
+	/* Colors — Accent */
+	--color-accent-primary: #6366f1;
+	--color-accent-secondary: #8b5cf6;
+	--color-accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+	--color-accent-glow: rgba(99, 102, 241, 0.15);
+
+	/* Colors — User Bubble */
+	--color-user-bubble: #1e1e2e;
+	--color-user-bubble-border: #313244;
+
+	/* Colors — AI Bubble */
+	--color-ai-bubble: #16161e;
+	--color-ai-bubble-border: #2a2a3a;
+
+	/* Colors — Status */
+	--color-success: #22c55e;
+	--color-warning: #f59e0b;
+	--color-error: #ef4444;
+	--color-loading: #6366f1;
+
+	/* Colors — Code Block */
+	--color-code-bg: #1a1b26;
+	--color-code-border: #313244;
+	--color-code-text: #c0caf5;
+	--color-code-header-bg: #16161e;
+	--color-code-header-text: #a0a0a0;
+
+	/* Colors — Border */
+	--color-border: #2a2a2a;
+	--color-border-subtle: #1f1f1f;
+
+	/* Typography */
+	--font-family: 'NxMaple', sans-serif;
+	--font-size-xs: 0.7rem;
+	--font-size-sm: 0.85rem;
+	--font-size-base: 1rem;
+	--font-size-lg: 1.15rem;
+	--font-size-xl: 1.4rem;
+	--font-size-2xl: 1.75rem;
+
+	/* Spacing */
+	--space-xs: 0.25rem;
+	--space-sm: 0.5rem;
+	--space-md: 1rem;
+	--space-lg: 1.5rem;
+	--space-xl: 2rem;
+	--space-2xl: 3rem;
+
+	/* Radius */
+	--radius-sm: 0.5rem;
+	--radius-md: 0.75rem;
+	--radius-lg: 1rem;
+	--radius-xl: 1.5rem;
+	--radius-full: 9999px;
+
+	/* Shadows */
+	--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+	--shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+	--shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5);
+	--shadow-glow: 0 0 20px rgba(99, 102, 241, 0.1);
+
+	/* Transitions */
+	--transition-fast: 150ms ease;
+	--transition-base: 250ms ease;
+	--transition-slow: 400ms ease;
+
+	/* Header */
+	--header-height: 3.5rem;
+
+	/* Input area */
+	--input-area-height: auto;
+}
+
+/* ---------- Global Reset ---------- */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	user-select: none;
 }
 
 main,
-html {
-	margin: 0;
-	padding: 0;
-
+html,
+body {
 	min-width: 100dvw;
 	min-height: 100dvh;
 	max-width: 100dvw;
 	max-height: 100dvh;
-	background-color: black;
 	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	box-sizing: border-box;
 }
 
-#chat_input {
-	width: 60dvw;
-	height: 20dvh;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-around;
-	border: 0.2rem solid gray;
-	border-radius: 1rem;
-	margin-bottom: 2rem;
-	padding: 0.5em;
-	background-color: #151515;
-}
-#user_input {
-	resize: none;
-	width: 100%;
-	height: 100%;
-	background-color: transparent;
-	border: none;
-	outline: none;
-	font-size: 1.2rem;
-	z-index: 998;
+html {
+	font-size: 16px;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
-* {
-	box-sizing: border-box;
-	color: white;
+body {
+	font-family: var(--font-family);
+	color: var(--color-text-primary);
+	background-color: var(--color-bg-primary);
+	line-height: 1.6;
+}
+
+/* ---------- Font Face ---------- */
+@font-face {
 	font-family: 'NxMaple';
+	src: url('$lib/assets/Maplestory OTF Light.woff2') format('woff2');
+	font-display: swap;
 }
 
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar {
+	width: 6px;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+::-webkit-scrollbar-thumb {
+	background: var(--color-border);
+	border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+	background: var(--color-text-tertiary);
+}
+
+/* ---------- Selection ---------- */
+::selection {
+	background: var(--color-accent-primary);
+	color: white;
+}
+
+/* ---------- Focus ---------- */
+:focus-visible {
+	outline: 2px solid var(--color-accent-primary);
+	outline-offset: 2px;
+}
+
+/* ---------- Button Reset ---------- */
 button {
 	appearance: none;
 	border: none;
 	outline: none;
-	background-color: transparent;
-	/* color: white; */
-	margin: 0;
+	background: none;
+	cursor: pointer;
+	font-family: var(--font-family);
 	padding: 0;
-	text-align: start;
+	margin: 0;
+	color: inherit;
+}
+
+/* ---------- Utility ---------- */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
 }
