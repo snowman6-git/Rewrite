@@ -8,6 +8,8 @@ import { chatSSE_listen, chatSSE_announcement } from "./routes/chatSSE";
 import { auto_report } from "./routes/collect";
 import { serveStatic } from "hono/bun";
 
+import { authMiddleware } from "./middleware/auth";
+
 const app = new Hono();
 app.use(
   cors({
@@ -21,6 +23,7 @@ app.use(
   }),
 );
 app.use("/img/*", serveStatic({ root: "./public" }));
+app.use("/api/files/*", authMiddleware);
 
 // GET 나중에는 지워야함, 이건 ㄹㅇ 중간자 서버역임, 아님 옵션을 루트에서도 수정가능하게 하던가
 app.get("/", (c) => {
