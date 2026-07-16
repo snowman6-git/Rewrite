@@ -1,6 +1,6 @@
 <img width="128" height="128" alt="128x128" src="https://github.com/user-attachments/assets/91d0cc16-6ad2-4340-a798-7be7b53a923e" />
 
-## 우리가 다시쓰는 이야기, Rewrite
+## 마침표를 지우고, 다시 써내려갈 당신만의 이야기.
 
 [홈페이지](https://rewrite.aa2.uk) | Docs(없음) | 업데이트 노트(없음)
 
