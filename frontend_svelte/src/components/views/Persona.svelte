@@ -1,26 +1,25 @@
 <script lang="ts">
 	import Desc from '$components/Common/Desc.svelte';
 	import InputField from '$components/Common/InputField.svelte';
+	import InputGroup from '$components/Common/InputGroup.svelte';
 
 	let persona_name = $state('');
 	let persona_desc = $state('');
 </script>
 
-<div class="persona-view">
+<div class="persona-view view-container">
 	<Desc>페르소나의 이름과 설명을 설정합니다.</Desc>
 
-	<div class="input-group">
-		<label class="input-label" for="persona-name">이름</label>
+	<InputGroup label="이름" for="persona-name">
 		<InputField
 			id="persona-name"
 			type="text"
 			bind:value={persona_name}
 			placeholder="페르소나 이름"
 		/>
-	</div>
+	</InputGroup>
 
-	<div class="input-group">
-		<label class="input-label" for="persona-desc">설명</label>
+	<InputGroup label="설명" for="persona-desc">
 		<InputField
 			id="persona-desc"
 			type="textarea"
@@ -28,33 +27,13 @@
 			placeholder="페르소나 설명"
 			rows="4"
 		/>
-	</div>
+	</InputGroup>
 </div>
 
 <style>
-	.persona-view {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-md);
-		padding: var(--space-md);
-	}
-
-	.input-group {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-xs);
-	}
-
-	.input-label {
-		font-size: var(--font-size-xs);
-		color: var(--color-text-secondary);
-		font-weight: 500;
-	}
-
-	@media (max-width: 640px) {
-		.persona-view {
-			padding: var(--space-sm);
-			gap: var(--space-sm);
-		}
-	}
+.persona-view {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+}
 </style>

@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import { getSystemPrompt, assistant_prompt, start_up_prompt } from "../static/prompt";
+import { getSystemPrompt, getStartPrompt, getAssistantPrompt } from "../static/prompt";
 import { Context } from "hono";
 
 import * as dotenv from "dotenv";
@@ -15,16 +15,16 @@ dotenv.config();
 //     );
 // `).run();
 let chat_history: Array<object> = [
-    // { role: "system", content: `${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
-    // { role: "assistant", content: `${assistant_prompt}` },
+    { role: "system", content: `${await getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
+    { role: "assistant", content: `${await getAssistantPrompt()}` },
+    { role: "assistant", content: `${await getStartPrompt()}` },
 ]
 
 export async function reset_chat_history() {
     chat_history = [
-        { role: "system", content: `테스트만 할거니까, 100자 이내로 말해` },
-
-        // { role: "system", content: `${getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
-        // { role: "assistant", content: `${assistant_prompt}` },
+        { role: "system", content: `${await getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
+        { role: "assistant", content: `${await getAssistantPrompt()}` },
+        { role: "assistant", content: `${await getStartPrompt()}` },
     ];
 }
 

@@ -65,23 +65,6 @@
 </div>
 
 <style>
-	.token-info {
-		font-size: var(--font-size-xs);
-		color: var(--color-text-tertiary);
-		margin-top: var(--space-xs);
-		display: flex;
-		align-items: center;
-		gap: var(--space-xs);
-	}
-
-	.token-info .token-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--color-accent-primary);
-		display: inline-block;
-	}
-
 	.loading-indicator {
 		display: flex;
 		align-items: center;

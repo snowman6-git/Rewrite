@@ -1,2 +1,16 @@
-<a href="/book">Book</a>
-<a href="/sse">SSE</a>
+<script lang="ts">
+
+</script>
+
+<svelte:head>
+	<title>Rewrite</title>
+</svelte:head>
+
+
+<div class="app-layout">
+
+</div>
+
+<style>
+	
+</style>

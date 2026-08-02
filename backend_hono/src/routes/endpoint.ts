@@ -108,7 +108,7 @@ export async function chat(c: Context) {
   if (logic_plus == false) {
     thinking_tokens = 0;
   } else {
-    thinking_tokens = 1200;
+    thinking_tokens = 2500;
   }
   // 유저입력을 추가
   await add_chat_history(id, "user", chat);
@@ -118,7 +118,7 @@ export async function chat(c: Context) {
     min_p: 0.5,
     temperature: 1.2,
     // token
-    max_tokens: 3000,
+    max_tokens: 5500,
     thinking_budget_tokens: thinking_tokens,
     // streaming
     stream: true, // 반드시 true로 설정
