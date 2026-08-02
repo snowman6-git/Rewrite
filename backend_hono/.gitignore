@@ -2,10 +2,8 @@
 node_modules/
 .env
 public/img/*
-
+src/static/*.txt
 src/static/prompt.ts
 src/static/model.ts
 error-code.ts
 *.db
-
-../tools/sqlite_test

@@ -1,3 +1,15 @@
 #차후 릴리즈
 app_rewrite 
 *.code-workspace
+
+
+# opencode
+.codegraph
+AGENTS.md
+.omo
+sqlite_test
+
+# LLM Create Folder
+A_*
+
+*_prototype

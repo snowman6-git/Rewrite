@@ -35,7 +35,7 @@
 	}
 </script>
 
-<div class="memory-view">
+<div class="memory-view view-container">
 	<Desc>기록된 메모리를 수정, 삭제합니다.</Desc>
 
 	<div class="usage-card">
@@ -52,7 +52,7 @@
 				max={memoryTools.safeContextSize}
 			/>
 			<progress
-				class="usage-progress"
+				class="progress-bar"
 				value={memoryTools.safeMemoryUsage}
 				max={memoryTools.safeContextSize}
 			></progress>
@@ -67,12 +67,11 @@
 </div>
 
 <style>
-	.memory-view {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-lg);
-		padding: var(--space-md);
-	}
+.memory-view {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-lg);
+}
 
 	.usage-card {
 		padding: var(--space-md);
@@ -102,46 +101,9 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-	.usage-bar {
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-	}
-
-	.usage-progress {
-		flex: 1;
-		height: 6px;
-		border-radius: var(--radius-full);
-		overflow: hidden;
-		background: var(--color-bg-elevated);
-		border: none;
-		appearance: none;
-		-webkit-appearance: none;
-	}
-
-	.usage-progress::-webkit-progress-bar {
-		background: var(--color-bg-elevated);
-		border-radius: var(--radius-full);
-	}
-
-	.usage-progress::-webkit-progress-value {
-		background: var(--color-accent-gradient);
-		border-radius: var(--radius-full);
-	}
-
-	.usage-progress::-moz-progress-bar {
-		background: var(--color-accent-gradient);
-		border-radius: var(--radius-full);
-	}
-
-	@media (max-width: 640px) {
-		.memory-view {
-			padding: var(--space-sm);
-			gap: var(--space-md);
-		}
-
-		.usage-card {
-			padding: var(--space-sm);
-		}
-	}
+.usage-bar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+}
 </style>

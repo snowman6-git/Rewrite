@@ -259,6 +259,33 @@
 	margin: var(--space-sm) 0;
 }
 
+/* ---------- Progress Bar ---------- */
+.progress-bar {
+	flex: 1;
+	height: 6px;
+	border-radius: var(--radius-full);
+	overflow: hidden;
+	background: var(--color-bg-elevated);
+	border: none;
+	appearance: none;
+	-webkit-appearance: none;
+}
+
+.progress-bar::-webkit-progress-bar {
+	background: var(--color-bg-elevated);
+	border-radius: var(--radius-full);
+}
+
+.progress-bar::-webkit-progress-value {
+	background: var(--color-accent-gradient);
+	border-radius: var(--radius-full);
+}
+
+.progress-bar::-moz-progress-bar {
+	background: var(--color-accent-gradient);
+	border-radius: var(--radius-full);
+}
+
 /* ---------- Animation ---------- */
 @keyframes messageSlideIn {
 	from {

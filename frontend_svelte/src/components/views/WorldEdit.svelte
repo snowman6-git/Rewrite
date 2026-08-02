@@ -52,7 +52,7 @@
 	load_system_prompt();
 </script>
 
-<div class="world-edit">
+<div class="world-edit view-container">
 	<Desc>세계의 규칙을 변경합니다.</Desc>
 
 	<div class="textarea-wrapper">
@@ -85,13 +85,9 @@
 </div>
 
 <style>
-	.world-edit {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-md);
-		padding: var(--space-md);
-		height: 100%;
-	}
+.world-edit {
+	height: 100%;
+}
 
 	.textarea-wrapper {
 		flex: 1;
@@ -127,12 +123,5 @@
 
 	.stats-percent {
 		font-size: var(--font-size-xs);
-	}
-
-	@media (max-width: 640px) {
-		.world-edit {
-			padding: var(--space-sm);
-			gap: var(--space-sm);
-		}
 	}
 </style>

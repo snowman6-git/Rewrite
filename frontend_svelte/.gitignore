@@ -23,11 +23,3 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 vitest-examples
-
-# opencode
-.codegraph
-.omo
-AGENTS.md
-
-# LLM Create Folder
-A_*

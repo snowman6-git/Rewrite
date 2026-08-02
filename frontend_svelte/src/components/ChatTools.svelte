@@ -17,7 +17,7 @@
 		<span class="logic-plus-icon"></span>
 	</button>
 
-	<!-- 메모리 바 -->
+	<!-- 메모리 바 (사용 안 함) -->
 	<!-- <div class="mem-bar">
 		<MinMaxPercent
 			class="mem-percent"
@@ -25,7 +25,7 @@
 			max={memoryTools.safeContextSize}
 		/>
 		<progress
-			class="mem-progress"
+			class="progress-bar"
 			value={memoryTools.safeMemoryUsage}
 			max={memoryTools.safeContextSize}
 		></progress>
@@ -87,42 +87,6 @@
 		background-position: center;
 		background-repeat: no-repeat;
 		background-size: contain;
-	}
-
-	/* ---------- Memory Bar ---------- */
-	.mem-bar {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		gap: var(--space-xs);
-		min-width: 0;
-	}
-
-	.mem-progress {
-		flex: 1;
-		height: 4px;
-		border-radius: var(--radius-full);
-		overflow: hidden;
-		background: var(--color-bg-elevated);
-		border: none;
-		appearance: none;
-		-webkit-appearance: none;
-	}
-
-	.mem-progress::-webkit-progress-bar {
-		background: var(--color-bg-elevated);
-		border-radius: var(--radius-full);
-	}
-
-	.mem-progress::-webkit-progress-value {
-		background: var(--color-accent-gradient);
-		border-radius: var(--radius-full);
-		transition: width var(--transition-base);
-	}
-
-	.mem-progress::-moz-progress-bar {
-		background: var(--color-accent-gradient);
-		border-radius: var(--radius-full);
 	}
 
 	/* ---------- Send Button ---------- */
