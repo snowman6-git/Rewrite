@@ -2,11 +2,10 @@
 	import ModelBlock from './ModelBlock.svelte';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import { onMount } from 'svelte';
 	import { modelsState } from '$lib/states/models.svelte';
 	import { pageState } from '$lib/states/menus.svelte';
 
-	onMount(() => {
+	$effect(() => {
 		modelsState.loadModels();
 	});
 </script>

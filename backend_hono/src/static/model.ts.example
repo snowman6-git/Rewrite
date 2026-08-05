@@ -1,8 +1,0 @@
-// 모델의 id기반으로 이름을 지어주는 영역
-export const MODEL_DISPLAY_CONFIG: Record<string, { aliases: string; desc: string; hardware: string }> = {
-  "model.id": {
-    aliases: "model.aliases",
-    desc: "model.desc",
-    hardware: "model.hardware"
-  }
-};

@@ -1,16 +1,5 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
 
+    goto("/book")
 </script>
-
-<svelte:head>
-	<title>Rewrite</title>
-</svelte:head>
-
-
-<div class="app-layout">
-
-</div>
-
-<style>
-	
-</style>

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
-	import { onMount, onDestroy } from 'svelte';
 
 	let {
 		text,
@@ -17,8 +16,7 @@
 	}>();
 
 	let cleanHtml = $derived(DOMPurify.sanitize(text));
-	let isStreaming = $derived(cleanHtml.length > 1); //하나 이상 뱉었으면으로 함, chat.model에서 가져와도 될듯
-	// let isStreaming = $derived(!!live_token && live_token > 0); 라이브 토큰 누적은 백엔드 옵션 따라 안올 수 있음
+	let isStreaming = $derived(cleanHtml.length > 1);
 	let isRespondingProp = $derived(isResponding);
 
 	let loadingTexts = [
@@ -29,16 +27,16 @@
 	let currentTextIndex = $state(0);
 	let intervalId: ReturnType<typeof setInterval> | null = null;
 
-	onMount(() => {
+	$effect(() => {
 		intervalId = setInterval(() => {
 			currentTextIndex = (currentTextIndex + 1) % loadingTexts.length;
 		}, 5000);
-	});
 
-	onDestroy(() => {
-		if (intervalId) {
-			clearInterval(intervalId);
-		}
+		return () => {
+			if (intervalId) {
+				clearInterval(intervalId);
+			}
+		};
 	});
 </script>
 

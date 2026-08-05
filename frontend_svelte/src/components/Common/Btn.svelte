@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	type BtnVariant = 'default' | 'cancel' | 'save' | 'reset';
 
 	let {
@@ -9,7 +11,7 @@
 	} = $props<{
 		variant?: BtnVariant;
 		disabled?: boolean;
-		children: any;
+		children: Snippet;
 		onclick?: () => void;
 	}>();
 </script>

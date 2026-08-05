@@ -26,6 +26,9 @@ const config = {
 			$components: 'src/components',
 			$api: 'src/lib/api'
 			// '$assets': 'src/assets',
+		},
+		prerender: {
+			entries: ['*']
 		}
 	}
 };

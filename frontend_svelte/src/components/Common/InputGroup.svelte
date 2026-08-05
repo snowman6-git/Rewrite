@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	let {
 		label,
 		for: forId,
@@ -6,7 +8,7 @@
 	} = $props<{
 		label: string;
 		for: string;
-		children: any;
+		children: Snippet;
 	}>();
 </script>
 
