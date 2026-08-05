@@ -1,2 +1,0 @@
-export const system_prompt = ``;
-export const assistant_prompt = ``;

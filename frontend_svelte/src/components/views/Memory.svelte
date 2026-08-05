@@ -1,5 +1,4 @@
 <script lang="ts">
-	import axios from 'axios';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import { chatState } from '$lib/states/chat.svelte';
 	import { modelsState } from '$lib/states/models.svelte';
@@ -17,8 +16,10 @@
 		is_resetting = true;
 		reset_status = 'idle';
 		try {
-			let request_reset = await axios.post(`${PUBLIC_API_URL}/reset_world_memory`, {});
-			if (request_reset.status === 200) {
+			const response = await fetch(`${PUBLIC_API_URL}/reset_world_memory`, {
+				method: 'POST'
+			});
+			if (response.ok) {
 				reset_status = 'success';
 				chatState.loadHistory();
 				toast.success('메모리가 초기화되었습니다.');

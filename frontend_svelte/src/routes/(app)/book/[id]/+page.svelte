@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { tick } from 'svelte';
 	import { modelsState } from '$lib/states/models.svelte';
 	import { chatState } from '$lib/states/chat.svelte';
 	import { pageState } from '$lib/states/menus.svelte';
 	import '$lib/assets/chat_body.css';
 
-	onMount(() => {
+	$effect(() => {
 		modelsState.loadModels();
 		chatState.loadHistory();
 	});
@@ -20,7 +20,7 @@
 	import ToastContainer from '$components/Common/ToastContainer.svelte';
 
 	let isDesktopMode = $state(false);
-	onMount(() => {
+	$effect(() => {
 		isDesktopMode = window.matchMedia('(pointer: fine)').matches;
 	});
 
@@ -55,7 +55,7 @@
 <svelte:head>
 	<title>{book_title}</title>
 </svelte:head>
-<svelte:window on:keydown={handleGlobalKeyDown} />
+<svelte:window onkeydown={handleGlobalKeyDown} />
 
 <ToastContainer />
 
@@ -124,7 +124,6 @@
 </div>
 
 <style>
-	/* Layout */
 	.app-layout {
 		width: 100dvw;
 		height: 100dvh;
@@ -134,7 +133,6 @@
 		overflow: hidden;
 	}
 
-	/* Header */
 	.header {
 		height: var(--header-height);
 		padding: 0 var(--space-md);
@@ -176,7 +174,6 @@
 		flex-shrink: 0;
 	}
 
-	/* Model Button */
 	.model-btn {
 		display: flex;
 		align-items: center;
@@ -208,13 +205,11 @@
 		font-size: var(--font-size-sm);
 	}
 
-	/* 엣지 케이스지만, 모델이름이 너무너무너무 길면 제목을 잡아먹음, 멕스치를 정할지 고민하기 */
 	.model-name {
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
 
-	/* Loading Dots */
 	.loading-dots {
 		display: flex;
 		gap: 3px;
@@ -245,22 +240,6 @@
 		}
 	}
 
-	/* Overlay - removed, now in ModelListMenu */
-
-	/* Chat Body */
-	.chat-body {
-		flex: 1;
-		overflow-y: auto;
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		padding: var(--space-md);
-		gap: var(--space-sm);
-		min-height: 0;
-		scroll-behavior: smooth;
-	}
-
-	/* Input Area */
 	.input-area {
 		padding: var(--space-sm) var(--space-md) var(--space-md);
 		border-top: 1px solid var(--color-border);
@@ -305,7 +284,6 @@
 		cursor: not-allowed;
 	}
 
-	/* Mobile */
 	@media (max-width: 640px) {
 		.header {
 			height: 3rem;

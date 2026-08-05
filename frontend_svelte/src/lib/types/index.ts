@@ -2,6 +2,7 @@ export interface Msg {
 	id: string;
 	role: string;
 	content: string;
+	sender?: string;
 	live_token?: number;
 }
 export interface ModelInfo {

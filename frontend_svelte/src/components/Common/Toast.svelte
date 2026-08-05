@@ -26,8 +26,7 @@
 >
 	<span class="toast-icon" style="color: {config.color}">{config.icon}</span>
 	<span class="toast-message">{toastItem.message}</span>
-	<button class="toast-close" onclick={() => toast.remove(toastItem.id)} aria-label="닫기">×</button
-	>
+	<button class="toast-close" onclick={() => toast.remove(toastItem.id)} aria-label="닫기">×</button>
 </div>
 
 <style>

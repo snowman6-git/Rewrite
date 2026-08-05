@@ -300,12 +300,7 @@
 
 /* ---------- Mobile Responsive ---------- */
 @media (max-width: 640px) {
-	.chat-body {
-		padding: var(--space-sm);
-	}
-
 	.message-bubble {
-		/* max-width: 90%; */
 		max-width: 90%;
 		padding: var(--space-xs) var(--space-sm);
 		font-size: var(--font-size-sm);

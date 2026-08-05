@@ -1,5 +1,4 @@
 <script lang="ts">
-	import axios from 'axios';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import MinMaxPercent from '$components/MinMaxPercent.svelte';
 	import { modelsState } from '$lib/states/models.svelte';
@@ -18,8 +17,8 @@
 
 	async function load_system_prompt() {
 		try {
-			let request_system_prompt = await axios.get(`${PUBLIC_API_URL}/world_memory`, {});
-			system_prompt = request_system_prompt.data;
+			const response = await fetch(`${PUBLIC_API_URL}/world_memory`);
+			system_prompt = await response.text();
 		} catch {
 			system_prompt = '';
 		} finally {
@@ -31,10 +30,12 @@
 		is_saving = true;
 		save_status = 'idle';
 		try {
-			let response = await axios.post(`${PUBLIC_API_URL}/world_memory`, {
-				prompt: system_prompt
+			const response = await fetch(`${PUBLIC_API_URL}/world_memory`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ prompt: system_prompt })
 			});
-			if (response.status === 200) {
+			if (response.ok) {
 				save_status = 'success';
 				toast.success('저장 완료!');
 			} else {
@@ -49,7 +50,9 @@
 		}
 	}
 
-	load_system_prompt();
+	$effect(() => {
+		load_system_prompt();
+	});
 </script>
 
 <div class="world-edit view-container">

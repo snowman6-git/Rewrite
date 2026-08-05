@@ -1,13 +1,8 @@
-import { PUBLIC_API_URL } from '$env/static/public';
 import axios from 'axios';
+import type { ModelInfo } from '$lib/types';
+import { PUBLIC_API_URL } from '$env/static/public';
 
-export async function model_listup() {
-	try {
-		const model_list_api = await axios.get(`${PUBLIC_API_URL}/models`, { timeout: 5000 });
-		return model_list_api.data;
-		// $selectedModel = model_list.find((model) => model.sstatus === 'loaded') ?? model_list[0];
-		// $isModel_loaded = true;
-	} catch (error) {
-		console.error('모델 리스트 로드 실패:', error);
-	}
+export async function model_listup(): Promise<ModelInfo[]> {
+	const response = await axios.get<ModelInfo[]>(`${PUBLIC_API_URL}/models`, { timeout: 5000 });
+	return response.data;
 }

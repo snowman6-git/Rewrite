@@ -25,8 +25,6 @@ class ModelsState {
 			}
 			// 모델이 로드되고 컨텍사이즈를 찾아 할당으로 변경
 			this.context_size = this.list[0]['context_size'] ?? 0;
-		} catch (error) {
-			console.log(error);
 		} finally {
 			this.isLoading = false;
 		}

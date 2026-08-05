@@ -3,6 +3,7 @@
 	import ToastContainer from '$components/Common/ToastContainer.svelte';
 	import InputField from '$components/Common/InputField.svelte';
 	import Btn from '$components/Common/Btn.svelte';
+	import { PUBLIC_API_URL } from '$env/static/public';
 
 	let id = $state('');
 	let password = $state('');
@@ -17,7 +18,7 @@
 		isLoading = true;
 		
 		try {
-			const response = await fetch('http://localhost:3002/api/login', {
+			const response = await fetch(`${PUBLIC_API_URL}/api/login`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ id, password })
