@@ -239,23 +239,57 @@ await deleteBook(1);
 interface Book {
 	id: number;
 	title: string;
+	desc: string;
 	author: string;
 	category: string;
 	usageCount: number;
 	createdAt: string;
 	content?: string;
+	starting_point: Array<{
+		id: string;
+		name: string;
+		content: string;
+	}>;
 }
 ```
 
-| Field      | Type   | Description       |
-| ---------- | ------ | ----------------- |
-| id         | number | 책 고유 ID        |
-| title      | string | 책 제목           |
-| author     | string | 저자              |
-| category   | string | 카테고리          |
-| usageCount | number | 사용 횟수         |
-| createdAt  | string | 생성일 (ISO 8601) |
-| content    | string | 책 내용 (선택)    |
+| Field          | Type     | Description                          |
+| -------------- | -------- | ------------------------------------ |
+| id             | number   | 책 고유 ID                           |
+| title          | string   | 책 제목                              |
+| desc           | string   | 책 소개                              |
+| author         | string   | 저자                                 |
+| category       | string   | 카테고리                             |
+| usageCount     | number   | 사용 횟수                            |
+| createdAt      | string   | 생성일 (ISO 8601)                    |
+| content        | string   | 책 내용 (선택)                       |
+| starting_point | object[] | 시작 지점 목록 (항상 1 개 이상)       |
+
+**starting_point 객체**
+
+| Field | Type   | Description  |
+| ----- | ------ | ------------ |
+| id    | string | 지점 고유 ID |
+| name  | string | 지점 이름    |
+
+**Response Example**
+
+```json
+{
+	"id": 1,
+	"title": "태초에 언어가 있었다",
+	"desc": "언어의 기원에 대한 탐구",
+	"author": "한강",
+	"category": "소설",
+	"usageCount": 45,
+	"createdAt": "2024-01-15",
+	"content": "전체 책 내용...",
+	"starting_point": [
+		{ "id": "sp-1", "name": "제 1 장: 시작" },
+		{ "id": "sp-2", "name": "제 2 장: 발전" }
+	]
+}
+```
 
 ---
 
