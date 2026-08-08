@@ -12,8 +12,6 @@
 	let percent = $derived(
 		min != undefined && max != 0 ? ((min / max) * 100).toFixed(2) + '%' : '0.00%'
 	);
-
-	let progressColor = $derived(max > 0 ? (min / max) * 100 : 0);
 </script>
 
 <span class:className class="mem-percent">

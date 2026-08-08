@@ -1,5 +1,11 @@
 <script lang="ts">
-	let { label, description = '', type = 'toggle', value = false, options = [] }: {
+	let {
+		label,
+		description = '',
+		type = 'toggle',
+		value = false,
+		options = []
+	}: {
 		label: string;
 		description?: string;
 		type: 'toggle' | 'select';
@@ -22,7 +28,7 @@
 		</label>
 	{:else}
 		<select class="setting-select">
-			{#each options as option}
+			{#each options as option (option)}
 				<option>{option}</option>
 			{/each}
 		</select>
@@ -94,7 +100,7 @@
 
 	.toggle-slider:before {
 		position: absolute;
-		content: "";
+		content: '';
 		height: 20px;
 		width: 20px;
 		left: 3px;

@@ -12,7 +12,6 @@
 	let system_prompt_size = $state(0);
 	let is_loading = $state(true);
 	let is_saving = $state(false);
-	let save_status = $state<'idle' | 'success' | 'error'>('idle');
 	let placeholder = $derived(is_loading ? '로딩 중...' : '세계 규칙을 입력하세요...');
 
 	async function load_system_prompt() {
@@ -28,7 +27,6 @@
 
 	async function handleSave() {
 		is_saving = true;
-		save_status = 'idle';
 		try {
 			const response = await fetch(`${PUBLIC_API_URL}/world_memory`, {
 				method: 'POST',
@@ -36,14 +34,11 @@
 				body: JSON.stringify({ prompt: system_prompt })
 			});
 			if (response.ok) {
-				save_status = 'success';
 				toast.success('저장 완료!');
 			} else {
-				save_status = 'error';
 				toast.error('저장 실패');
 			}
 		} catch {
-			save_status = 'error';
 			toast.error('저장 실패');
 		} finally {
 			is_saving = false;
@@ -88,9 +83,9 @@
 </div>
 
 <style>
-.world-edit {
-	height: 100%;
-}
+	.world-edit {
+		height: 100%;
+	}
 
 	.textarea-wrapper {
 		flex: 1;

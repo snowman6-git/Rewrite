@@ -1,18 +1,26 @@
 <script lang="ts">
-	let { action, title, time, icon }: {
+	let {
+		action,
+		title,
+		time
+	}: {
 		action: string;
 		title: string;
 		time: string;
-		icon?: string;
 	} = $props();
 
 	function getActivityIcon(action: string): string {
 		switch (action) {
-			case '게시물 게시': return '📝';
-			case '댓글': return '💬';
-			case '좋아요': return '❤️';
-			case '프로필 업데이트': return '👤';
-			default: return '📌';
+			case '게시물 게시':
+				return '📝';
+			case '댓글':
+				return '💬';
+			case '좋아요':
+				return '❤️';
+			case '프로필 업데이트':
+				return '👤';
+			default:
+				return '📌';
 		}
 	}
 </script>

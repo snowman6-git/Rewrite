@@ -16,7 +16,7 @@
 		}
 
 		isLoading = true;
-		
+
 		try {
 			const response = await fetch(`${PUBLIC_API_URL}/api/login`, {
 				method: 'POST',
@@ -25,13 +25,13 @@
 			});
 
 			if (response.ok) {
-				const data = await response.json();
+				await response.json();
 				toast.success('로그인 성공!');
 				// TODO: 토큰 저장, 리다이렉트
 			} else {
 				toast.error('로그인 실패!');
 			}
-		} catch (error) {
+		} catch {
 			toast.error('로그인 실패!');
 		} finally {
 			isLoading = false;
@@ -56,17 +56,12 @@
 		<form class="login-form" onsubmit={handleLogin} aria-label="로그인 폼">
 			<div class="input-group">
 				<label for="login-id" class="sr-only">아이디</label>
-				<InputField 
-					id="login-id"
-					type="text" 
-					bind:value={id} 
-					placeholder="아이디를 입력하세요"
-				/>
+				<InputField id="login-id" type="text" bind:value={id} placeholder="아이디를 입력하세요" />
 			</div>
 
 			<div class="input-group">
 				<label for="login-password" class="sr-only">비밀번호</label>
-				<input 
+				<input
 					id="login-password"
 					type="password"
 					bind:value={password}
@@ -77,11 +72,7 @@
 			</div>
 
 			<div class="input-group login-btn-group">
-				<Btn 
-					variant="save" 
-					onclick={handleLogin}
-					disabled={isLoading || !id || !password}
-				>
+				<Btn variant="save" onclick={handleLogin} disabled={isLoading || !id || !password}>
 					{#if isLoading}
 						<span>로그인 중...</span>
 					{:else}
@@ -175,7 +166,9 @@
 		font-family: var(--font-family);
 		font-size: var(--font-size-sm);
 		outline: none;
-		transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+		transition:
+			border-color var(--transition-fast),
+			box-shadow var(--transition-fast);
 		box-sizing: border-box;
 	}
 

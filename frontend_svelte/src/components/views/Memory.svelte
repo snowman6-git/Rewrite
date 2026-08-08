@@ -10,25 +10,20 @@
 	import { toast } from '$lib/stores/toast.svelte';
 
 	let is_resetting = $state(false);
-	let reset_status = $state<'idle' | 'success' | 'error'>('idle');
 
 	async function reset_world_memory() {
 		is_resetting = true;
-		reset_status = 'idle';
 		try {
 			const response = await fetch(`${PUBLIC_API_URL}/reset_world_memory`, {
 				method: 'POST'
 			});
 			if (response.ok) {
-				reset_status = 'success';
 				chatState.loadHistory();
 				toast.success('메모리가 초기화되었습니다.');
 			} else {
-				reset_status = 'error';
 				toast.error('초기화 실패');
 			}
 		} catch {
-			reset_status = 'error';
 			toast.error('초기화 실패');
 		} finally {
 			is_resetting = false;
@@ -68,11 +63,11 @@
 </div>
 
 <style>
-.memory-view {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-lg);
-}
+	.memory-view {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg);
+	}
 
 	.usage-card {
 		padding: var(--space-md);
@@ -102,9 +97,9 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-.usage-bar {
-	display: flex;
-	align-items: center;
-	gap: var(--space-sm);
-}
+	.usage-bar {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
 </style>

@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import { getSystemPrompt, getStartPrompt, getAssistantPrompt } from "../static/prompt";
+import { getSystemPrompt, getAssistantPrompt } from "../static/prompt";
 import { Context } from "hono";
 
 import * as dotenv from "dotenv";
@@ -15,16 +15,15 @@ dotenv.config();
 //     );
 // `).run();
 let chat_history: Array<object> = [
-    { role: "system", content: `${await getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
-    { role: "assistant", content: `${await getAssistantPrompt()}` },
-    { role: "assistant", content: `${await getStartPrompt()}` },
+    // { role: "system", content: `${await getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
+    // { role: "assistant", content: `${await getAssistantPrompt()}` },
 ]
 
 export async function reset_chat_history() {
     chat_history = [
-        { role: "system", content: `${await getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
-        { role: "assistant", content: `${await getAssistantPrompt()}` },
-        { role: "assistant", content: `${await getStartPrompt()}` },
+        // { role: "system", content: `${await getSystemPrompt(process.env.TEST_IMG_URL!, process.env.TEST_NAME!, process.env.TEST_PERSONA!)}` },
+        // { role: "assistant", content: `${await getAssistantPrompt()}` },
+        // { role: "assistant", content: `${await getStartPrompt()}` },
     ];
 }
 
