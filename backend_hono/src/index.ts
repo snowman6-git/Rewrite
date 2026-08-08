@@ -3,7 +3,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { models, chat, chat_listup, world_memory, reset_world_memory, getTokenSize } from "./handlers/endpoint";
 import { chatSSE_listen, chatSSE_announcement } from "./handlers/chatSSE";
-import { book_listup } from "./handlers/book";
+import { book_upload, book_listup } from "./handlers/book";
+import { login } from "./handlers/user";
 
 // 프론트 에러를 동의 없이 수집해도 되는지 알아보기
 import { auto_report } from "./handlers/collect";
@@ -47,6 +48,11 @@ app.post("/reset_world_memory", reset_world_memory);
 app.post("/api/chat/send", chatSSE_announcement);
 app.post("/auto_report/:type", auto_report);
 app.post("/getToken_size/:target", getTokenSize);
+app.post('/book_upload', book_upload)
+
+
+app.post("/api/user/login", login);
+
 
 export default {
   port: 3002,

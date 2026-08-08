@@ -9,6 +9,7 @@
     "dompurify": "^3.4.2",
     "dotenv": "^17.4.2",
     "hono": "^4.12.16",
+    "js-toml": "^2.0.1",
     "llamaindex": "^0.12.1"
   },
   "devDependencies": {

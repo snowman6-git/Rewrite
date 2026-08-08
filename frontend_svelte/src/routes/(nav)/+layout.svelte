@@ -5,7 +5,7 @@
 	const tabs = [
 		{ id: 'book', label: '책장', icon: '📚', href: '/book' },
 		{ id: 'production', label: '제작', icon: '🎨', href: '/production' },
-		{ id: 'desk', label: '서재', icon: '🖊️', href: '/desk' },
+		{ id: 'library', label: '서재', icon: '🖊️', href: '/library' },
 		{ id: 'characters', label: '등장인물', icon: '👥', href: '/characters' },
 		{ id: 'settings', label: '설정', icon: '⚙️', href: '/settings' }
 	];

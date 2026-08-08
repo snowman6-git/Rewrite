@@ -39,25 +39,25 @@ GET /book_listup
 
 ```json
 {
-  "books": [
-    {
-      "id": 1,
-      "title": "태초에 언어가 있었다",
-      "author": "한강",
-      "category": "소설",
-      "usageCount": 45,
-      "createdAt": "2024-01-15"
-    },
-    {
-      "id": 2,
-      "title": "파친코",
-      "author": "이민진",
-      "category": "소설",
-      "usageCount": 32,
-      "createdAt": "2024-02-20"
-    }
-  ],
-  "total": 2
+	"books": [
+		{
+			"id": 1,
+			"title": "태초에 언어가 있었다",
+			"author": "한강",
+			"category": "소설",
+			"usageCount": 45,
+			"createdAt": "2024-01-15"
+		},
+		{
+			"id": 2,
+			"title": "파친코",
+			"author": "이민진",
+			"category": "소설",
+			"usageCount": 32,
+			"createdAt": "2024-02-20"
+		}
+	],
+	"total": 2
 }
 ```
 
@@ -85,19 +85,19 @@ POST /book_create
 
 **Request Body**
 
-| Field      | Type   | Required | Description      |
-|------------|--------|----------|------------------|
-| title      | string | ✅       | 책 제목          |
-| author     | string | ❌       | 저자             |
-| category   | string | ❌       | 카테고리         |
+| Field    | Type   | Required | Description |
+| -------- | ------ | -------- | ----------- |
+| title    | string | ✅       | 책 제목     |
+| author   | string | ❌       | 저자        |
+| category | string | ❌       | 카테고리    |
 
 **Request Example**
 
 ```json
 {
-  "title": "사색의 기술",
-  "author": "김용규",
-  "category": "에세이"
+	"title": "사색의 기술",
+	"author": "김용규",
+	"category": "에세이"
 }
 ```
 
@@ -105,12 +105,12 @@ POST /book_create
 
 ```json
 {
-  "id": 3,
-  "title": "사색의 기술",
-  "author": "김용규",
-  "category": "에세이",
-  "usageCount": 0,
-  "createdAt": "2024-03-10"
+	"id": 3,
+	"title": "사색의 기술",
+	"author": "김용규",
+	"category": "에세이",
+	"usageCount": 0,
+	"createdAt": "2024-03-10"
 }
 ```
 
@@ -121,9 +121,9 @@ import { createBook } from '$lib/api/book';
 
 // 새 책 생성
 const newBook = await createBook({
-  title: '사색의 기술',
-  author: '김용규',
-  category: '에세이'
+	title: '사색의 기술',
+	author: '김용규',
+	category: '에세이'
 });
 
 console.log(newBook); // Book
@@ -143,12 +143,12 @@ PUT /book_update
 
 **Request Body**
 
-| Field      | Type   | Required | Description      |
-|------------|--------|----------|------------------|
-| id         | number | ✅       | 수정할 책 ID     |
-| title      | string | ❌       | 책 제목          |
-| author     | string | ❌       | 저자             |
-| category   | string | ❌       | 카테고리         |
+| Field    | Type   | Required | Description  |
+| -------- | ------ | -------- | ------------ |
+| id       | number | ✅       | 수정할 책 ID |
+| title    | string | ❌       | 책 제목      |
+| author   | string | ❌       | 저자         |
+| category | string | ❌       | 카테고리     |
 
 > 💡 **Note**: `id`만 제공하고 나머지는 생략하면 해당 필드만 수정됩니다.
 
@@ -156,9 +156,9 @@ PUT /book_update
 
 ```json
 {
-  "id": 1,
-  "title": "태초에 언어가 있었다 (수정)",
-  "category": "문학"
+	"id": 1,
+	"title": "태초에 언어가 있었다 (수정)",
+	"category": "문학"
 }
 ```
 
@@ -166,12 +166,12 @@ PUT /book_update
 
 ```json
 {
-  "id": 1,
-  "title": "태초에 언어가 있었다 (수정)",
-  "author": "한강",
-  "category": "문학",
-  "usageCount": 45,
-  "createdAt": "2024-01-15"
+	"id": 1,
+	"title": "태초에 언어가 있었다 (수정)",
+	"author": "한강",
+	"category": "문학",
+	"usageCount": 45,
+	"createdAt": "2024-01-15"
 }
 ```
 
@@ -182,9 +182,9 @@ import { updateBook } from '$lib/api/book';
 
 // 책 수정
 const updatedBook = await updateBook({
-  id: 1,
-  title: '태초에 언어가 있었다 (수정)',
-  category: '문학'
+	id: 1,
+	title: '태초에 언어가 있었다 (수정)',
+	category: '문학'
 });
 
 console.log(updatedBook); // Book
@@ -204,8 +204,8 @@ DELETE /book_delete
 
 **Query Parameters**
 
-| Parameter | Type   | Required | Description |
-|-----------|--------|----------|-------------|
+| Parameter | Type   | Required | Description  |
+| --------- | ------ | -------- | ------------ |
 | id        | number | ✅       | 삭제할 책 ID |
 
 **Request Example**
@@ -237,23 +237,25 @@ await deleteBook(1);
 
 ```typescript
 interface Book {
-  id: number;
-  title: string;
-  author: string;
-  category: string;
-  usageCount: number;
-  createdAt: string;
+	id: number;
+	title: string;
+	author: string;
+	category: string;
+	usageCount: number;
+	createdAt: string;
+	content?: string;
 }
 ```
 
-| Field        | Type   | Description      |
-|--------------|--------|------------------|
-| id           | number | 책 고유 ID       |
-| title        | string | 책 제목          |
-| author       | string | 저자             |
-| category     | string | 카테고리         |
-| usageCount   | number | 사용 횟수        |
-| createdAt    | string | 생성일 (ISO 8601)|
+| Field      | Type   | Description       |
+| ---------- | ------ | ----------------- |
+| id         | number | 책 고유 ID        |
+| title      | string | 책 제목           |
+| author     | string | 저자              |
+| category   | string | 카테고리          |
+| usageCount | number | 사용 횟수         |
+| createdAt  | string | 생성일 (ISO 8601) |
+| content    | string | 책 내용 (선택)    |
 
 ---
 
@@ -261,8 +263,8 @@ interface Book {
 
 ```typescript
 interface BookListResponse {
-  books: Book[];
-  total: number;
+	books: Book[];
+	total: number;
 }
 ```
 
@@ -272,9 +274,9 @@ interface BookListResponse {
 
 ```typescript
 interface BookCreateRequest {
-  title: string;
-  author?: string;
-  category?: string;
+	title: string;
+	author?: string;
+	category?: string;
 }
 ```
 
@@ -284,7 +286,7 @@ interface BookCreateRequest {
 
 ```typescript
 interface BookUpdateRequest extends BookCreateRequest {
-  id: number;
+	id: number;
 }
 ```
 
@@ -296,18 +298,18 @@ interface BookUpdateRequest extends BookCreateRequest {
 
 ```json
 {
-  "error": "에러 메시지"
+	"error": "에러 메시지"
 }
 ```
 
 **Common Errors**
 
-| Status Code | Description          |
-|-------------|----------------------|
-| 400         | Bad Request          |
-| 401         | Unauthorized         |
-| 404         | Not Found            |
-| 500         | Internal Server Error|
+| Status Code | Description           |
+| ----------- | --------------------- |
+| 400         | Bad Request           |
+| 401         | Unauthorized          |
+| 404         | Not Found             |
+| 500         | Internal Server Error |
 
 ---
 
@@ -317,6 +319,214 @@ interface BookUpdateRequest extends BookCreateRequest {
 - `createdAt` 은 ISO 8601 형식 (YYYY-MM-DD) 입니다.
 - `usageCount` 는 책 사용 횟수를 나타냅니다.
 - 카테고리 목록은 프로젝트 설정에 따라 다릅니다.
+
+---
+
+### 5. 파일 업로드
+
+파일을 업로드하여 책을 추가합니다.
+
+**Endpoint**
+
+```
+POST /book_upload
+```
+
+**Request**
+
+- Method: `POST`
+- Content-Type: `multipart/form-data`
+- Body: `FormData` with `file` key
+
+| Field | Type | Required | Description                     |
+| ----- | ---- | -------- | ------------------------------- |
+| file  | File | ✅       | 업로드할 파일 (.zip 또는 .json) |
+
+**Supported Formats**
+
+- `.zip` - ZIP 압축 파일 (준비 중)
+- `.toml` - TOML 파일 (배열 형식)
+
+**TOML Format Example**
+
+```toml
+[[books]]
+title = "책제목"
+author = "저자"
+category = "카테고리"
+content = """
+내용 (줄바꿈: 실제 개행 사용)
+"""
+
+[[books]]
+title = "다른 책"
+author = "다른 저자"
+category = "다른 카테고리"
+content = """
+다른 내용
+"""
+```
+
+**Response Example**
+
+```json
+{
+	"message": "2 권의 책이 추가되었습니다.",
+	"books": [
+		{ "id": "uuid-1", "title": "책 1", "author": "저자 1", "category": "소설", "content": "..." },
+		{ "id": "uuid-2", "title": "책 2", "author": "저자 2", "category": "기술", "content": "..." }
+	]
+}
+```
+
+**Frontend Usage**
+
+```typescript
+import { uploadBookFile } from '$lib/api/book';
+
+// 파일 선택 후 업로드
+const input = document.createElement('input');
+input.type = 'file';
+input.accept = '.zip,.json';
+input.onchange = async (e) => {
+	const file = (e.target as HTMLInputElement).files?.[0];
+	if (file) {
+		const result = await uploadBookFile(file);
+		console.log(result.message); // "2 권의 책이 추가되었습니다."
+	}
+};
+input.click();
+```
+
+---
+
+### 6. ZIP 파일 업로드
+
+ZIP 압축 파일로 여러 책을 한 번에 업로드합니다.
+
+**Endpoint**
+
+```
+POST /book_upload_zip
+```
+
+**Request**
+
+- Method: `POST`
+- Content-Type: `multipart/form-data`
+- Body: `FormData` with `file` key
+
+| Field | Type | Required | Description       |
+| ----- | ---- | -------- | ----------------- |
+| file  | File | ✅       | 업로드할 ZIP 파일 |
+
+**ZIP Format**
+
+```
+books.zip
+├── book1.json
+├── book2.json
+└── book3.json
+```
+
+또는:
+
+```
+books.zip
+└── books.json (배열 형식)
+```
+
+**Response Example**
+
+```json
+{
+	"message": "3 권의 책이 추가되었습니다.",
+	"count": 3,
+	"books": [
+		{ "id": "uuid-1", "title": "책 1", "author": "저자 1", "category": "소설", "content": "..." },
+		{ "id": "uuid-2", "title": "책 2", "author": "저자 2", "category": "기술", "content": "..." },
+		{ "id": "uuid-3", "title": "책 3", "author": "저자 3", "category": "역사", "content": "..." }
+	]
+}
+```
+
+**Frontend Usage**
+
+```typescript
+import { uploadZipFile } from '$lib/api/book';
+
+// ZIP 파일 업로드
+const result = await uploadZipFile(zipFile);
+console.log(result.count); // 3
+console.log(result.books); // Book[]
+```
+
+---
+
+### 8. TOML 파일 다중 업로드
+
+여러 TOML 파일을 동시에 업로드합니다.
+
+**Endpoint**
+
+```
+POST /book_upload_toml
+```
+
+**Request**
+
+- Method: `POST`
+- Content-Type: `multipart/form-data`
+- Body: `FormData` with `files` key (multiple)
+
+| Field | Type   | Required | Description          |
+| ----- | ------ | -------- | -------------------- |
+| files | File[] | ✅       | 업로드할 TOML 파일들 |
+
+**TOML Format Example**
+
+```toml
+[[books]]
+title = "책제목"
+author = "저자"
+category = "카테고리"
+content = """
+내용 (줄바꿈: 실제 개행 사용)
+"""
+
+[[books]]
+title = "다른 책"
+author = "다른 저자"
+category = "다른 카테고리"
+content = """
+다른 내용
+"""
+```
+
+**Response Example**
+
+```json
+{
+	"message": "2 권의 책이 추가되었습니다.",
+	"count": 2,
+	"books": [
+		{ "id": "uuid-1", "title": "책 1", "author": "저자 1", "category": "소설", "content": "..." },
+		{ "id": "uuid-2", "title": "책 2", "author": "저자 2", "category": "기술", "content": "..." }
+	]
+}
+```
+
+**Frontend Usage**
+
+```typescript
+import { uploadTomlFiles } from '$lib/api/book';
+
+// 여러 TOML 파일 업로드
+const tomlFiles = [file1, file2];
+const result = await uploadTomlFiles(tomlFiles);
+console.log(result.count); // 2
+console.log(result.books); // Book[]
+```
 
 ---
 

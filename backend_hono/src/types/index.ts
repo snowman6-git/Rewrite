@@ -4,7 +4,12 @@ export interface ModelInfo {
     value: string;
   };
 }
-
+export interface BookStruct {
+  id?: string;
+  title: any;
+  desc: any;
+  starting_point?: []
+}
 export interface ChatInfo {
   sender: string;
   content: string;

@@ -19,4 +19,5 @@ export interface Book {
 	category: string;
 	usageCount: number;
 	createdAt: string;
+	content?: string;
 }
