@@ -8,7 +8,7 @@ export interface BookStruct {
   id?: string;
   title: any;
   desc: any;
-  starting_point?: []
+  starting?: []
 }
 export interface ChatInfo {
   sender: string;

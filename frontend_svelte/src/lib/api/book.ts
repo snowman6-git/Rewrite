@@ -22,9 +22,7 @@ export async function loadBooks(): Promise<Book[]> {
 	const response = await axios.get(`${PUBLIC_API_URL}/book_listup`, {
 		withCredentials: true
 	});
-	console.log(response.data);
 	return response.data;
-	//  || [];
 	// return response.data?.books || [];
 }
 

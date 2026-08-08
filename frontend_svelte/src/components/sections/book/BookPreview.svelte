@@ -1,4 +1,9 @@
 <script lang="ts">
+	import axios from "axios";
+	import { PUBLIC_API_URL } from '$env/static/public';
+	import { toast } from '$lib/stores/toast.svelte';
+	import ToastContainer from '$components/Common/ToastContainer.svelte';
+
 	interface Book {
 		id: number;
 		title: string;
@@ -8,11 +13,49 @@
 		usageCount: number;
 		createdAt: string;
 		content?: string;
+		starting: Array<{
+			id: string;
+			name: string;
+		}>;
 	}
 
 	let { book, onClose }: { book: Book; onClose: () => void } = $props();
-</script>
 
+	let selectedPoint = $state<string>('');
+
+	$effect(() => {
+		if (book.starting && book.starting.length > 0) {
+			selectedPoint = book.starting[0].id;
+		}
+	});
+
+	function handlePointChange(event: Event) {
+		const target = event.target as HTMLSelectElement;
+		selectedPoint = target.value;
+	}
+
+	async function handleStart() {
+		let story_unfolds = await axios.post(
+			`${PUBLIC_API_URL}/book_unfolds`,
+			{
+				book_id: book.id,
+				starting: selectedPoint
+			},
+			{
+				withCredentials: true
+			}
+		);
+
+		if (story_unfolds.status >= 200 && story_unfolds.status < 300) {
+			window.location.href = `/book/${story_unfolds.data["table_id"]}`;
+		} else {
+			toast.error('생성에 실패했어요');
+		}
+
+		// onClose();
+	}
+</script>
+<ToastContainer />
 <div class="modal-overlay" onclick={onClose}>
 	<div class="modal" onclick={(e) => e.stopPropagation()}>
 		<div class="modal-header">
@@ -21,10 +64,25 @@
 		</div>
 
 		<div class="modal-content">
+			<div class="starting-point-selector">
+				<label class="selector-label">시작 지점</label>
+				<select class="selector-dropdown" bind:value={selectedPoint}>
+					{#each book.starting as point}
+						<option value={point.id}>{point.name}</option>
+					{/each}
+				</select>
+			</div>
+
 			<div class="book-preview">
-				<div class="preview-placeholder">
-					<span class="preview-emoji">📖</span>
-				</div>
+				{#if book.content}
+					<div class="content-display">
+						<pre class="content-text">{book.content}</pre>
+					</div>
+				{:else}
+					<div class="preview-placeholder">
+						<span class="preview-emoji">📖</span>
+					</div>
+				{/if}
 			</div>
 
 			<div class="book-details">
@@ -44,6 +102,12 @@
 					</p>
 				</div>
 			</div>
+		</div>
+
+		<div class="modal-footer">
+			<button class="start-btn" onclick={handleStart}>
+				시작하기
+			</button>
 		</div>
 	</div>
 </div>
@@ -113,6 +177,42 @@
 	.modal-content {
 		padding: var(--space-lg);
 		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg);
+	}
+
+	.starting-point-selector {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	.selector-label {
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		color: var(--color-text-primary);
+	}
+
+	.selector-dropdown {
+		padding: var(--space-sm) var(--space-md);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-bg-secondary);
+		color: var(--color-text-primary);
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.selector-dropdown:hover {
+		border-color: var(--color-accent-primary);
+	}
+
+	.selector-dropdown:focus {
+		outline: none;
+		border-color: var(--color-accent-primary);
+		box-shadow: 0 0 0 3px var(--color-accent-primary-opacity);
 	}
 
 	.book-preview {
@@ -143,6 +243,27 @@
 	.preview-emoji {
 		font-size: 4rem;
 		opacity: 0.5;
+	}
+
+	.content-display {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.content-text {
+		flex: 1;
+		overflow-y: auto;
+		padding: var(--space-lg);
+		font-family: var(--font-family-monospace);
+		font-size: var(--font-size-sm);
+		line-height: 1.8;
+		color: var(--color-text-primary);
+		white-space: pre-wrap;
+		word-break: break-word;
+		margin: 0;
 	}
 
 	.book-details {
@@ -200,6 +321,35 @@
 		font-size: 0.75rem;
 		color: var(--color-text-tertiary);
 		margin: 0;
+	}
+
+	.modal-footer {
+		padding: var(--space-md) var(--space-lg);
+		border-top: 1px solid var(--color-border);
+		display: flex;
+		justify-content: flex-end;
+	}
+
+	.start-btn {
+		padding: var(--space-sm) var(--space-2xl);
+		background: var(--color-accent-primary);
+		color: white;
+		border: none;
+		border-radius: var(--radius-md);
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.start-btn:hover {
+		background: var(--color-accent-primary-dark);
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-md);
+	}
+
+	.start-btn:active {
+		transform: translateY(0);
 	}
 
 	/* 모바일: 100% 높이/넓이 */

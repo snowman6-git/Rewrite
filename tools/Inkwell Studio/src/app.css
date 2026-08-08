@@ -1,36 +1,180 @@
-/* 모든 HTML 요소에 적용 */
+/* ============================================================
+   Inkwell Studio — Modern Dark Theme Design System
+   Font: NxMaple
+   Mobile-first, Tauri-ready
+   ============================================================ */
 
-@font-face {
-	font-family: 'NxMaple';
-	/* 사용할 이름 정의 */
-	src: url('/Maplestory\ OTF\ Light.otf') format('opentype');
+/* ---------- Hide Scrollbars Completely ---------- */
+html {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
 }
 
-body,
-html {
+html::-webkit-scrollbar {
+	display: none;
+	width: 0;
+	height: 0;
+}
+
+body {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+body::-webkit-scrollbar {
+	display: none;
+	width: 0;
+	height: 0;
+}
+
+/* ---------- CSS Variables (Design Tokens) ---------- */
+:root {
+	/* Colors — Neutral */
+	--color-bg-primary: #0a0a0a;
+	--color-bg-secondary: #111111;
+	--color-bg-tertiary: #1a1a1a;
+	--color-bg-elevated: #222222;
+	--color-bg-hover: #2a2a2a;
+	--color-bg-active: #333333;
+
+	/* Colors — Text */
+	--color-text-primary: #ededed;
+	--color-text-secondary: #a0a0a0;
+	--color-text-tertiary: #666666;
+	--color-text-inverse: #0a0a0a;
+
+	/* Colors — Accent */
+	--color-accent-primary: #6366f1;
+	--color-accent-secondary: #8b5cf6;
+	--color-accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+	--color-accent-glow: rgba(99, 102, 241, 0.15);
+
+	/* Colors — Status */
+	--color-success: #22c55e;
+	--color-warning: #f59e0b;
+	--color-error: #ef4444;
+	--color-loading: #6366f1;
+
+	/* Colors — Border */
+	--color-border: #2a2a2a;
+	--color-border-subtle: #1f1f1f;
+
+	/* Typography */
+	--font-family: 'NxMaple', sans-serif;
+	--font-size-xs: 0.7rem;
+	--font-size-sm: 0.85rem;
+	--font-size-base: 1rem;
+	--font-size-lg: 1.15rem;
+	--font-size-xl: 1.4rem;
+	--font-size-2xl: 1.75rem;
+	--font-size-3xl: 2.25rem;
+
+	/* Spacing */
+	--space-xs: 0.25rem;
+	--space-sm: 0.5rem;
+	--space-md: 1rem;
+	--space-lg: 1.5rem;
+	--space-xl: 2rem;
+	--space-2xl: 3rem;
+
+	/* Radius */
+	--radius-sm: 0.5rem;
+	--radius-md: 0.75rem;
+	--radius-lg: 1rem;
+	--radius-xl: 1.5rem;
+	--radius-full: 9999px;
+
+	/* Shadows */
+	--shadow-sm: 0 1px 2px #0000004d;
+	--shadow-md: 0 4px 12px #0006;
+	--shadow-lg: 0 8px 30px #00000080;
+	--shadow-glow: 0 0 20px #6366f11a;
+
+	/* Transitions */
+	--transition-fast: 150ms ease;
+	--transition-base: 250ms ease;
+	--transition-slow: 400ms ease;
+}
+
+/* ---------- Global Reset ---------- */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
 	margin: 0;
 	padding: 0;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+	display: none;
+}
+
+html,
+body {
 	min-width: 100dvw;
 	min-height: 100dvh;
 	max-width: 100dvw;
 	max-height: 100dvh;
-	background-color: black;
+	display: flex;
 }
 
+html {
+	font-size: 16px;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
 
-* {
-	box-sizing: border-box;
-	color: white;
+body {
+	font-family: var(--font-family);
+	color: var(--color-text-primary);
+	background-color: var(--color-bg-primary);
+	line-height: 1.6;
+}
+
+/* ---------- Font Face ---------- */
+@font-face {
 	font-family: 'NxMaple';
+	src: url('/Maplestory OTF Light.woff2') format('woff2');
+	font-display: swap;
 }
 
+/* ---------- Selection ---------- */
+::selection {
+	background: var(--color-accent-primary);
+	color: white;
+}
+
+/* ---------- Focus ---------- */
+:focus-visible {
+	outline: 2px solid var(--color-accent-primary);
+	outline-offset: 2px;
+}
+
+/* ---------- Button Reset ---------- */
 button {
 	appearance: none;
 	border: none;
 	outline: none;
-	background-color: transparent;
-	/* color: white; */
-	margin: 0;
+	background: none;
+	cursor: pointer;
+	font-family: var(--font-family);
 	padding: 0;
-	text-align: start;
+	margin: 0;
+	color: inherit;
+}
+
+/* ---------- Utility ---------- */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
 }
