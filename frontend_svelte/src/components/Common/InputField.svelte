@@ -3,7 +3,7 @@
 		type = 'text',
 		value = $bindable(''),
 		placeholder = '',
-		class: className = '',
+		class: cls,
 		id,
 		rows,
 		disabled = false
@@ -19,9 +19,10 @@
 </script>
 
 {#if type === 'textarea'}
-	<textarea bind:value class="input-field textarea" {placeholder} {id} {rows} {disabled}></textarea>
+	<textarea bind:value class="input-field textarea {cls}" {placeholder} {id} {rows} {disabled}
+	></textarea>
 {:else}
-	<input bind:value {type} class="input-field" {placeholder} {id} {disabled} />
+	<input bind:value {type} class="input-field {cls}" {placeholder} {id} {disabled} />
 {/if}
 
 <style>

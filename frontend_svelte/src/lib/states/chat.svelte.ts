@@ -57,7 +57,6 @@ class ChatState {
 					for (const streamData of decoder.decode(value, { stream: true }).split('\n')) {
 						if (streamData !== '') {
 							const parsed = JSON.parse(streamData.trim());
-							const input_token = parsed['input'];
 							const output_token = parsed['output'];
 
 							memoryTools.live_memory_usage = output_token;

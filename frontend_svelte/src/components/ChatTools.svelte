@@ -1,8 +1,5 @@
 <script lang="ts">
 	import { chatState } from '$lib/states/chat.svelte';
-	import MinMaxPercent from './MinMaxPercent.svelte';
-	import { memoryTools } from '$lib/states/memory.svelte';
-	import { modelsState } from '$lib/states/models.svelte';
 </script>
 
 <div class="chat-tools">

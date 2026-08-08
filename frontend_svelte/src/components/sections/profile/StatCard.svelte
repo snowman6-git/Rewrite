@@ -1,5 +1,9 @@
 <script lang="ts">
-	let { label, value, icon }: {
+	let {
+		label,
+		value,
+		icon
+	}: {
 		label: string;
 		value: string | number;
 		icon: string;

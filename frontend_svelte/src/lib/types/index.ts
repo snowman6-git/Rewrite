@@ -12,3 +12,11 @@ export interface ModelInfo {
 	status: string;
 	context_size: number;
 }
+export interface Book {
+	id: number;
+	title: string;
+	author: string;
+	category: string;
+	usageCount: number;
+	createdAt: string;
+}

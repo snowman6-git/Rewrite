@@ -1,9 +1,14 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
-
 	let { title, items } = $props<{
 		title: string;
-		items: { id: number; title: string; author: string; category: string; status: string; progress: number }[];
+		items: {
+			id: number;
+			title: string;
+			author: string;
+			category: string;
+			status: string;
+			progress: number;
+		}[];
 	}>();
 </script>
 
@@ -114,7 +119,7 @@
 		}
 
 		.card-cover {
-			height: 160px;
+			height: 80px;
 		}
 	}
 </style>

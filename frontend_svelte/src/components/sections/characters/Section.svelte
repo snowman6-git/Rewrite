@@ -1,15 +1,15 @@
 <script lang="ts">
 </script>
 
-<div class="profile-section">
+<div class="characters-section">
 	<!-- Blank Placeholder -->
 	<div class="blank-placeholder">
-		<p>프로필 섹션 - 디자인 대기 중</p>
+		<p>등장인물 섹션 - 디자인 대기 중</p>
 	</div>
 </div>
 
 <style>
-	.profile-section {
+	.characters-section {
 		padding: var(--space-lg);
 		max-width: 1400px;
 		margin: 0 auto;
@@ -25,7 +25,7 @@
 	}
 
 	@media (max-width: 768px) {
-		.profile-section {
+		.characters-section {
 			padding: var(--space-md);
 		}
 
@@ -36,7 +36,7 @@
 	}
 
 	@media (max-width: 480px) {
-		.profile-section {
+		.characters-section {
 			padding: var(--space-sm);
 		}
 

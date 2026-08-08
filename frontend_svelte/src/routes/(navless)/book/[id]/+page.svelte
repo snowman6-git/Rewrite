@@ -10,7 +10,7 @@
 		chatState.loadHistory();
 	});
 
-	let book_title = $state('테스트북123MKii-Alpha');
+	let book_title = $state('');
 
 	import ModelListMenu from '$components/ModelListMenu.svelte';
 	import BackBtn from '$components/BackBtn.svelte';
@@ -19,10 +19,7 @@
 	import ChatBlock from '$components/ChatBlock.svelte';
 	import ToastContainer from '$components/Common/ToastContainer.svelte';
 
-	let isDesktopMode = $state(false);
-	$effect(() => {
-		isDesktopMode = window.matchMedia('(pointer: fine)').matches;
-	});
+	let isDesktopMode = $derived(window.matchMedia('(pointer: fine)').matches);
 
 	let chat_body: HTMLDivElement;
 

@@ -1,11 +1,12 @@
 import axios from "axios";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { models, chat, chat_listup, world_memory, reset_world_memory, getTokenSize } from "./routes/endpoint";
-import { chatSSE_listen, chatSSE_announcement } from "./routes/chatSSE";
+import { models, chat, chat_listup, world_memory, reset_world_memory, getTokenSize } from "./handlers/endpoint";
+import { chatSSE_listen, chatSSE_announcement } from "./handlers/chatSSE";
+import { book_listup } from "./handlers/book";
 
 // 프론트 에러를 동의 없이 수집해도 되는지 알아보기
-import { auto_report } from "./routes/collect";
+import { auto_report } from "./handlers/collect";
 import { serveStatic } from "hono/bun";
 
 import { authMiddleware } from "./middleware/auth";
@@ -31,11 +32,13 @@ app.get("/", (c) => {
 });
 
 
+
 // GET
 app.get("/chat_listup", chat_listup)
 app.get("/models", models);
 app.get("/world_memory", world_memory);
 app.get('/api/chat/stream', chatSSE_listen)
+app.get('/book_listup', book_listup)
 
 
 // POST

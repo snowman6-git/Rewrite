@@ -12,7 +12,7 @@ import { ModelInfo, ChatInfo } from "../types/index"
 
 import { args_only } from "../lib/parser";
 import { memo } from "hono/jsx";
-import { add_chat_history, load_chat_history, reset_chat_history } from "../api/session";
+import { add_chat_history, load_chat_history, reset_chat_history } from "../services/session";
 
 
 

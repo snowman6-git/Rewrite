@@ -1,5 +1,10 @@
 <script lang="ts">
-	let { label, icon, active = false, onClick }: {
+	let {
+		label,
+		icon,
+		active = false,
+		onClick
+	}: {
 		label: string;
 		icon: string;
 		active?: boolean;
@@ -7,7 +12,7 @@
 	} = $props();
 </script>
 
-<button class="nav-item" class:active={active} onclick={onClick}>
+<button class="nav-item" class:active onclick={onClick}>
 	<span class="nav-icon">{icon}</span>
 	<span class="nav-label">{label}</span>
 </button>

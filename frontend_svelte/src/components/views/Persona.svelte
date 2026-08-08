@@ -31,9 +31,9 @@
 </div>
 
 <style>
-.persona-view {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-md);
-}
+	.persona-view {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+	}
 </style>
