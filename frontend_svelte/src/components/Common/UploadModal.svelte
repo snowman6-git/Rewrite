@@ -1,23 +1,11 @@
 <script lang="ts">
 	export interface Props {
-		title: string;
-		message: string;
-		onConfirm: () => void;
+		onUploadZip: () => void;
+		onUploadToml: () => void;
 		onCancel: () => void;
-		variant?: 'danger' | 'default';
-		confirmText?: string;
-		cancelText?: string;
 	}
 
-	let {
-		title,
-		message,
-		onConfirm,
-		onCancel,
-		variant = 'default',
-		confirmText = '확인',
-		cancelText = '취소'
-	}: Props = $props();
+	let { onUploadZip, onUploadToml, onCancel }: Props = $props();
 
 	function handleOverlayClick() {
 		onCancel();
@@ -42,14 +30,32 @@
 </script>
 
 <div class="modal-overlay" onclick={handleOverlayClick}>
-	<div class="modal" class:danger={variant === 'danger'} onclick={handleModalClick}>
-		<h3 class="modal-title">{title}</h3>
-		<p class="modal-text">{message}</p>
+	<div class="modal" onclick={handleModalClick}>
+		<h3 class="modal-title">책 업로드</h3>
+		<p class="modal-text">업로드할 파일 형식을 선택하세요.</p>
+
+		<div class="upload-options">
+			<button class="option-btn" onclick={onUploadZip}>
+				<span class="option-icon">📦</span>
+				<div class="option-content">
+					<span class="option-title">ZIP 파일</span>
+					<span class="option-desc">압축 파일로 여러 책 업로드</span>
+				</div>
+				<span class="option-arrow">›</span>
+			</button>
+
+			<button class="option-btn" onclick={onUploadToml}>
+				<span class="option-icon">📝</span>
+				<div class="option-content">
+					<span class="option-title">TOML 파일</span>
+					<span class="option-desc">TOML 형식으로 책 데이터 업로드</span>
+				</div>
+				<span class="option-arrow">›</span>
+			</button>
+		</div>
+
 		<div class="modal-actions">
-			<button class="btn btn-cancel" onclick={onCancel}>{cancelText}</button>
-			<button class="btn btn-confirm" class:danger={variant === 'danger'} onclick={onConfirm}
-				>{confirmText}</button
-			>
+			<button class="btn btn-cancel" onclick={onCancel}>취소</button>
 		</div>
 	</div>
 </div>
@@ -87,10 +93,6 @@
 		animation: slideUp 0.2s ease-out;
 	}
 
-	.modal.danger {
-		border-color: var(--color-error);
-	}
-
 	@keyframes slideUp {
 		from {
 			opacity: 0;
@@ -106,7 +108,7 @@
 		font-size: var(--font-size-lg);
 		font-weight: 600;
 		color: var(--color-text-primary);
-		margin: 0 0 var(--space-md);
+		margin: 0 0 var(--space-sm);
 	}
 
 	.modal-text {
@@ -116,9 +118,64 @@
 		line-height: 1.6;
 	}
 
+	.upload-options {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		margin-bottom: var(--space-lg);
+	}
+
+	.option-btn {
+		display: flex;
+		align-items: center;
+		gap: var(--space-md);
+		padding: var(--space-md);
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		text-align: left;
+	}
+
+	.option-btn:hover {
+		background: var(--color-bg-elevated);
+		border-color: var(--color-accent-primary);
+	}
+
+	.option-icon {
+		font-size: 1.5rem;
+		flex-shrink: 0;
+	}
+
+	.option-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	.option-title {
+		font-size: var(--font-size-base);
+		font-weight: 600;
+		color: var(--color-text-primary);
+	}
+
+	.option-desc {
+		font-size: 0.8rem;
+		color: var(--color-text-tertiary);
+	}
+
+	.option-arrow {
+		font-size: 1.5rem;
+		color: var(--color-text-tertiary);
+		font-weight: 300;
+		flex-shrink: 0;
+	}
+
 	.modal-actions {
 		display: flex;
-		gap: var(--space-sm);
 		justify-content: flex-end;
 	}
 
@@ -144,37 +201,11 @@
 		color: var(--color-text-primary);
 	}
 
-	.btn-confirm {
-		background: var(--color-accent-primary);
-		color: white;
-	}
-
-	.btn-confirm:hover {
-		background: var(--color-accent-secondary);
-	}
-
-	.btn-confirm.danger {
-		background: var(--color-error);
-	}
-
-	.btn-confirm.danger:hover {
-		background: #dc2626;
-	}
-
 	@media (max-width: 480px) {
 		.modal {
 			min-width: unset;
 			width: calc(100vw - 2rem);
 			padding: var(--space-lg);
-		}
-
-		.modal-actions {
-			flex-direction: column-reverse;
-		}
-
-		.btn {
-			width: 100%;
-			text-align: center;
 		}
 	}
 </style>

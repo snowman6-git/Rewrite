@@ -1,4 +1,5 @@
 <script lang="ts">
+	import axios from 'axios';
 	import { toast } from '$lib/stores/toast.svelte';
 	import ToastContainer from '$components/Common/ToastContainer.svelte';
 	import InputField from '$components/Common/InputField.svelte';
@@ -18,20 +19,25 @@
 		isLoading = true;
 
 		try {
-			const response = await fetch(`${PUBLIC_API_URL}/api/login`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ id, password })
-			});
+			const response = await axios.post(
+				`${PUBLIC_API_URL}/api/user/login`,
+				{
+					id: id,
+					pw: password
+				},
+				{
+					withCredentials: true
+				}
+			);
 
-			if (response.ok) {
-				await response.json();
+			if (response.status >= 200 && response.status < 300) {
 				toast.success('로그인 성공!');
-				// TODO: 토큰 저장, 리다이렉트
+				window.location.href = '/book';
 			} else {
 				toast.error('로그인 실패!');
 			}
-		} catch {
+		} catch (error) {
+			console.error('로그인 오류:', error);
 			toast.error('로그인 실패!');
 		} finally {
 			isLoading = false;

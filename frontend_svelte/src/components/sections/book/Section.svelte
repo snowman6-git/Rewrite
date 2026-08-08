@@ -1,11 +1,20 @@
 <script lang="ts">
+	import UploadModal from '$components/Common/UploadModal.svelte';
+	import ToastContainer from '$components/Common/ToastContainer.svelte';
+	import BookCard from '$components/sections/book/BookCard.svelte';
+	import BookPreview from '$components/sections/book/BookPreview.svelte';
+	import { uploadFiles, loadBooks } from '$lib/api/book';
+	import { toast } from '$lib/stores/toast.svelte';
+
 	interface Book {
 		id: number;
 		title: string;
+		desc: string;
 		author: string;
 		category: string;
 		usageCount: number;
 		createdAt: string;
+		content?: string;
 	}
 
 	let { books = [] }: { books?: Book[] } = $props();
@@ -14,6 +23,10 @@
 	let sortBy = $state<'popular' | 'usage' | 'created'>('popular');
 	let filteredBooks = $state<Book[]>([]);
 	let uploadInput = $state<HTMLInputElement>();
+	let tomlUploadInput = $state<HTMLInputElement>();
+	let showUploadModal = $state(false);
+	let loaded = $state(false);
+	let selectedBook = $state<Book | null>(null);
 
 	function handleSearch(event: Event) {
 		searchQuery = (event.target as HTMLInputElement).value;
@@ -23,25 +36,48 @@
 		sortBy = (event.target as HTMLButtonElement).dataset.sort as typeof sortBy;
 	}
 
-	async function handleUpload(event: Event) {
+	// async function handleUploadZip(event: Event) {
+	// 	const input = event.target as HTMLInputElement;
+	// 	if (!input.files || input.files.length === 0) return;
+
+	// 	try {
+	// 		const result = await uploadFiles([input.files[0]], 'zip');
+	// 		toast.success(`${result.count} 권의 책이 추가되었습니다.`);
+	// 	} catch (error) {
+	// 		console.error('ZIP 업로드 오류:', error);
+	// 		toast.error('업로드 실패: ' + (error as Error).message);
+	// 	}
+	// }
+
+	async function handleUploadToml(event: Event) {
 		const input = event.target as HTMLInputElement;
 		if (!input.files || input.files.length === 0) return;
 
-		const file = input.files[0];
-		if (!file.name.endsWith('.zip')) {
-			alert('ZIP 파일만 업로드 가능합니다.');
-			return;
+		try {
+			const result = await uploadFiles(Array.from(input.files), 'toml');
+			toast.success(`${result.books} 가 추가되었습니다.`);
+		} catch (error) {
+			console.error('TOML 업로드 오류:', error);
+			toast.error('업로드 실패: ' + (error as Error).message);
 		}
-
-		// TODO: ZIP 파일 파싱 및 책 데이터 추출
-		console.log('Upload ZIP:', file.name);
-		alert('ZIP 파일 업로드 기능 준비 중입니다.');
 	}
+
+	$effect(() => {
+		if (books.length === 0 && !loaded) {
+			loaded = true;
+			loadBooks()
+				.then((loadedBooks) => {
+					books = loadedBooks;
+				})
+				.catch((error) => {
+					console.error('[Section] 책 로드 실패:', error);
+				});
+		}
+	});
 
 	$effect(() => {
 		const allBooks = books.length > 0 ? books : [];
 		let result = [...allBooks];
-
 		if (searchQuery.trim()) {
 			const query = searchQuery.toLowerCase();
 			result = result.filter(
@@ -69,6 +105,8 @@
 </script>
 
 <div class="book-section">
+	<ToastContainer />
+
 	<!-- Search & Sort -->
 	<div class="controls">
 		<div class="search-container">
@@ -112,47 +150,24 @@
 				</button>
 			</div>
 
-			<!-- Upload Button -->
-			<input
-				type="file"
-				class="upload-input"
-				accept=".zip"
-				multiple={false}
-				onchange={handleUpload}
-				hidden
-				bind:this={uploadInput}
-			/>
-			<button class="upload-btn" onclick={() => uploadInput?.click()} aria-label="책 업로드">
-				<span class="icon">+</span>
-			</button>
+			<!-- Upload Buttons -->
+			<div class="upload-group">
+				<button
+					class="upload-btn"
+					onclick={() => (showUploadModal = true)}
+					aria-label="책 업로드"
+					title="책 업로드"
+				>
+					<span class="icon">+</span>
+				</button>
+			</div>
 		</div>
 	</div>
 
 	<!-- Grid -->
 	<div class="book-grid">
 		{#each filteredBooks as book (book.id)}
-			<div class="book-card">
-				<div class="book-cover">
-					<div class="cover-placeholder">
-						<span class="book-emoji">📖</span>
-					</div>
-				</div>
-				<div class="book-info">
-					<h3 class="book-title">{book.title}</h3>
-					<p class="book-author">{book.author}</p>
-					<span class="book-category">{book.category}</span>
-					<div class="book-meta">
-						<span class="meta-item">
-							<span class="meta-icon">📊</span>
-							<span>{book.usageCount}회</span>
-						</span>
-						<span class="meta-item">
-							<span class="meta-icon">📅</span>
-							<span>{new Date(book.createdAt).toLocaleDateString('ko-KR')}</span>
-						</span>
-					</div>
-				</div>
-			</div>
+			<BookCard {book} onClick={(b) => (selectedBook = b)} />
 		{/each}
 	</div>
 
@@ -168,6 +183,44 @@
 			</p>
 		</div>
 	{/if}
+
+	{#if showUploadModal}
+		<UploadModal
+			onUploadZip={() => {
+				showUploadModal = false;
+				uploadInput?.click();
+			}}
+			onUploadToml={() => {
+				showUploadModal = false;
+				tomlUploadInput?.click();
+			}}
+			onCancel={() => (showUploadModal = false)}
+		/>
+	{/if}
+
+	{#if selectedBook}
+		<BookPreview book={selectedBook} onClose={() => (selectedBook = null)} />
+	{/if}
+
+	<!-- Hidden file inputs -->
+	<input
+		type="file"
+		class="upload-input"
+		accept=".zip"
+		multiple={false}
+		onchange={handleUploadZip}
+		hidden
+		bind:this={uploadInput}
+	/>
+	<input
+		type="file"
+		class="upload-input"
+		accept=".toml"
+		multiple={true}
+		onchange={handleUploadToml}
+		hidden
+		bind:this={tomlUploadInput}
+	/>
 </div>
 
 <style>
@@ -262,6 +315,33 @@
 		box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
 	}
 
+	.upload-group {
+		display: flex;
+		gap: var(--space-2xs);
+		align-items: center;
+	}
+
+	.upload-btn {
+		width: 2rem;
+		height: 2rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 2px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-bg-secondary);
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		font-size: 0.9rem;
+	}
+
+	.upload-btn:hover {
+		background: var(--color-bg-tertiary);
+		border-color: var(--color-accent-primary);
+		color: var(--color-text-primary);
+	}
+
 	.upload-btn {
 		display: flex;
 		align-items: center;
@@ -289,108 +369,6 @@
 		gap: var(--space-md);
 		overflow-y: scroll;
 		-webkit-overflow-scrolling: touch;
-	}
-
-	.book-card {
-		background: var(--color-bg-tertiary);
-		border-radius: var(--radius-md);
-		overflow: hidden;
-		transition: all var(--transition-base);
-		border: 1px solid var(--color-border);
-		cursor: pointer;
-		min-height: 280px;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.book-card:hover {
-		box-shadow: var(--shadow-md);
-		border-color: var(--color-accent-primary);
-	}
-
-	.book-cover {
-		position: relative;
-		width: 100%;
-		aspect-ratio: 3 / 4;
-		overflow: hidden;
-		background: var(--color-bg-elevated);
-	}
-
-	.cover-placeholder {
-		width: 100%;
-		height: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: linear-gradient(
-			135deg,
-			var(--color-bg-elevated) 0%,
-			var(--color-bg-secondary) 100%
-		);
-	}
-
-	.book-emoji {
-		font-size: 3rem;
-		opacity: 0.5;
-	}
-
-	.book-info {
-		padding: var(--space-md);
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
-	}
-
-	.book-title {
-		font-size: var(--font-size-sm);
-		font-weight: 600;
-		color: var(--color-text-primary);
-		margin: 0;
-		line-height: 1.4;
-		padding: var(--space-2xs) 0;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-
-	.book-author {
-		font-size: 0.75rem;
-		color: var(--color-text-secondary);
-		margin: 0;
-		line-height: 1.4;
-		padding: var(--space-2xs) 0;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.book-category {
-		font-size: 0.65rem;
-		padding: var(--space-2xs) var(--space-xs);
-		background: var(--color-bg-elevated);
-		border-radius: var(--radius-xs);
-		color: var(--color-text-tertiary);
-		align-self: flex-start;
-	}
-
-	.book-meta {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-xs);
-		margin-top: var(--space-2xs);
-	}
-
-	.meta-item {
-		display: flex;
-		align-items: center;
-		gap: 2px;
-		font-size: 0.65rem;
-		color: var(--color-text-tertiary);
-	}
-
-	.meta-icon {
-		font-size: 0.7rem;
 	}
 
 	.empty-state {

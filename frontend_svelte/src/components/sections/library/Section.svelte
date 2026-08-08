@@ -19,7 +19,12 @@
 			lastLine: '자리에 앉자 나를 맞이한건 수백 수십개의 버그였다',
 			label: '기술'
 		},
-		{ id: 2, title: 'AI', lastLine: '나는 오늘도 그날을 후회한다 AI에게 고맙다고 인사하지않은걸...', label: '역사' },
+		{
+			id: 2,
+			title: 'AI',
+			lastLine: '나는 오늘도 그날을 후회한다 AI에게 고맙다고 인사하지않은걸...',
+			label: '역사'
+		}
 	];
 
 	let contextMenu = $state<{ x: number; y: number; book: DeskBook | null }>({
@@ -73,19 +78,21 @@
 </script>
 
 <div class="desk-section">
-	<!-- Grid -->
-	<div class="desk-grid">
+	<!-- 채팅방 목록 스타일 -->
+	<div class="desk-list">
 		{#each booksData as book (book.id)}
 			<div
-				class="desk-card"
+				class="desk-item"
 				onclick={() => {
 					/* TODO: 열기 */
 				}}
 				oncontextmenu={(e) => showContextMenu(e, book)}
 			>
-				<h3 class="card-title">{book.title}</h3>
-				<p class="card-last-line">"{book.lastLine}"</p>
-				<span class="card-label">{book.label}</span>
+				<div class="item-content">
+					<h3 class="item-title">{book.title}</h3>
+					<p class="item-last-line">{book.lastLine}</p>
+				</div>
+				<span class="item-arrow">›</span>
 			</div>
 		{/each}
 	</div>
@@ -123,62 +130,67 @@
 		margin: 0 auto;
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-lg);
+		gap: var(--space-xs);
 	}
 
-	.desk-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-		gap: var(--space-md);
-	}
-
-	.desk-card {
-		background: var(--color-bg-tertiary);
-		border-radius: var(--radius-md);
-		overflow: hidden;
-		transition: all var(--transition-base);
-		border: 1px solid var(--color-border);
-		padding: var(--space-md);
+	.desk-list {
 		display: flex;
 		flex-direction: column;
+		gap: 1px;
+		background: var(--color-border);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+
+	.desk-item {
+		background: var(--color-bg-secondary);
+		padding: var(--space-md);
+		display: flex;
+		align-items: center;
 		gap: var(--space-sm);
-		position: relative;
 		cursor: pointer;
+		transition: background var(--transition-fast);
 		user-select: none;
 	}
 
-	.desk-card:hover {
-		box-shadow: var(--shadow-md);
-		border-color: var(--color-accent-primary);
+	.desk-item:hover {
+		background: var(--color-bg-tertiary);
 	}
 
-	.card-title {
+	.item-content {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.item-title {
 		font-size: var(--font-size-base);
 		font-weight: 600;
 		color: var(--color-text-primary);
 		margin: 0;
 		line-height: 1.3;
-	}
-
-	.card-last-line {
-		font-size: 0.85rem;
-		color: var(--color-text-secondary);
-		margin: 0;
-		line-height: 1.4;
-		font-style: italic;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
+		white-space: nowrap;
 		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
-	.card-label {
-		font-size: 0.7rem;
-		padding: 2px 8px;
-		background: var(--color-bg-elevated);
-		border-radius: var(--radius-full);
+	.item-last-line {
+		font-size: 0.8rem;
 		color: var(--color-text-tertiary);
-		align-self: flex-start;
+		margin: 0;
+		line-height: 1.3;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.item-arrow {
+		font-size: 1.5rem;
+		color: var(--color-text-tertiary);
+		font-weight: 300;
+		flex-shrink: 0;
 	}
 
 	.empty-state {
@@ -206,11 +218,18 @@
 	@media (max-width: 768px) {
 		.desk-section {
 			padding: var(--space-md);
-			gap: var(--space-md);
 		}
 
-		.desk-grid {
-			grid-template-columns: 1fr;
+		.desk-item {
+			padding: var(--space-sm);
+		}
+
+		.item-title {
+			font-size: var(--font-size-sm);
+		}
+
+		.item-last-line {
+			font-size: 0.75rem;
 		}
 	}
 </style>
