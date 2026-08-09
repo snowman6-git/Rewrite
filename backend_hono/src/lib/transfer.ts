@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as dotenv from "dotenv";
+import * as dotenv from 'dotenv';
 
 dotenv.config();
 const LLM_API_URL = process.env.LLM_API_URL;
@@ -10,9 +10,9 @@ export async function getTokenSize(text: string) {
 		`${LLM_API_URL}/getToken_size`,
 		{
 			model: modelsState.selectedModel?.id,
-			text: text
+			text: text,
 		},
-		{}
+		{},
 	);
 	return token_size.data;
 }

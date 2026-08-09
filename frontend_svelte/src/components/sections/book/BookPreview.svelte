@@ -1,5 +1,5 @@
 <script lang="ts">
-	import axios from "axios";
+	import axios from 'axios';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import { toast } from '$lib/stores/toast.svelte';
 	import ToastContainer from '$components/Common/ToastContainer.svelte';
@@ -13,20 +13,26 @@
 		usageCount: number;
 		createdAt: string;
 		content?: string;
-		starting: Array<{
-			id: string;
-			name: string;
-		}>;
 	}
 
 	let { book, onClose }: { book: Book; onClose: () => void } = $props();
 
+	interface StartingPoint {
+		point_id: string;
+		name: string;
+	}
+
+	let starting_points = $state<StartingPoint[]>([]);
 	let selectedPoint = $state<string>('');
 
 	$effect(() => {
-		if (book.starting && book.starting.length > 0) {
-			selectedPoint = book.starting[0].id;
+		if (starting_points.length > 0) {
+			selectedPoint = starting_points[0].point_id;
 		}
+	});
+
+	$effect(() => {
+		handleLoadStarting();
 	});
 
 	function handlePointChange(event: Event) {
@@ -34,12 +40,24 @@
 		selectedPoint = target.value;
 	}
 
+	async function handleLoadStarting() {
+		let load_starting = await axios.get(`${PUBLIC_API_URL}/book_starting?id=${book.id}`, {
+			withCredentials: true
+		});
+		if (load_starting.status >= 200 && load_starting.status < 300) {
+			console.log(load_starting.data);
+			starting_points = load_starting.data;
+		} else {
+			// toast.error('생성에 실패했어요');
+		}
+	}
+
 	async function handleStart() {
 		let story_unfolds = await axios.post(
 			`${PUBLIC_API_URL}/book_unfolds`,
 			{
 				book_id: book.id,
-				starting: selectedPoint
+				point_id: selectedPoint
 			},
 			{
 				withCredentials: true
@@ -47,7 +65,7 @@
 		);
 
 		if (story_unfolds.status >= 200 && story_unfolds.status < 300) {
-			window.location.href = `/book/${story_unfolds.data["table_id"]}`;
+			window.location.href = `/book/${story_unfolds.data['table_id']}`;
 		} else {
 			toast.error('생성에 실패했어요');
 		}
@@ -55,6 +73,7 @@
 		// onClose();
 	}
 </script>
+
 <ToastContainer />
 <div class="modal-overlay" onclick={onClose}>
 	<div class="modal" onclick={(e) => e.stopPropagation()}>
@@ -67,8 +86,8 @@
 			<div class="starting-point-selector">
 				<label class="selector-label">시작 지점</label>
 				<select class="selector-dropdown" bind:value={selectedPoint}>
-					{#each book.starting as point}
-						<option value={point.id}>{point.name}</option>
+					{#each starting_points as point (point.point_id)}
+						<option value={point.point_id}>{point.name}</option>
 					{/each}
 				</select>
 			</div>
@@ -105,9 +124,7 @@
 		</div>
 
 		<div class="modal-footer">
-			<button class="start-btn" onclick={handleStart}>
-				시작하기
-			</button>
+			<button class="start-btn" onclick={handleStart}> 시작하기 </button>
 		</div>
 	</div>
 </div>

@@ -4,6 +4,8 @@ import { PUBLIC_API_URL } from '$env/static/public';
 import { modelsState } from './models.svelte';
 import { v4 as uuidv4 } from 'uuid';
 import { memoryTools } from './memory.svelte';
+import { page } from '$app/stores';
+import { get } from 'svelte/store';
 
 class ChatState {
 	list = $state<Msg[]>([]);
@@ -14,7 +16,8 @@ class ChatState {
 
 	// 이제 여기서 관리하면서, 전역에 모델이 응답중인지 전파
 	async loadHistory() {
-		this.list = (await loadChatHistory()) || [];
+		this.list =
+			(await loadChatHistory(get(page).url.pathname.split('/').filter(Boolean).pop() ?? '')) || [];
 	}
 
 	async addMessage(newMsg: Msg) {

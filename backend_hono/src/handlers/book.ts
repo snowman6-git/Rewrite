@@ -1,69 +1,64 @@
-import { Context } from 'hono'
-import { readdir } from "node:fs/promises";
+import { Context } from 'hono';
+import { readdir } from 'node:fs/promises';
 import { BookStruct } from '../types';
-import { parse, stringify } from 'smol-toml'
+import { parse, stringify } from 'smol-toml';
 import { v4 as uuidv4 } from 'uuid';
-import { bookshelf_upload } from '../lib/db';
-
-const BOOKSHELF_PATH = "./src/test/bookshelf"
+import {
+	activebook_listup,
+	bookshelf_listup,
+	bookshelf_upload,
+	clone_book,
+	starting_points,
+} from '../lib/db';
 
 export async function book_listup(c: Context) {
-    const bookshelf = await readdir(BOOKSHELF_PATH);
-    let books: Array<BookStruct> = []
-
-    // db에 하드클론 하기로 했으니, 디비준비되면 바꾸기, 이건 진짜 너무 비효율임 ㅇㅇ... 
-    // forEach좀 그만써
-    for (const book of bookshelf) {
-        const book_text = await Bun.file(`${BOOKSHELF_PATH}/${book}`).text()
-        const book_toml = parse(book_text)
-
-        console.log(book_toml["starting_point"])
-        books.push({
-            id: book_toml["book"].id,
-            title: book_toml["cover"].title,
-            desc: book_toml["cover"].desc,
-            starting: book_toml["entry"].starting
-        })
-    }
-    console.log(books)
-    return c.json(books)
+	const bookshelf = await bookshelf_listup();
+	// 예외처리와 조건문 만들기
+	return c.json(bookshelf);
 }
 
 // 나중에 zod로 검증하는 과정을 거쳐야함
 export async function book_upload(c: Context) {
-    const body = await c.req.parseBody();
-    const type = body.type as string;
-    const file = body.files as File
+	const body = await c.req.parseBody();
+	const type = body.type as string;
+	const file = body.files as File;
 
-    switch (type) {
-        case "toml":
-            const rawToml = Bun.file(await file!.arrayBuffer())
-            const book_toml = parse(`${rawToml}`)
-            let book = {
-                id: book_toml["book"].id,
-                title: book_toml["cover"].title,
-                desc: book_toml["cover"].desc,
-                system: book_toml["prompt"].system
-            }
-            await bookshelf_upload(book)
-            break;
-        default:
-            break;
-    }
+	if (type == 'toml') {
+		let path = `./src/test/bookshelf/${file!.name}`;
 
-    // let save = await Bun.write(`./src/test/bookshelf/${file.name}`, await file!.arrayBuffer());
-    console.log()
+		// 오류 처리 코드 추가하기
+		let saveToml = await Bun.write(path, await file.arrayBuffer());
 
-    return c.json({ message: "OK", type, files: !!file }, 200)
+		const book_toml = parse(await Bun.file(path).text());
+		let book = {
+			id: book_toml['book'].id,
+			title: book_toml['cover'].title,
+			desc: book_toml['cover'].desc,
+			system: book_toml['prompt'].system,
+			starting: book_toml['entry'].starting,
+		};
+		await bookshelf_upload(book);
+	}
+	return c.json({ message: 'OK', type, files: !!file }, 200);
 }
 
 export async function book_unfolds(c: Context) {
-    const { book_id, starting_point } = await c.req.json()
-    // 업로드하면 내용 하드클론 해서 디비에 넣고, 그거기반으로 ID를 생성해서 해야함, 잉크웰 스튜디오에서도 ID를 랜덤생성하게 하자
+	const { book_id, point_id } = await c.req.json();
+	const table_id = await clone_book(book_id, point_id);
 
+	// 여기도 나중에 확장 안할거면 단일리턴
+	return c.json({
+		table_id: table_id,
+	});
+}
 
+export async function book_starting(c: Context) {
+	const { id } = c.req.query();
+	return c.json(await starting_points(id));
+}
 
-    return c.json({
-        table_id: uuidv4()
-    })
+// 나중에 로그인 추가하면, 링크조작으로 접근 방지를 위해 여기랑 엔트리 auth 필수로 전환
+export async function library_listup(c: Context) {
+	const activebooks = await activebook_listup();
+	return c.json(activebooks);
 }
