@@ -3,7 +3,7 @@ import { getSystemPrompt, getAssistantPrompt } from '../static/prompt';
 import { Context } from 'hono';
 
 import * as dotenv from 'dotenv';
-import { read_book } from '../lib/db';
+import { add_page, read_book } from '../lib/db';
 dotenv.config();
 
 // const db = new Database(":memory:");
@@ -35,9 +35,9 @@ export async function reset_chat_history() {
 // }
 
 // 세션 관련 라우트들, 세션은 일단 간단하게 DB에 저장하는 형태로 구현, 나중에 Redis나 다른 스토리지로 변경 가능
-export async function add_chat_history(id: string, sender: string, content: string) {
-	chat_history.push({ role: sender, content: content });
+export async function add_chat_history(book_id: string, role: string, content: string) {
+	await add_page(book_id, role, content);
 }
-export async function load_chat_history() {
-	return chat_history;
+export async function load_chat_history(book_id: string) {
+	return read_book(book_id);
 }

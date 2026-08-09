@@ -129,11 +129,35 @@ export async function read_book(book_id: string) {
 	let chat_list = db
 		.prepare(
 			`
-      SELECT role, content FROM E_Book WHERE book_id = (?)
+      SELECT page_id, role, content FROM E_Book WHERE book_id = (?)
       `,
 		)
 		.all(book_id);
 	return chat_list;
+}
+
+// 이거 시발 나중에 꼭 정규화해서 최적화 해야함, 아무리봐도 여기가 병목임
+export async function add_page(book_id: string, role: string, content: string) {
+	const page_id = uuidv4();
+	let origin = db
+		.query(
+			`
+      SELECT id FROM E_Book WHERE book_id = (?)
+      `,
+		)
+		.get(book_id);
+
+	db.query(
+		`
+	  INSERT OR REPLACE INTO E_Book (
+	    id,
+	    book_id,
+	    page_id,
+	    role,
+      content
+	  ) VALUES (?, ?, ?, ?, ?)`,
+	).run([origin.id, book_id, page_id, role, content]);
+	return book_id;
 }
 
 // 비효율적이어도 구현 먼저하자

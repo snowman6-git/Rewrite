@@ -4,24 +4,26 @@ import { PUBLIC_API_URL } from '$env/static/public';
 import { modelsState } from './models.svelte';
 import { v4 as uuidv4 } from 'uuid';
 import { memoryTools } from './memory.svelte';
-import { page } from '$app/stores';
-import { get } from 'svelte/store';
+import { toast } from '$lib/stores/toast.svelte';
 
 class ChatState {
 	list = $state<Msg[]>([]);
 	user_input = $state<string>('');
 	logic_plus = $state<boolean>(false);
-
+	book_id = $state<string>('');
 	isModelResponding = $state<boolean>(false);
 
 	// 이제 여기서 관리하면서, 전역에 모델이 응답중인지 전파
 	async loadHistory() {
-		this.list =
-			(await loadChatHistory(get(page).url.pathname.split('/').filter(Boolean).pop() ?? '')) || [];
+		this.list = await loadChatHistory(this.book_id);
 	}
 
 	async addMessage(newMsg: Msg) {
 		this.list = [...this.list, newMsg];
+	}
+
+	async initBook_id(book_id: string) {
+		this.book_id = book_id;
 	}
 
 	async sendMessage() {
@@ -29,8 +31,11 @@ class ChatState {
 		if (this.user_input.trim() === '' || this.isModelResponding) return;
 
 		try {
-			this.list = [...this.list, { id: uuidv4(), role: 'user', content: this.user_input }];
-			this.list = [...this.list, { id: uuidv4(), role: 'assistant', content: '', live_token: 0 }];
+			this.list = [...this.list, { page_id: uuidv4(), role: 'user', content: this.user_input }];
+			this.list = [
+				...this.list,
+				{ page_id: uuidv4(), role: 'assistant', content: '', live_token: 0 }
+			];
 			this.isModelResponding = true;
 
 			const tempUserInput = this.user_input;
@@ -41,12 +46,22 @@ class ChatState {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
+					book_id: this.book_id,
 					chat: tempUserInput,
 					model: modelsState.selectedModel?.id,
 					custom_note: '',
 					logic_plus: this.logic_plus
 				})
 			});
+
+			if (response.status !== 200) {
+				console.log('[sendMessage] Error response:', response.status, response.statusText);
+				toast.error('메시지 전송에 실패했습니다.');
+				this.isModelResponding = false;
+				this.user_input = tempUserInput;
+				this.list = this.list.slice(0, -1); // assistant 메시지 제거
+				return;
+			}
 
 			const reader = response.body?.getReader();
 			const decoder = new TextDecoder();
