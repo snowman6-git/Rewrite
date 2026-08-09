@@ -3,11 +3,15 @@
 	import { modelsState } from '$lib/states/models.svelte';
 	import { chatState } from '$lib/states/chat.svelte';
 	import { pageState } from '$lib/states/menus.svelte';
+	import { page } from '$app/stores';
+
 	import '$lib/assets/chat_body.css';
 
+	const sessionId = $derived($page.url.pathname.split('/').filter(Boolean).pop());
 	$effect(() => {
 		modelsState.loadModels();
 		chatState.loadHistory();
+		chatState.initBook_id(sessionId);
 	});
 
 	let book_title = $state('');
@@ -90,7 +94,7 @@
 
 	<!-- Chat Body -->
 	<div class="chat-body" bind:this={chat_body}>
-		{#each chatState.list as msg (msg.id)}
+		{#each chatState.list as msg (msg.page_id)}
 			<ChatBlock
 				text={msg.content}
 				live_token={msg.live_token}

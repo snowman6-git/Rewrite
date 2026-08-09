@@ -68,12 +68,6 @@
 		confirmDeleteBook = null;
 	}
 
-	function handleBookClick(book: DeskBook) {
-		if (onBookClick) {
-			onBookClick(book);
-		}
-	}
-
 	let menuItems = $derived.by(() => {
 		if (!contextMenu.book) return [];
 		return [

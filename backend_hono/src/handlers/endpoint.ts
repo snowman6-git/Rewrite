@@ -23,6 +23,7 @@ const API_KEY = process.env.API_KEY;
 export async function chat_listup(c: Context) {
 	const { book_id } = c.req.query();
 	const chat_list = await read_book(`${book_id}`);
+	console.log(chat_list);
 	return c.json(chat_list);
 }
 
@@ -94,7 +95,7 @@ export async function models(c: Context) {
 }
 
 export async function chat(c: Context) {
-	const { id, chat, model, custom_note, logic_plus } = await c.req.json();
+	const { book_id, chat, model, custom_note, logic_plus } = await c.req.json();
 	// 초기화 하고 리턴에서 참조가능하게 상위변수 지정
 	let thinking_tokens = 0;
 	if (logic_plus == false) {
@@ -103,7 +104,7 @@ export async function chat(c: Context) {
 		thinking_tokens = 2500;
 	}
 	// 유저입력을 추가
-	await add_chat_history(id, 'user', chat);
+	await add_chat_history(book_id, 'user', chat);
 	const requestBody = {
 		model: model,
 		// Advance parameters
@@ -119,10 +120,10 @@ export async function chat(c: Context) {
 		return_progress: true,
 		timings_per_token: true,
 		// 채팅기록을 불러옴, 이때 방금 막 추가한 메세지도 불러와 사용됌
-		messages: await load_chat_history(),
+		messages: await load_chat_history(book_id),
 	};
 
-	const response = await fetch(`${LLM_API_URL}/v1/chat/completions`, {
+	const response = await fetch(`${LLM_API_URL}/chat/completions`, {
 		// 엔드포인트 확인
 		method: 'POST',
 		headers: {
@@ -165,6 +166,6 @@ export async function chat(c: Context) {
 		}
 
 		// 스트림데이터 수신 종료후, LLM의 최종응답을 저장
-		await add_chat_history(id, 'assistant', llm_response_result);
+		await add_chat_history(book_id, 'assistant', llm_response_result);
 	});
 }
