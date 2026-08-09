@@ -253,17 +253,17 @@ interface Book {
 }
 ```
 
-| Field          | Type     | Description                          |
-| -------------- | -------- | ------------------------------------ |
-| id             | number   | 책 고유 ID                           |
-| title          | string   | 책 제목                              |
-| desc           | string   | 책 소개                              |
-| author         | string   | 저자                                 |
-| category       | string   | 카테고리                             |
-| usageCount     | number   | 사용 횟수                            |
-| createdAt      | string   | 생성일 (ISO 8601)                    |
-| content        | string   | 책 내용 (선택)                       |
-| starting_point | object[] | 시작 지점 목록 (항상 1 개 이상)       |
+| Field          | Type     | Description                     |
+| -------------- | -------- | ------------------------------- |
+| id             | number   | 책 고유 ID                      |
+| title          | string   | 책 제목                         |
+| desc           | string   | 책 소개                         |
+| author         | string   | 저자                            |
+| category       | string   | 카테고리                        |
+| usageCount     | number   | 사용 횟수                       |
+| createdAt      | string   | 생성일 (ISO 8601)               |
+| content        | string   | 책 내용 (선택)                  |
+| starting_point | object[] | 시작 지점 목록 (항상 1 개 이상) |
 
 **starting_point 객체**
 
@@ -560,6 +560,47 @@ const tomlFiles = [file1, file2];
 const result = await uploadTomlFiles(tomlFiles);
 console.log(result.count); // 2
 console.log(result.books); // Book[]
+```
+
+---
+
+### 7. 서재 목록 조회 (Library Listup)
+
+서재 (Library) 의 활성 책 목록을 조회합니다.
+
+**Endpoint**
+
+```
+GET /library_listup
+```
+
+**Response Example**
+
+```json
+[
+	{
+		"id": 1,
+		"title": "태초에 언어가 있었다",
+		"lastLine": "자리에 앉자 나를 맞이한건 수백 수십개의 버그였다",
+		"label": "기술"
+	},
+	{
+		"id": 2,
+		"title": "AI",
+		"lastLine": "나는 오늘도 그날을 후회한다 AI에게 고맙다고 인사하지않은걸...",
+		"label": "역사"
+	}
+]
+```
+
+**Frontend Usage**
+
+```typescript
+import { library_listup } from '$lib/api/book';
+
+// 서재 목록 조회
+const books = await library_listup();
+console.log(books); // DeskBook[]
 ```
 
 ---

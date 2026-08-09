@@ -1,23 +1,24 @@
 export interface ModelInfo {
-  id: string;
-  status?: {
-    value: string;
-  };
+	id: string;
+	status?: {
+		value: string;
+	};
 }
 export interface BookStruct {
-  id?: string;
-  title: any;
-  desc: any;
-  starting?: []
+	id: string;
+	cover?: string;
+	title: string;
+	desc: string;
+	system?: string;
 }
 export interface ChatInfo {
-  sender: string;
-  content: string;
+	sender: string;
+	content: string;
 }
 
 export interface ResChunk {
-  stream_n: number
-  content: string
-  input: number
-  output: number
+	stream_n: number;
+	content: string;
+	input: number;
+	output: number;
 }

@@ -18,12 +18,17 @@ export interface BookUpdateRequest extends BookCreateRequest {
 }
 
 export async function loadBooks(): Promise<Book[]> {
-	// const response = await axios.get<BookListResponse>(`${PUBLIC_API_URL}/book_listup`, {
 	const response = await axios.get(`${PUBLIC_API_URL}/book_listup`, {
 		withCredentials: true
 	});
 	return response.data;
-	// return response.data?.books || [];
+}
+
+export async function library_listup(): Promise<any[]> {
+	const response = await axios.get(`${PUBLIC_API_URL}/library_listup`, {
+		withCredentials: true
+	});
+	return response.data;
 }
 
 export async function createBook(data: BookCreateRequest): Promise<Book> {
