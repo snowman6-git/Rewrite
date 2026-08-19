@@ -5,7 +5,7 @@
 	import ToastContainer from '$components/Common/ToastContainer.svelte';
 
 	interface Book {
-		id: number;
+		id: string;
 		title: string;
 		desc: string;
 		author: string;
@@ -22,17 +22,17 @@
 		name: string;
 	}
 
-	let starting_points = $state<StartingPoint[]>([]);
+	let book_detail = $state<Book[]>([]);
 	let selectedPoint = $state<string>('');
 
 	$effect(() => {
-		if (starting_points.length > 0) {
-			selectedPoint = starting_points[0].point_id;
+		if (book_detail.length > 0) {
+			selectedPoint = book_detail[0]['id'];
 		}
 	});
 
 	$effect(() => {
-		handleLoadStarting();
+		handlebookPreview();
 	});
 
 	function handlePointChange(event: Event) {
@@ -40,13 +40,12 @@
 		selectedPoint = target.value;
 	}
 
-	async function handleLoadStarting() {
-		let load_starting = await axios.get(`${PUBLIC_API_URL}/book_starting?id=${book.id}`, {
+	async function handlebookPreview() {
+		let loadBook_detail = await axios.get(`${PUBLIC_API_URL}/book_detail?id=${book.id}`, {
 			withCredentials: true
 		});
-		if (load_starting.status >= 200 && load_starting.status < 300) {
-			console.log(load_starting.data);
-			starting_points = load_starting.data;
+		if (loadBook_detail.status >= 200 && loadBook_detail.status < 300) {
+			book_detail = loadBook_detail.data;
 		} else {
 			// toast.error('생성에 실패했어요');
 		}
@@ -107,7 +106,7 @@
 			<div class="book-details">
 				<div class="book-info-section">
 					<h4 class="section-label">소개</h4>
-					<p class="book-desc">{book.desc}</p>
+					<p class="book-desc">{book_detail[0]['desc']}</p>
 				</div>
 
 				<div class="book-meta-section">

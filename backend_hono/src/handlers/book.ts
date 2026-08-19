@@ -6,9 +6,9 @@ import { v4 as uuidv4 } from 'uuid';
 import {
 	activebook_listup,
 	bookshelf_listup,
-	bookshelf_upload,
+	bookshelf_add,
 	clone_book,
-	starting_points,
+	read_bookdetail,
 } from '../lib/db';
 
 export async function book_listup(c: Context) {
@@ -37,7 +37,7 @@ export async function book_upload(c: Context) {
 			system: book_toml['prompt'].system,
 			starting: book_toml['entry'].starting,
 		};
-		await bookshelf_upload(book);
+		await bookshelf_add(book);
 	}
 	return c.json({ message: 'OK', type, files: !!file }, 200);
 }
@@ -52,9 +52,9 @@ export async function book_unfolds(c: Context) {
 	});
 }
 
-export async function book_starting(c: Context) {
+export async function book_detail(c: Context) {
 	const { id } = c.req.query();
-	return c.json(await starting_points(id));
+	return c.json(await read_bookdetail(id));
 }
 
 // 나중에 로그인 추가하면, 링크조작으로 접근 방지를 위해 여기랑 엔트리 auth 필수로 전환

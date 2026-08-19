@@ -24,6 +24,13 @@ export async function loadBooks(): Promise<Book[]> {
 	return response.data;
 }
 
+export async function loadBook_detail(book_id: string): Promise<Book[]> {
+	const response = await axios.get(`${PUBLIC_API_URL}/book_detail?id=${book_id}`, {
+		withCredentials: true
+	});
+	return response.data;
+}
+
 export async function library_listup(): Promise<any[]> {
 	const response = await axios.get(`${PUBLIC_API_URL}/library_listup`, {
 		withCredentials: true
