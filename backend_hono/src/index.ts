@@ -14,7 +14,7 @@ import {
 	book_upload,
 	book_listup,
 	book_unfolds,
-	book_starting,
+	book_detail,
 	library_listup,
 } from './handlers/book';
 import { login } from './handlers/user';
@@ -54,7 +54,7 @@ app.get('/world_memory', world_memory);
 app.get('/api/chat/stream', chatSSE_listen);
 app.get('/book_listup', book_listup);
 app.get('/library_listup', library_listup);
-app.get('/book_starting', book_starting);
+app.get('/book_detail', book_detail);
 
 // POST
 app.post('/chat', chat);

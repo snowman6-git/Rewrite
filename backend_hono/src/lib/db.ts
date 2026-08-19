@@ -1,7 +1,7 @@
 // 차후 에디터 api로 변경: Rewrite_Deskc
 import { Database } from 'bun:sqlite';
 import { BookStruct } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import { v7 as uuidv7 } from 'uuid';
 const db = new Database('main.db');
 // db.run("PRAGMA journal_mode = WAL;");
 
@@ -10,64 +10,52 @@ const db = new Database('main.db');
 // DELETE FROM E_Book;
 export async function init() {
 	const LibraryBlueprint = db.exec(`
-
-    -- 프롬프트 원본
-    CREATE TABLE IF NOT EXISTS C_Bookshelf (
-	    id TEXT UNIQUE NOT NULL,
-	    cover BLOB,
-	    title TEXT NOT NULL,
-	    desc TEXT NOT NULL,
-	    system TEXT NOT NULL
-	  );
-    -- 스타팅
-	  CREATE TABLE IF NOT EXISTS D_Starting (
-      id TEXT NOT NULL,
-      point_id TEXT NOT NULL,
-	    name TEXT NOT NULL,
-	    content TEXT NOT NULL,
-      UNIQUE (id, point_id)
-    );
-    -- 채팅 기록 
-    CREATE TABLE IF NOT EXISTS E_Book (
-      id TEXT NOT NULL,
-      book_id TEXT NOT NULL,
-      page_id TEXT NOT NULL,
-      role TEXT NOT NULL,
-	    content TEXT NOT NULL,
-      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-    
-     `);
+		CREATE TABLE IF NOT EXISTS C_Bookspine (
+			id TEXT UNIQUE NOT NULL,
+			title TEXT UNIQUE NOT NULL
+		);
+		CREATE TABLE IF NOT EXISTS D_Bookshelf (
+			id TEXT UNIQUE NOT NULL,
+			cover BLOB,
+			desc TEXT NOT NULL,
+			system TEXT NOT NULL
+		);
+		CREATE TABLE IF NOT EXISTS E_Starting (
+			id TEXT NOT NULL,
+			point_id TEXT NOT NULL,
+			name TEXT NOT NULL,
+			content TEXT NOT NULL,
+			UNIQUE (id, point_id)
+		);
+	`);
 }
-
-// 북 하나에 다 꼬라박고, 쿼리로 나누자
-// -- 액티브 프롬프트 id는 업데이트 감지용 오리진 심링크
-//     CREATE TABLE IF NOT EXISTS F_Active (
-//       id TEXT NOT NULL,
-//       book_id TEXT NOT NULL,
-//       system TEXT NOT NULL,
-// 	     TEXT NOT NULL,
-//       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-//     );
 
 // 여유생기면 diff랑 버젼 해싱(혹은 날짜)
 // A: idpw, B: userprofile
-export async function bookshelf_upload(book: BookStruct) {
+export async function bookshelf_add(book: BookStruct) {
 	// 스타팅도 ID지급 할것, 리스트 형태의 FOR문으로 저장할지 쿼리문 찾을지 찾을것
 	// ON CONFLICT(book_id)
+	//  여유나면 클래스 형 함수로 만들어서 디비 관련 코드 컴포넌트로 만들기
 	// DO UPDATE SET title = excluded.starting;;`,
 	db.query(
 		`
-	  INSERT OR REPLACE INTO C_Bookshelf (
+	  INSERT OR REPLACE INTO C_Bookspine (
 	    id,
-	    title,
+	    title
+	  ) VALUES (?, ?)`,
+	).run([book.id, book.title]);
+
+	db.query(
+		`
+	  INSERT OR REPLACE INTO D_Bookshelf (
+	    id,
 	    desc,
 	    system
-	  ) VALUES (?, ?, ?, ?)`,
-	).run([book.id, book.title, book.desc, book.system]);
+	  ) VALUES (?, ?, ?)`,
+	).run([book.id, book.desc, book.system]);
 
 	const insertBook = db.prepare(`
-    INSERT OR REPLACE INTO D_Starting (
+    INSERT OR REPLACE INTO E_Starting (
       id,
       point_id,
       name,
@@ -91,7 +79,7 @@ export async function bookshelf_listup() {
 	let book = db
 		.prepare(
 			`
-      SELECT * FROM C_Bookshelf
+      SELECT * FROM C_Bookspine
       `,
 		)
 		.all();
@@ -114,14 +102,17 @@ export async function activebook_listup() {
 	return book;
 }
 
-export async function starting_points(id: string) {
+export async function read_bookdetail(id: string) {
 	let starting_points = db
 		.prepare(
 			`
-      SELECT point_id, name FROM D_starting WHERE id = (?)
+			SELECT Bookspine.id, Bookshelf.desc
+    		FROM C_Bookspine AS Bookspine
+    		JOIN D_Bookshelf AS Bookshelf ON Bookspine.id = Bookspine.id
       `,
 		)
 		.all(id);
+	console.log(starting_points);
 	return starting_points;
 }
 
@@ -138,7 +129,7 @@ export async function read_book(book_id: string) {
 
 // 이거 시발 나중에 꼭 정규화해서 최적화 해야함, 아무리봐도 여기가 병목임
 export async function add_page(book_id: string, role: string, content: string) {
-	const page_id = uuidv4();
+	const page_id = uuidv7();
 	let origin = db
 		.query(
 			`
@@ -166,7 +157,7 @@ export async function add_page(book_id: string, role: string, content: string) {
 // 나중에 꼭 정규화로 쪼개야함
 export async function clone_book(origin_id: string, point_id: string) {
 	const starting = db
-		.query(`SELECT content FROM D_Starting WHERE id = ? AND point_id = ?;`)
+		.query(`SELECT content FROM E_Starting WHERE id = ? AND point_id = ?;`)
 		.get(origin_id, point_id);
 
 	const book_id = uuidv4();
