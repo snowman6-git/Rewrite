@@ -7,10 +7,11 @@ export interface ModelInfo {
 export interface BookStruct {
 	id: string;
 	cover?: string;
-	title: string;
+	title?: string;
 	desc: string;
-	system?: string;
+	starting_points?: string;
 }
+
 export interface ChatInfo {
 	sender: string;
 	content: string;

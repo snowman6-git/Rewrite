@@ -103,17 +103,27 @@ export async function activebook_listup() {
 }
 
 export async function read_bookdetail(id: string) {
-	let starting_points = db
+	let id_desc = db
 		.prepare(
 			`
 			SELECT Bookspine.id, Bookshelf.desc
     		FROM C_Bookspine AS Bookspine
-    		JOIN D_Bookshelf AS Bookshelf ON Bookspine.id = Bookspine.id
-      `,
+			-- FROM은 한개만 쓴대
+			JOIN D_Bookshelf AS Bookshelf ON Bookspine.id = Bookspine.id
+		`,
+		)
+		.get(id) as BookStruct;
+	// 미리보기라 컨텐츠는 제외(잊지마!)
+	let starting = db
+		.prepare(
+			`
+			SELECT point_id, name FROM E_Starting WHERE id = ?;
+		`,
 		)
 		.all(id);
-	console.log(starting_points);
-	return starting_points;
+	// 합치기
+	const book_details: object = { ...id_desc, starting };
+	return book_details;
 }
 
 export async function read_book(book_id: string) {

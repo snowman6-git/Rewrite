@@ -3,42 +3,27 @@
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import { toast } from '$lib/stores/toast.svelte';
 	import ToastContainer from '$components/Common/ToastContainer.svelte';
+	import { onMount } from 'svelte';
 
 	interface Book {
-		id: string;
-		title: string;
-		desc: string;
-		author: string;
-		category: string;
-		usageCount: number;
-		createdAt: string;
+		id?: string;
+		title?: string;
+		desc?: string;
+		author?: string;
+		category?: string;
+		usageCount?: number;
+		createdAt?: string;
 		content?: string;
 	}
 
 	let { book, onClose }: { book: Book; onClose: () => void } = $props();
 
-	interface StartingPoint {
-		point_id: string;
-		name: string;
-	}
-
 	let book_detail = $state<Book[]>([]);
-	let selectedPoint = $state<string>('');
+	let selectedPoint = $state<string>('1');
 
-	$effect(() => {
-		if (book_detail.length > 0) {
-			selectedPoint = book_detail[0]['id'];
-		}
-	});
-
-	$effect(() => {
+	onMount(() => {
 		handlebookPreview();
 	});
-
-	function handlePointChange(event: Event) {
-		const target = event.target as HTMLSelectElement;
-		selectedPoint = target.value;
-	}
 
 	async function handlebookPreview() {
 		let loadBook_detail = await axios.get(`${PUBLIC_API_URL}/book_detail?id=${book.id}`, {
@@ -47,7 +32,7 @@
 		if (loadBook_detail.status >= 200 && loadBook_detail.status < 300) {
 			book_detail = loadBook_detail.data;
 		} else {
-			// toast.error('생성에 실패했어요');
+			toast.error('생성에 실패했어요');
 		}
 	}
 
@@ -85,8 +70,8 @@
 			<div class="starting-point-selector">
 				<label class="selector-label">시작 지점</label>
 				<select class="selector-dropdown" bind:value={selectedPoint}>
-					{#each starting_points as point (point.point_id)}
-						<option value={point.point_id}>{point.name}</option>
+					{#each book_detail['starting'] as starting (starting.point_id)}
+						<option value={starting.point_id}>{starting.name}</option>
 					{/each}
 				</select>
 			</div>
@@ -106,7 +91,7 @@
 			<div class="book-details">
 				<div class="book-info-section">
 					<h4 class="section-label">소개</h4>
-					<p class="book-desc">{book_detail[0]['desc']}</p>
+					<p class="book-desc">{book_detail.desc}</p>
 				</div>
 
 				<div class="book-meta-section">
