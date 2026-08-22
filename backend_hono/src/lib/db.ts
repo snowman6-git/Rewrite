@@ -164,6 +164,7 @@ export async function read_book(book_id: string) {
 			SELECT Pages.pid, Pages.role, Pages.content
     		FROM F_Book AS Book
 			JOIN G_Pages AS Pages ON Book.session_id = Pages.session_id
+			WHERE Pages.session_id = ?
       `,
 		)
 		.all(book_id);
