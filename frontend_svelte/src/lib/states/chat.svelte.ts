@@ -31,11 +31,8 @@ class ChatState {
 		if (this.user_input.trim() === '' || this.isModelResponding) return;
 
 		try {
-			this.list = [...this.list, { page_id: uuidv4(), role: 'user', content: this.user_input }];
-			this.list = [
-				...this.list,
-				{ page_id: uuidv4(), role: 'assistant', content: '', live_token: 0 }
-			];
+			this.list = [...this.list, { pid: uuidv4(), role: 'user', content: this.user_input }];
+			this.list = [...this.list, { pid: uuidv4(), role: 'assistant', content: '', live_token: 0 }];
 			this.isModelResponding = true;
 
 			const tempUserInput = this.user_input;
