@@ -1,6 +1,6 @@
 export interface Msg {
 	// 임시로 프백 통일
-	page_id: string;
+	pid: string;
 	role: string;
 	content: string;
 	sender?: string;

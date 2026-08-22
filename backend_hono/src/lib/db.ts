@@ -128,8 +128,6 @@ export async function activebook_listup() {
 			`,
 		)
 		.all();
-
-	console.log(book);
 	return book;
 }
 
@@ -158,7 +156,7 @@ export async function read_bookdetail(id: string) {
 	return book_details;
 }
 
-export async function read_book(book_id: string) {
+export async function read_book(book_id: string, is_reqeust: boolean) {
 	let chat_list = db
 		.prepare(
 			`
@@ -166,33 +164,48 @@ export async function read_book(book_id: string) {
     		FROM F_Book AS Book
 			JOIN G_Pages AS Pages ON Book.session_id = Pages.session_id
 			WHERE Pages.session_id = ?
+			ORDER BY Pages.create_at LIMIT 50 --갯수는 나중에 조절 가능하게 하기
       `,
 		)
 		.all(book_id);
-	return chat_list;
+
+	if (is_reqeust === true) {
+		let header = db
+			.prepare(
+				`
+			SELECT Header.system, Header.rule
+    		FROM I_Header AS Header
+			JOIN F_Book AS Book ON Header.session_id = Book.session_id
+			WHERE Header.session_id = ?
+     		 `,
+			)
+			.get(book_id);
+		const request = {
+			header,
+			chat_list,
+		};
+		return request;
+	} else {
+		return chat_list;
+	}
 }
 
-// 이거 시발 나중에 꼭 정규화해서 최적화 해야함, 아무리봐도 여기가 병목임
+// 이거 시발 나중에 꼭 정규화해서 최적화 해야함, 아무리봐도 여기가 병목임 < 기초는 했음. 26.08.22
+// 번외로 여긴 SSE처리해서 보내는중... 을 구분 할 수 있게 해야함, 실제 디비에 저장 됐는지 여부임
 export async function add_page(book_id: string, role: string, content: string) {
+	console.log(book_id);
 	const page_id = uuidv4();
-	let origin = db
+	const inject_starting = db
 		.query(
 			`
-      SELECT id FROM F_Book WHERE book_id = (?)
-      `,
+			INSERT INTO G_Pages (
+				session_id,
+				pid,
+				role,
+				content
+			) VALUES (?, ?, ?, ?)`,
 		)
-		.get(book_id);
-
-	db.query(
-		`
-	  INSERT OR REPLACE INTO F_Book (
-	    id,
-	    book_id,
-	    page_id,
-	    role,
-      content
-	  ) VALUES (?, ?, ?, ?, ?)`,
-	).run([origin.id, book_id, page_id, role, content]);
+		.run(book_id, page_id, role, content);
 	return book_id;
 }
 
@@ -240,8 +253,5 @@ export async function clone_book(origin_id: string, point_id: string) {
 			) VALUES (?, ?)`,
 		)
 		.run([origin_id, book_id]);
-
-	console.log(get_starting, get_system.system);
-
 	return book_id;
 }

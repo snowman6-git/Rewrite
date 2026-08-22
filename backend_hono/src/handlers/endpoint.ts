@@ -23,7 +23,6 @@ const API_KEY = process.env.API_KEY;
 export async function chat_listup(c: Context) {
 	const { book_id } = c.req.query();
 	const chat_list = await read_book(`${book_id}`);
-	console.log(chat_list);
 	return c.json(chat_list);
 }
 
@@ -120,7 +119,7 @@ export async function chat(c: Context) {
 		return_progress: true,
 		timings_per_token: true,
 		// 채팅기록을 불러옴, 이때 방금 막 추가한 메세지도 불러와 사용됌
-		messages: await load_chat_history(book_id),
+		messages: await read_book(book_id, true),
 	};
 
 	const response = await fetch(`${LLM_API_URL}/chat/completions`, {
