@@ -94,7 +94,7 @@
 
 	<!-- Chat Body -->
 	<div class="chat-body" bind:this={chat_body}>
-		{#each chatState.list as msg (msg.page_id)}
+		{#each chatState.list as msg (msg.pid)}
 			<ChatBlock
 				text={msg.content}
 				live_token={msg.live_token}

@@ -23,8 +23,8 @@
 		try {
 			const data = await library_listup();
 			books = data.map((book: any) => ({
-				id: book.book_id,
-				title: book.book_id || '제목 없음',
+				id: book.session_id,
+				title: book.title || '제목 없음',
 				lastLine: book.lastLine || '',
 				label: book.label || '분류 없음'
 			}));
