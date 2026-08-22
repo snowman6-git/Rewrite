@@ -112,6 +112,7 @@ export async function bookshelf_listup() {
       `,
 		)
 		.all();
+	console.log(book);
 	return book;
 }
 
@@ -122,7 +123,7 @@ export async function activebook_listup() {
 			`
 			SELECT Bookspine.title, Book.session_id
     		FROM C_Bookspine AS Bookspine
-			JOIN F_Book AS Book ON Bookspine.id = Bookspine.id
+			JOIN F_Book AS Book ON Bookspine.id = Book.id
 			GROUP BY session_id;
 			`,
 		)
