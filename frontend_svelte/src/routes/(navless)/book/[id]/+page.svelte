@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tick } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { modelsState } from '$lib/states/models.svelte';
 	import { chatState } from '$lib/states/chat.svelte';
 	import { pageState } from '$lib/states/menus.svelte';
@@ -8,10 +8,20 @@
 	import '$lib/assets/chat_body.css';
 
 	const sessionId = $derived($page.url.pathname.split('/').filter(Boolean).pop());
-	$effect(() => {
+
+	onMount(async () => {
 		modelsState.loadModels();
+		await chatState.initBook_id(sessionId);
 		chatState.loadHistory();
-		chatState.initBook_id(sessionId);
+		chatState.list.map((m) => m.content);
+		if (chat_body) {
+			tick().then(() => {
+				chat_body.scrollTo({
+					top: chat_body.scrollHeight,
+					behavior: 'smooth'
+				});
+			});
+		}
 	});
 
 	let book_title = $state('');
