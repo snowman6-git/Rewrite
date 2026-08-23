@@ -12,6 +12,10 @@ export interface BookStruct {
 	starting_points?: string;
 }
 
+export interface ReadType {
+	type: 'request' | 'edit' | 'chat';
+}
+
 export interface ChatInfo {
 	sender: string;
 	content: string;
