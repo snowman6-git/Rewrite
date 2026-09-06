@@ -8,3 +8,4 @@ src/static/model.ts
 error-code.ts
 *.db
 test
+models.ts

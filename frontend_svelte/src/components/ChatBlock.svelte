@@ -25,18 +25,18 @@
 		'주변 인물들이 유저의 행동에 반응하는중...'
 	];
 	let currentTextIndex = $state(0);
-	let intervalId: ReturnType<typeof setInterval> | null = null;
 
 	$effect(() => {
-		intervalId = setInterval(() => {
+		const showLoading = sender === 'assistant' && isResponding && !isStreaming;
+		if (!showLoading) {
+			currentTextIndex = 0;
+			return;
+		}
+
+		const id = setInterval(() => {
 			currentTextIndex = (currentTextIndex + 1) % loadingTexts.length;
 		}, 5000);
-
-		return () => {
-			if (intervalId) {
-				clearInterval(intervalId);
-			}
-		};
+		return () => clearInterval(id);
 	});
 </script>
 

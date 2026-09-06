@@ -57,8 +57,8 @@ export async function init() {
 		CREATE TABLE IF NOT EXISTS D_Bookshelf (
 			id TEXT UNIQUE NOT NULL,
 			cover BLOB,
-			DESC TEXT NOT NULL,
-			SYSTEM TEXT NOT NULL
+			desc TEXT NOT NULL,
+			system TEXT NOT NULL
 		);
 
 		CREATE TABLE IF NOT EXISTS E_Starting (
@@ -93,7 +93,7 @@ export async function init() {
 
 		CREATE TABLE IF NOT EXISTS I_Header (
 			session_id TEXT NOT NULL,
-			SYSTEM TEXT NOT NULL,
+			system TEXT NOT NULL,
 			rule TEXT
 		);
 
@@ -121,7 +121,7 @@ export async function bookshelf_add(book: BookStruct) {
 
 	db.query(sql`
 		INSERT
-		OR REPLACE INTO D_Bookshelf (id, DESC, SYSTEM)
+		OR REPLACE INTO D_Bookshelf (id, desc, system)
 		VALUES
 			(?, ?, ?)
 	`).run([book.id, book.desc, book.system]);
@@ -154,7 +154,6 @@ export async function bookshelf_listup() {
 				C_Bookspine
 		`)
 		.all();
-	console.log(book);
 	return book;
 }
 
@@ -164,12 +163,17 @@ export async function activebook_listup() {
 		.prepare(sql`
 			SELECT
 				Bookspine.title,
-				Book.session_id
+				Book.session_id,
+				SUBSTR(Pages.content, 1, 40) || '...' AS lastLine, --SQL배우다보니까 신기한거 개많음, 애초에 백에서 줄여서 보내 네트워크 오버헤드 줄이자(이게 더 나은지는 검증필요)
+				Pages.session_id 
 			FROM
 				C_Bookspine AS Bookspine
 				JOIN F_Book AS Book ON Bookspine.id = Book.id
+				JOIN G_Pages AS Pages ON Book.session_id = Pages.session_id
 			GROUP BY
-				session_id;
+				Book.session_id;
+			ORDER BY
+				Pages.create_at DESC --최신순
 		`)
 		.all();
 	return book;
@@ -210,7 +214,7 @@ export async function read_book(book_id: string, type: ReadType[]) {
 	const header = ReadBook.header(book_id);
 	const chat = ReadBook.chat(book_id);
 	const request = {
-		// header,
+		header,
 		chat,
 	};
 	return request;
@@ -219,7 +223,6 @@ export async function read_book(book_id: string, type: ReadType[]) {
 // 이거 시발 나중에 꼭 정규화해서 최적화 해야함, 아무리봐도 여기가 병목임 < 기초는 했음. 26.08.22
 // 번외로 여긴 SSE처리해서 보내는중... 을 구분 할 수 있게 해야함, 실제 디비에 저장 됐는지 여부임
 export async function add_page(book_id: string, role: string, content: string) {
-	console.log(book_id);
 	const page_id = uuidv4();
 	const inject_starting = db
 		.query(sql`
@@ -254,7 +257,7 @@ export async function clone_book(origin_id: string, point_id: string) {
 	const get_system = db
 		.query(sql`
 			SELECT
-				SYSTEM
+				system
 			FROM
 				D_Bookshelf
 			WHERE
@@ -274,7 +277,7 @@ export async function clone_book(origin_id: string, point_id: string) {
 	const inject_system = db
 		.query(sql`
 			INSERT INTO
-				I_Header (session_id, SYSTEM)
+				I_Header (session_id, system)
 			VALUES
 				(?, ?)
 		`)
