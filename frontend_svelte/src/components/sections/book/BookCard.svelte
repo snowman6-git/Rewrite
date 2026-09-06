@@ -1,14 +1,5 @@
 <script lang="ts">
-	interface Book {
-		id: number;
-		title: string;
-		desc: string;
-		author: string;
-		category: string;
-		usageCount: number;
-		createdAt: string;
-		content?: string;
-	}
+	import type { Book } from '$lib/types';
 
 	let { book, onClick }: { book: Book; onClick?: (book: Book) => void } = $props();
 
@@ -35,7 +26,7 @@
 			</span>
 			<span class="meta-item">
 				<span class="meta-icon">📅</span>
-				<span>{new Date(book.createdAt).toLocaleDateString('ko-KR')}</span>
+						<span>{book.createdAt ? new Date(book.createdAt).toLocaleDateString('ko-KR') : ''}</span>
 			</span>
 		</div>
 	</div>

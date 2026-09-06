@@ -15,7 +15,11 @@ class ChatState {
 
 	// 이제 여기서 관리하면서, 전역에 모델이 응답중인지 전파
 	async loadHistory() {
-		this.list = await loadChatHistory(this.book_id);
+		try {
+			this.list = await loadChatHistory(this.book_id);
+		} catch {
+			this.list = [];
+		}
 	}
 
 	async addMessage(newMsg: Msg) {
@@ -77,7 +81,6 @@ class ChatState {
 							memoryTools.live_memory_usage = output_token;
 							this.list[this.list.length - 1].content += parsed['content'];
 							this.list[this.list.length - 1].live_token = output_token;
-							this.list = [...this.list];
 						}
 					}
 				} catch {

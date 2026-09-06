@@ -4,21 +4,17 @@
 	import { toast } from '$lib/stores/toast.svelte';
 	import ToastContainer from '$components/Common/ToastContainer.svelte';
 	import { onMount } from 'svelte';
-
-	interface Book {
-		id?: string;
-		title?: string;
-		desc?: string;
-		author?: string;
-		category?: string;
-		usageCount?: number;
-		createdAt?: string;
-		content?: string;
-	}
+	import type { Book } from '$lib/types';
 
 	let { book, onClose }: { book: Book; onClose: () => void } = $props();
 
-	let book_detail = $state<Book[]>([]);
+	interface BookDetail {
+		id?: string;
+		desc?: string;
+		starting?: { point_id: string; name: string }[];
+	}
+
+	let book_detail = $state<BookDetail | null>(null);
 	let selectedPoint = $state<string>('1');
 
 	onMount(() => {
@@ -70,9 +66,9 @@
 			<div class="starting-point-selector">
 				<label class="selector-label">시작 지점</label>
 				<select class="selector-dropdown" bind:value={selectedPoint}>
-					{#each book_detail['starting'] as starting (starting.point_id)}
-						<option value={starting.point_id}>{starting.name}</option>
-					{/each}
+				{#each book_detail?.starting ?? [] as starting (starting.point_id)}
+					<option value={starting.point_id}>{starting.name}</option>
+				{/each}
 				</select>
 			</div>
 
@@ -91,7 +87,7 @@
 			<div class="book-details">
 				<div class="book-info-section">
 					<h4 class="section-label">소개</h4>
-					<p class="book-desc">{book_detail.desc}</p>
+					<p class="book-desc">{book_detail?.desc ?? ''}</p>
 				</div>
 
 				<div class="book-meta-section">
@@ -101,7 +97,7 @@
 						<span class="meta-tag">📊 {book.usageCount} 회</span>
 					</div>
 					<p class="book-created">
-						📅 {new Date(book.createdAt).toLocaleDateString('ko-KR')}
+						📅 {book.createdAt ? new Date(book.createdAt).toLocaleDateString('ko-KR') : ''}
 					</p>
 				</div>
 			</div>

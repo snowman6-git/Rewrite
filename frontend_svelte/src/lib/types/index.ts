@@ -14,11 +14,12 @@ export interface ModelInfo {
 	context_size: number;
 }
 export interface Book {
-	id: number;
+	id: string;
 	title: string;
-	author: string;
-	category: string;
-	usageCount: number;
-	createdAt: string;
+	desc?: string;
+	author?: string;
+	category?: string;
+	usageCount?: number;
+	createdAt?: string;
 	content?: string;
 }

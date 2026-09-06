@@ -5,17 +5,7 @@
 	import BookPreview from '$components/sections/book/BookPreview.svelte';
 	import { uploadFiles, loadBooks } from '$lib/api/book';
 	import { toast } from '$lib/stores/toast.svelte';
-
-	interface Book {
-		id: number;
-		title: string;
-		desc: string;
-		author: string;
-		category: string;
-		usageCount: number;
-		createdAt: string;
-		content?: string;
-	}
+	import type { Book } from '$lib/types';
 
 	let { books = [] }: { books?: Book[] } = $props();
 
@@ -36,18 +26,18 @@
 		sortBy = (event.target as HTMLButtonElement).dataset.sort as typeof sortBy;
 	}
 
-	// async function handleUploadZip(event: Event) {
-	// 	const input = event.target as HTMLInputElement;
-	// 	if (!input.files || input.files.length === 0) return;
+	async function handleUploadZip(event: Event) {
+		const input = event.target as HTMLInputElement;
+		if (!input.files || input.files.length === 0) return;
 
-	// 	try {
-	// 		const result = await uploadFiles([input.files[0]], 'zip');
-	// 		toast.success(`${result.count} 권의 책이 추가되었습니다.`);
-	// 	} catch (error) {
-	// 		console.error('ZIP 업로드 오류:', error);
-	// 		toast.error('업로드 실패: ' + (error as Error).message);
-	// 	}
-	// }
+		try {
+			const result = await uploadFiles([input.files[0]], 'zip');
+			toast.success(`${result.count} 권의 책이 추가되었습니다.`);
+		} catch (error) {
+			console.error('ZIP 업로드 오류:', error);
+			toast.error('업로드 실패: ' + (error as Error).message);
+		}
+	}
 
 	async function handleUploadToml(event: Event) {
 		const input = event.target as HTMLInputElement;
@@ -83,20 +73,22 @@
 			result = result.filter(
 				(book) =>
 					book.title.toLowerCase().includes(query) ||
-					book.author.toLowerCase().includes(query) ||
-					book.category.toLowerCase().includes(query)
+					(book.author ?? '').toLowerCase().includes(query) ||
+					(book.category ?? '').toLowerCase().includes(query)
 			);
 		}
 
 		switch (sortBy) {
 			case 'usage':
-				result.sort((a, b) => b.usageCount - a.usageCount);
+				result.sort((a, b) => (b.usageCount ?? 0) - (a.usageCount ?? 0));
 				break;
 			case 'created':
-				result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+				result.sort(
+					(a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+				);
 				break;
 			case 'popular':
-				result.sort((a, b) => b.usageCount - a.usageCount);
+				result.sort((a, b) => (b.usageCount ?? 0) - (a.usageCount ?? 0));
 				break;
 		}
 

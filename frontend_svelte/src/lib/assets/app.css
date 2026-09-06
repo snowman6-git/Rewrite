@@ -138,6 +138,12 @@ body::-webkit-scrollbar {
 	display: none; /* Chromium / WebKit */
 }
 
+input,
+textarea,
+[contenteditable] {
+	user-select: text;
+}
+
 /* 레이아웃 때문에 높이는 제외 */
 main {
 	min-width: 100dvw;

@@ -68,7 +68,7 @@ app.post('/book_unfolds', book_unfolds);
 app.post('/api/user/login', login);
 
 export default {
-	port: 3002,
+	port: 3000,
 	host: '0.0.0.0',
 	fetch: app.fetch,
 };

@@ -6,7 +6,7 @@ import { Context } from 'hono';
 import { streamText } from 'hono/streaming';
 
 // 굳이 TS로 해야할지 고민하기
-import { MODEL_DISPLAY_CONFIG } from '../static/model';
+import { MODEL_DISPLAY_CONFIG } from '../lib/models'
 
 import { ModelInfo, ChatInfo } from '../types/index';
 
@@ -14,6 +14,7 @@ import { args_only } from '../lib/parser';
 import { memo } from 'hono/jsx';
 import { add_chat_history, load_chat_history, reset_chat_history } from '../services/session';
 import { read_book } from '../lib/db';
+import { Gemini_chat, Gemini_models } from '../test/Gemini-api';
 
 dotenv.config();
 const LLM_API_URL = process.env.LLM_API_URL;
@@ -76,25 +77,28 @@ export async function models(c: Context) {
 		},
 	});
 	let models_api_data = models_api.data.data;
-	const chat_list = models_api_data.map((model: ModelInfo) => {
-		// 1. 매핑 테이블에서 해당 모델용 정보를 가져옴
-		const config = MODEL_DISPLAY_CONFIG[model.id];
-		// 2. 새로운 객체를 반환 (이게 포인트!)
-		return {
-			// ...model, // 기존에 있던 id, created 등 모든 필드를 복사 < 가는게 너무 많음
-			id: model.id, // 모델명은 기존 id로 설정
-			name: config?.aliases ?? model.id,
-			desc: config?.desc ?? '설명 없음',
-			status: model.status?.value ?? '알 수 없음', // 메모리에 올라왔는가, 안나오는 경우도 있으니 status?넣어서 후처리
-			hardware: config?.hardware ?? '권장사양없음',
-			// context_size: args_only(model.status?.args ?? "")
-		};
-	});
+	// let chat_list = models_api_data.map((model: ModelInfo) => {
+	// 	// 1. 매핑 테이블에서 해당 모델용 정보를 가져옴
+	// 	const config = MODEL_DISPLAY_CONFIG[model.id];
+	// 	// 2. 새로운 객체를 반환 (이게 포인트!)
+	// 	return {
+	// 		// ...model, // 기존에 있던 id, created 등 모든 필드를 복사 < 가는게 너무 많음
+	// 		id: model.id, // 모델명은 기존 id로 설정
+	// 		name: config?.aliases ?? model.id,
+	// 		desc: config?.desc ?? '설명 없음',
+	// 		status: model.status?.value ?? '알 수 없음', // 메모리에 올라왔는가, 안나오는 경우도 있으니 status?넣어서 후처리
+	// 		hardware: config?.hardware ?? '권장사양없음',
+	// 		// context_size: args_only(model.status?.args ?? "")
+	// 	};
+	// });
+	let chat_list = await Gemini_models()
+	console.log(chat_list)
 	return c.json(chat_list);
 }
 
 export async function chat(c: Context) {
 	const { book_id, chat, model, custom_note, logic_plus } = await c.req.json();
+	console.log(model)
 	// 초기화 하고 리턴에서 참조가능하게 상위변수 지정
 	let thinking_tokens = 0;
 	if (logic_plus == false) {
@@ -119,18 +123,24 @@ export async function chat(c: Context) {
 		return_progress: true,
 		timings_per_token: true,
 		// 채팅기록을 불러옴, 이때 방금 막 추가한 메세지도 불러와 사용됌
-		messages: await read_book(book_id, true),
+		messages: (await read_book(book_id, true)).chat,
 	};
 
-	const response = await fetch(`${LLM_API_URL}/chat/completions`, {
-		// 엔드포인트 확인
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify(requestBody),
-	});
-
+	let response: any;
+	if (model.includes('gemini')){
+		console.log("AA")
+		const response = await Gemini_chat(requestBody)
+	} else {
+		response = await fetch(`${LLM_API_URL}/chat/completions`, {
+			// 엔드포인트 확인
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${API_KEY}`,
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(requestBody),
+		});
+	}
 	let llm_response_result = '';
 	return streamText(c, async (stream) => {
 		const reader = response.body?.getReader();
@@ -147,6 +157,8 @@ export async function chat(c: Context) {
 
 				if (line.startsWith('data: ') && line.trim() !== 'data: [DONE]') {
 					const data = JSON.parse(jsonStr);
+					console.log(line)
+
 					if (data.choices[0]?.finish_reason === 'stop') {
 					} else {
 						const content = data.choices[0]?.delta?.content || '';
