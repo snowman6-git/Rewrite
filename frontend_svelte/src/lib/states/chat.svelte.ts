@@ -6,6 +6,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { memoryTools } from './memory.svelte';
 import { toast } from '$lib/stores/toast.svelte';
 
+// sendMessage가 await할 히스토리 로드 promise. class 바깥 모듈 스코프에 두어
+// Svelte LSP의 $state 클래스 필드 제한 문제를 회피한다.
+let historyPromise: Promise<void> | null = null;
+
 class ChatState {
 	list = $state<Msg[]>([]);
 	user_input = $state<string>('');
@@ -13,13 +17,16 @@ class ChatState {
 	book_id = $state<string>('');
 	isModelResponding = $state<boolean>(false);
 
-	// 이제 여기서 관리하면서, 전역에 모델이 응답중인지 전파
+	// 여기서 관리하면서, 전역에 모델이 응답중인지 전파
 	async loadHistory() {
-		try {
-			this.list = await loadChatHistory(this.book_id);
-		} catch {
-			this.list = [];
-		}
+		// 히스토리 promise를 모듈 스코프에 보관. sendMessage가 await하도록
+		historyPromise = (async () => {
+			try {
+				this.list = await loadChatHistory(this.book_id);
+			} catch {
+				this.list = [];
+			}
+		})();
 	}
 
 	async addMessage(newMsg: Msg) {
@@ -34,11 +41,15 @@ class ChatState {
 		// 빈 입력 방지 + 모델이 응답 중이면 씹기
 		if (this.user_input.trim() === '' || this.isModelResponding) return;
 
+		// 히스토리 로드가 안 끝나면 여기서 멈춤. await 안 하면 loadHistory가 유저 메시지를 덮어 손실됨
+		// (히스토리 진입 전 전송 방지)
+		if (historyPromise) {
+			await historyPromise;
+		}
 		try {
 			this.list = [...this.list, { pid: uuidv4(), role: 'user', content: this.user_input }];
 			this.list = [...this.list, { pid: uuidv4(), role: 'assistant', content: '', live_token: 0 }];
 			this.isModelResponding = true;
-
 			const tempUserInput = this.user_input;
 			this.user_input = '';
 

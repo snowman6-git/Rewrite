@@ -70,18 +70,6 @@ export interface UploadBookResult {
 	}>;
 }
 
-export async function uploadBookFile(file: File): Promise<UploadBookResult> {
-	const response = await axios.post(
-		`${PUBLIC_API_URL}/book_upload`,
-		{
-			type: file.type,
-			file: file
-		},
-		{ withCredentials: true }
-	);
-	return response.data;
-}
-
 export interface UploadResult {
 	message: string;
 	count: number;
@@ -89,9 +77,6 @@ export interface UploadResult {
 }
 
 export async function uploadFiles(files: File[], type: 'zip' | 'toml'): Promise<UploadResult> {
-	console.log(`[uploadFiles] type: ${type}, files count: ${files.length}`);
-	console.log(`[uploadFiles] files:`, files);
-
 	if (files.length === 0) {
 		throw new Error('업로드할 파일이 선택되지 않았습니다.');
 	}
@@ -99,11 +84,8 @@ export async function uploadFiles(files: File[], type: 'zip' | 'toml'): Promise<
 	const formData = new FormData();
 	formData.append('type', type);
 	for (const file of files) {
-		console.log(`[uploadFiles] appending file: ${file.name}, size: ${file.size}`);
 		formData.append('files', file);
 	}
-
-	console.log(`[uploadFiles] formData keys:`, Array.from(formData.keys()));
 
 	try {
 		const response = await axios.post(`${PUBLIC_API_URL}/book_upload`, formData, {

@@ -126,57 +126,77 @@ export async function chat(c: Context) {
 		messages: (await read_book(book_id, true)).chat,
 	};
 
-	let response: any;
 	if (model.includes('gemini')){
-		console.log("AA")
+		let llm_response_result = '';
 		const response = await Gemini_chat(requestBody)
-	} else {
-		response = await fetch(`${LLM_API_URL}/chat/completions`, {
-			// 엔드포인트 확인
-			method: 'POST',
-			headers: {
-				Authorization: `Bearer ${API_KEY}`,
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(requestBody),
-		});
-	}
-	let llm_response_result = '';
-	return streamText(c, async (stream) => {
-		const reader = response.body?.getReader();
-		if (!reader) return;
-		const decoder = new TextDecoder();
-
-		while (true) {
-			const { done, value } = await reader.read();
-
-			if (done) break;
-			const chunk = decoder.decode(value);
-			for (const line of chunk.split('\n')) {
-				const jsonStr = line.slice(6); //6개로 썰어야 시작종료 태그가 된다고 함
-
-				if (line.startsWith('data: ') && line.trim() !== 'data: [DONE]') {
-					const data = JSON.parse(jsonStr);
-					console.log(line)
-
-					if (data.choices[0]?.finish_reason === 'stop') {
-					} else {
-						const content = data.choices[0]?.delta?.content || '';
-						llm_response_result += content;
-
+		return streamText(c, async (stream) => {
+			for await (const event of response) {
+				try {
+					// 이게 최선인지 알아보기
+					const content = event["delta"].text;
+					if (content != undefined ){
 						const res = {
 							content: content,
-							// input: data["timings"]["prompt_n"],
-							// output: data["timings"]["predicted_n"]
 						};
-
 						await stream.write(JSON.stringify(res) + '\n');
+						llm_response_result += content;
 					}
+				} catch (error) {
+					console.log(error)
 				}
 			}
+			// 응답 종료시 메세지 묶어서 저장
+			await add_chat_history(book_id, 'assistant', llm_response_result);
 		}
+	)
+		
+	} else {
+	// 	response = await fetch(`${LLM_API_URL}/chat/completions`, {
+	// 		// 엔드포인트 확인
+	// 		method: 'POST',
+	// 		headers: {
+	// 			Authorization: `Bearer ${API_KEY}`,
+	// 			'Content-Type': 'application/json',
+	// 		},
+	// 		body: JSON.stringify(requestBody),
+	// 	});
+	// }
+	// let llm_response_result = '';
+	// return streamText(c, async (stream) => {
+	// 	const reader = response.body?.getReader();
+	// 	if (!reader) return;
+	// 	const decoder = new TextDecoder();
 
-		// 스트림데이터 수신 종료후, LLM의 최종응답을 저장
-		await add_chat_history(book_id, 'assistant', llm_response_result);
-	});
+	// 	while (true) {
+	// 		const { done, value } = await reader.read();
+
+	// 		if (done) break;
+	// 		const chunk = decoder.decode(value);
+	// 		for (const line of chunk.split('\n')) {
+	// 			const jsonStr = line.slice(6); //6개로 썰어야 시작종료 태그가 된다고 함
+
+	// 			if (line.startsWith('data: ') && line.trim() !== 'data: [DONE]') {
+	// 				const data = JSON.parse(jsonStr);
+	// 				console.log(line)
+
+	// 				if (data.choices[0]?.finish_reason === 'stop') {
+	// 				} else {
+	// 					const content = data.choices[0]?.delta?.content || '';
+	// 					llm_response_result += content;
+
+	// 					const res = {
+	// 						content: content,
+	// 						// input: data["timings"]["prompt_n"],
+	// 						// output: data["timings"]["predicted_n"]
+	// 					};
+
+	// 					await stream.write(JSON.stringify(res) + '\n');
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	// 스트림데이터 수신 종료후, LLM의 최종응답을 저장
+	// 	await add_chat_history(book_id, 'assistant', llm_response_result);
+	// });
+}
 }
