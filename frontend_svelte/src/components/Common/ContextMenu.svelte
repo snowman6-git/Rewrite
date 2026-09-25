@@ -79,7 +79,6 @@
 		background: var(--color-bg-tertiary);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
-		box-shadow: var(--shadow-lg);
 		overflow: hidden;
 		animation: menu-appear 0.15s ease-out;
 	}

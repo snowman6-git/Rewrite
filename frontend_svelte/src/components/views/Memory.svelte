@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_API_URL } from '$env/static/public';
+	import { apiBase } from '$api/client';
 	import { chatState } from '$lib/states/chat.svelte';
 	import { modelsState } from '$lib/states/models.svelte';
 	import MinMaxPercent from '$components/MinMaxPercent.svelte';
@@ -14,7 +14,7 @@
 	async function reset_world_memory() {
 		is_resetting = true;
 		try {
-			const response = await fetch(`${PUBLIC_API_URL}/reset_world_memory`, {
+			const response = await fetch(`${apiBase()}/reset_world_memory`, {
 				method: 'POST'
 			});
 			if (response.ok) {

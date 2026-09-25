@@ -1,8 +1,10 @@
 <script lang="ts">
 	import axios from 'axios';
-	import { PUBLIC_API_URL } from '$env/static/public';
+	import { apiBase } from '$api/client';
 	import { toast } from '$lib/stores/toast.svelte';
 	import ToastContainer from '$components/Common/ToastContainer.svelte';
+	import Icon from '$components/Common/Icon.svelte';
+	import BookMeta from './BookMeta.svelte';
 	import { onMount } from 'svelte';
 	import type { Book } from '$lib/types';
 
@@ -22,7 +24,7 @@
 	});
 
 	async function handlebookPreview() {
-		let loadBook_detail = await axios.get(`${PUBLIC_API_URL}/book_detail?id=${book.id}`, {
+		let loadBook_detail = await axios.get(`${apiBase()}/book_detail?id=${book.id}`, {
 			withCredentials: true
 		});
 		if (loadBook_detail.status >= 200 && loadBook_detail.status < 300) {
@@ -34,7 +36,7 @@
 
 	async function handleStart() {
 		let story_unfolds = await axios.post(
-			`${PUBLIC_API_URL}/book_unfolds`,
+			`${apiBase()}/book_unfolds`,
 			{
 				book_id: book.id,
 				point_id: selectedPoint
@@ -55,8 +57,8 @@
 </script>
 
 <ToastContainer />
-<div class="modal-overlay" onclick={onClose}>
-	<div class="modal" onclick={(e) => e.stopPropagation()}>
+<div class="modal-overlay" role="presentation" onclick={onClose}>
+	<div class="modal" role="presentation" onclick={(e) => e.stopPropagation()}>
 		<div class="modal-header">
 			<h3 class="modal-title">{book.title}</h3>
 			<button class="close-btn" onclick={onClose} aria-label="닫기">✕</button>
@@ -64,8 +66,8 @@
 
 		<div class="modal-content">
 			<div class="starting-point-selector">
-				<label class="selector-label">시작 지점</label>
-				<select class="selector-dropdown" bind:value={selectedPoint}>
+				<label class="selector-label" for="starting-point">시작 지점</label>
+				<select class="selector-dropdown" id="starting-point" bind:value={selectedPoint}>
 				{#each book_detail?.starting ?? [] as starting (starting.point_id)}
 					<option value={starting.point_id}>{starting.name}</option>
 				{/each}
@@ -79,28 +81,18 @@
 					</div>
 				{:else}
 					<div class="preview-placeholder">
-						<span class="preview-emoji">📖</span>
+						<span class="preview-icon"><Icon name="book-open" size={48} /></span>
 					</div>
 				{/if}
 			</div>
 
-			<div class="book-details">
-				<div class="book-info-section">
-					<h4 class="section-label">소개</h4>
-					<p class="book-desc">{book_detail?.desc ?? ''}</p>
-				</div>
-
-				<div class="book-meta-section">
-					<div class="book-meta-info">
-						<span class="meta-tag">👤 {book.author}</span>
-						<span class="meta-tag">📂 {book.category}</span>
-						<span class="meta-tag">📊 {book.usageCount} 회</span>
-					</div>
-					<p class="book-created">
-						📅 {book.createdAt ? new Date(book.createdAt).toLocaleDateString('ko-KR') : ''}
-					</p>
-				</div>
-			</div>
+			<BookMeta
+				desc={book_detail?.desc ?? ''}
+				author={book.author}
+				category={book.category}
+				usageCount={book.usageCount}
+				createdAt={book.createdAt}
+			/>
 		</div>
 
 		<div class="modal-footer">
@@ -133,7 +125,6 @@
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
-		box-shadow: var(--shadow-xl);
 	}
 
 	.modal-header {
@@ -209,7 +200,7 @@
 	.selector-dropdown:focus {
 		outline: none;
 		border-color: var(--color-accent-primary);
-		box-shadow: 0 0 0 3px var(--color-accent-primary-opacity);
+		box-shadow: 0 0 0 3px var(--color-accent-glow);
 	}
 
 	.book-preview {
@@ -237,9 +228,10 @@
 		);
 	}
 
-	.preview-emoji {
-		font-size: 4rem;
-		opacity: 0.5;
+	.preview-icon {
+		display: inline-flex;
+		color: var(--color-text-tertiary);
+		opacity: 0.7;
 	}
 
 	.content-display {
@@ -263,63 +255,6 @@
 		margin: 0;
 	}
 
-	.book-details {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-lg);
-	}
-
-	.book-info-section {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
-	}
-
-	.section-label {
-		font-size: var(--font-size-sm);
-		font-weight: 600;
-		color: var(--color-text-primary);
-		margin: 0;
-	}
-
-	.book-desc {
-		font-size: var(--font-size-sm);
-		color: var(--color-text-primary);
-		line-height: 1.8;
-		margin: 0;
-		padding: var(--space-sm);
-		background: var(--color-bg-elevated);
-		border-radius: var(--radius-md);
-	}
-
-	.book-meta-section {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
-		padding-top: var(--space-sm);
-		border-top: 1px solid var(--color-border);
-	}
-
-	.book-meta-info {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-sm);
-	}
-
-	.meta-tag {
-		font-size: 0.75rem;
-		padding: var(--space-2xs) var(--space-xs);
-		background: var(--color-bg-elevated);
-		border-radius: var(--radius-xs);
-		color: var(--color-text-secondary);
-	}
-
-	.book-created {
-		font-size: 0.75rem;
-		color: var(--color-text-tertiary);
-		margin: 0;
-	}
-
 	.modal-footer {
 		padding: var(--space-md) var(--space-lg);
 		border-top: 1px solid var(--color-border);
@@ -330,7 +265,7 @@
 	.start-btn {
 		padding: var(--space-sm) var(--space-2xl);
 		background: var(--color-accent-primary);
-		color: white;
+		color: var(--color-text-inverse);
 		border: none;
 		border-radius: var(--radius-md);
 		font-size: var(--font-size-sm);
@@ -340,9 +275,8 @@
 	}
 
 	.start-btn:hover {
-		background: var(--color-accent-primary-dark);
+		background: var(--color-accent-secondary);
 		transform: translateY(-1px);
-		box-shadow: var(--shadow-md);
 	}
 
 	.start-btn:active {

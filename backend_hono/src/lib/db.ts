@@ -235,6 +235,12 @@ export async function add_page(book_id: string, role: string, content: string) {
 	return book_id;
 }
 
+export async function update_page(c: Context) {
+  const { book_id, pid, content } = await c.req.json();
+  if (!book_id || !pid || content == null) return c.json({ success: false, error: '필수 값 부족' }, 400);
+  await update_page(book_id, pid, content);
+  return c.json({ success: true });
+}
 // 비효율적이어도 구현 먼저하자
 // book이 가져야할것
 // 1. 오리진 ID, 2. uuid4기반 ID, 3. 챗 ID, 챗내용

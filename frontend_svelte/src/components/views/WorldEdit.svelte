@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_API_URL } from '$env/static/public';
+	import { apiBase } from '$api/client';
 	import MinMaxPercent from '$components/MinMaxPercent.svelte';
 	import { modelsState } from '$lib/states/models.svelte';
 	import Btn from '$components/Common/Btn.svelte';
@@ -16,7 +16,7 @@
 
 	async function load_system_prompt() {
 		try {
-			const response = await fetch(`${PUBLIC_API_URL}/world_memory`);
+			const response = await fetch(`${apiBase()}/world_memory`);
 			system_prompt = await response.text();
 		} catch {
 			system_prompt = '';
@@ -28,7 +28,7 @@
 	async function handleSave() {
 		is_saving = true;
 		try {
-			const response = await fetch(`${PUBLIC_API_URL}/world_memory`, {
+			const response = await fetch(`${apiBase()}/world_memory`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ prompt: system_prompt })
@@ -67,7 +67,7 @@
 		<div class="stats-text">
 			<span class="char-count">{system_prompt.length}자</span>
 			<span class="stat-separator">/</span>
-			<span class="size-count">컨텍스트: {system_prompt_size}</span>
+			<span class="size-count">토큰 크기: {system_prompt_size}</span>
 		</div>
 		<div class="stats-percent">
 			<MinMaxPercent min={system_prompt_size} max={modelsState.context_size} />

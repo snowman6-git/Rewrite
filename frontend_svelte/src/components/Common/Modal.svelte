@@ -41,8 +41,8 @@
 	});
 </script>
 
-<div class="modal-overlay" onclick={handleOverlayClick}>
-	<div class="modal" class:danger={variant === 'danger'} onclick={handleModalClick}>
+<div class="modal-overlay" role="presentation" onclick={handleOverlayClick}>
+	<div class="modal" role="presentation" class:danger={variant === 'danger'} onclick={handleModalClick}>
 		<h3 class="modal-title">{title}</h3>
 		<p class="modal-text">{message}</p>
 		<div class="modal-actions">
@@ -83,7 +83,6 @@
 		min-width: 320px;
 		max-width: calc(100vw - 2rem);
 		border: 1px solid var(--color-border);
-		box-shadow: var(--shadow-lg);
 		animation: slideUp 0.2s ease-out;
 	}
 
@@ -146,7 +145,7 @@
 
 	.btn-confirm {
 		background: var(--color-accent-primary);
-		color: white;
+		color: var(--color-text-inverse);
 	}
 
 	.btn-confirm:hover {
@@ -158,7 +157,7 @@
 	}
 
 	.btn-confirm.danger:hover {
-		background: #dc2626;
+		background: var(--color-error);
 	}
 
 	@media (max-width: 480px) {

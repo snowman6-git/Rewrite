@@ -1,9 +1,10 @@
 <script lang="ts">
 	import Modal from '$components/Common/Modal.svelte';
 	import ContextMenu from '$components/Common/ContextMenu.svelte';
+	import Icon from '$components/Common/Icon.svelte';
 
 	export interface DeskBook {
-		id: number;
+		id: string;
 		title: string;
 		lastLine: string;
 		label: string;
@@ -16,7 +17,6 @@
 		errorMessage?: string;
 		onDelete?: (book: DeskBook) => void;
 		onRefresh?: () => void;
-		onBookClick?: (book: DeskBook) => void;
 	}
 
 	let {
@@ -25,8 +25,7 @@
 		isError = false,
 		errorMessage = '',
 		onDelete,
-		onRefresh,
-		onBookClick
+		onRefresh
 	}: LibrarySectionProps = $props();
 
 	let contextMenu = $state<{ x: number; y: number; book: DeskBook | null }>({
@@ -37,8 +36,45 @@
 
 	let confirmDeleteBook = $state<DeskBook | null>(null);
 
+	// — 풀투리프레시(모바일): scrollTop 0에서 아래로 당겨 새로고침 —
+	let pull = $state(0);
+	let p2pSpin = $state(false);
+	let p2pStartY = 0;
+	let p2pActive = false;
+
+	function p2pTouchStart(e: TouchEvent) {
+		const scroller = document.querySelector('.app-main') as HTMLElement | null;
+		if ((scroller?.scrollTop ?? 0) === 0) {
+			p2pActive = true;
+			p2pStartY = e.touches[0].clientY;
+		}
+	}
+	function p2pTouchMove(e: TouchEvent) {
+		if (!p2pActive || p2pSpin) return;
+		const dy = e.touches[0].clientY - p2pStartY;
+		if (dy > 0) {
+			e.preventDefault();
+			pull = Math.min(dy * 0.5, 80);
+		}
+	}
+	function p2pEnd() {
+		if (!p2pActive) return;
+		p2pActive = false;
+		if (pull >= 60 && onRefresh) {
+			p2pSpin = true;
+			pull = 56;
+			Promise.resolve(onRefresh()).finally(() => {
+				p2pSpin = false;
+				pull = 0;
+			});
+		} else {
+			pull = 0;
+		}
+	}
+
 	function showContextMenu(e: MouseEvent, book: DeskBook) {
 		e.preventDefault();
+		e.stopPropagation();
 		contextMenu = { x: e.clientX, y: e.clientY, book };
 	}
 
@@ -54,7 +90,6 @@
 
 	function handleInfoFromMenu() {
 		// TODO: 정보 보기 구현
-		console.log('Info:', contextMenu.book?.id);
 		hideContextMenu();
 	}
 
@@ -71,47 +106,80 @@
 	let menuItems = $derived.by(() => {
 		if (!contextMenu.book) return [];
 		return [
-			{ label: '삭제', icon: '🗑️', onClick: handleDeleteFromMenu },
-			{ label: '정보 보기', icon: 'ℹ️', onClick: handleInfoFromMenu, disabled: true }
+			{ label: '삭제', onClick: handleDeleteFromMenu },
+			{ label: '정보 보기', onClick: handleInfoFromMenu, disabled: true }
 		];
 	});
 </script>
 
-<div class="desk-section">
+<div
+		class="library-section"
+		role="presentation"
+		ontouchstart={p2pTouchStart}
+		ontouchmove={p2pTouchMove}
+		ontouchend={p2pEnd}
+	>
+	<!-- 풀투리프레시 지표 -->
+	<div class="p2p" class:hidden={pull === 0} class:anim={!p2pActive} class:p2p-spin={p2pSpin} style={`height: ${pull}px`}>
+		<div class="p2p-indicator" style={`transform: rotate(${pull * 2.25}deg); opacity: ${Math.min(pull / 40, 1)}`}>
+			<Icon name="refresh" size={22} />
+		</div>
+	</div>
+	<!-- 헤더: 타이틀 + 개수 + 리프레시 (항상 노출 — 개수는 데이터와 함께 갱신) -->
+	<div class="lib-header">
+		<h2 class="lib-title">서재 <span class="lib-count">{books.length}</span></h2>
+		{#if onRefresh}
+			<button class="refresh-btn icon-btn" onclick={onRefresh} aria-label="새로고침" title="새로고침"><Icon name="refresh" size={16}/></button>
+		{/if}
+	</div>
+
 	<!-- 로딩 상태 -->
 	{#if isLoading}
-		<div class="loading-state">
-			<p class="loading-icon">⏳</p>
-			<p class="loading-text">서재를 불러오는 중...</p>
+		<div class="empty-state">
+			<p>서재를 불러오는 중...</p>
 		</div>
 	{/if}
 
 	<!-- 에러 상태 -->
 	{#if isError}
-		<div class="error-state">
-			<p class="error-icon">❌</p>
-			<p class="error-text">{errorMessage}</p>
+		<div class="empty-state">
+			<p>{errorMessage}</p>
 			{#if onRefresh}
 				<button class="retry-btn" onclick={onRefresh}>다시 시도</button>
 			{/if}
 		</div>
 	{/if}
 
-	<!-- 채팅방 목록 스타일 -->
+	<!-- 책 목록 -->
 	{#if !isLoading && !isError}
 		<div class="desk-list">
 			{#each books as book (book.id)}
 				<div
 					class="desk-item"
+					role="button"
+					tabindex={0}
 					onclick={() => {
 						window.location.href = `/book/${book.id}`;
 						/* TODO: 열기 */
 					}}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							window.location.href = `/book/${book.id}`;
+						}
+					}}
 					oncontextmenu={(e) => showContextMenu(e, book)}
 				>
 					<div class="item-content">
-						<h3 class="item-title">{book.title}</h3>
-						<p class="item-last-line">{book.lastLine}</p>
+						<div class="item-top">
+							<h3 class="item-title">{book.title}</h3>
+							{#if book.label}
+								<span class="item-label">{book.label}</span>
+							{/if}
+						</div>
+						{#if book.lastLine}
+							<p class="item-last-line">{book.lastLine}</p>
+						{/if}
 					</div>
 					<span class="item-arrow">›</span>
 				</div>
@@ -121,8 +189,7 @@
 		<!-- Empty State -->
 		{#if books.length === 0}
 			<div class="empty-state">
-				<p class="empty-icon">🖊️</p>
-				<p class="empty-text">서재에 책이 없습니다</p>
+				<p>서재에 책이 없습니다</p>
 			</div>
 		{/if}
 	{/if}
@@ -145,38 +212,91 @@
 </div>
 
 <style>
-	.desk-section {
+	.library-section {
 		width: 100%;
 		padding: var(--space-lg);
-		max-width: 1400px;
+		max-width: 900px;
 		margin: 0 auto;
 		display: flex;
 		flex-direction: column;
+		gap: var(--space-md);
+	}
+
+	/* — 풀투리프레시 — */
+	.p2p {
+		overflow: hidden;
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+		color: var(--color-text-tertiary);
+		flex-shrink: 0;
+	}
+
+	.p2p.hidden {
+		display: none;
+	}
+
+	.p2p.anim {
+		transition: height 0.25s ease;
+	}
+
+	.p2p-indicator {
+		line-height: 0;
+	}
+
+	.p2p-spin .p2p-indicator {
+		animation: p2p-rot 0.8s linear infinite;
+	}
+
+	@keyframes p2p-rot {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.lib-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.lib-title {
+		font-size: var(--font-size-lg);
+		font-weight: 600;
+		color: var(--color-text-primary);
+		margin: 0;
+		display: flex;
+		align-items: center;
 		gap: var(--space-xs);
+	}
+
+	.lib-count {
+		font-size: var(--font-size-sm);
+		font-weight: 500;
+		color: var(--color-text-tertiary);
 	}
 
 	.desk-list {
 		display: flex;
 		flex-direction: column;
-		gap: 1px;
-		background: var(--color-border);
-		border-radius: var(--radius-md);
-		overflow: hidden;
+		gap: var(--space-xs);
 	}
 
 	.desk-item {
 		background: var(--color-bg-secondary);
-		padding: var(--space-md);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		padding: var(--space-sm) var(--space-md);
 		display: flex;
 		align-items: center;
 		gap: var(--space-sm);
 		cursor: pointer;
-		transition: background var(--transition-fast);
+		transition: border-color var(--transition-fast);
 		user-select: none;
 	}
 
 	.desk-item:hover {
-		background: var(--color-bg-tertiary);
+		border-color: var(--color-accent-primary);
 	}
 
 	.item-content {
@@ -187,8 +307,15 @@
 		gap: 2px;
 	}
 
+	.item-top {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-xs);
+		min-width: 0;
+	}
+
 	.item-title {
-		font-size: var(--font-size-base);
+		font-size: var(--font-size-sm);
 		font-weight: 600;
 		color: var(--color-text-primary);
 		margin: 0;
@@ -198,81 +325,42 @@
 		text-overflow: ellipsis;
 	}
 
+	.item-label {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+		flex-shrink: 0;
+	}
+
 	.item-last-line {
-		font-size: 0.8rem;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-tertiary);
 		margin: 0;
-		line-height: 1.3;
-		white-space: nowrap;
+		line-height: 1.4;
+		display: -webkit-box;
+		line-clamp: 2;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
 		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 
 	.item-arrow {
-		font-size: 1.5rem;
+		font-size: 1.25rem;
 		color: var(--color-text-tertiary);
 		font-weight: 300;
 		flex-shrink: 0;
 	}
 
-	.empty-state {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		padding: var(--space-3xl) var(--space-md);
-		text-align: center;
-		gap: var(--space-sm);
-	}
-
-	.empty-icon {
-		font-size: 3rem;
-		opacity: 0.5;
-	}
-
-	.empty-text {
-		font-size: var(--font-size-base);
-		color: var(--color-text-secondary);
-		margin: 0;
-		font-weight: 500;
-	}
-
-	.loading-state,
-	.error-state {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		padding: var(--space-3xl) var(--space-md);
-		text-align: center;
-		gap: var(--space-sm);
-	}
-
-	.loading-icon,
-	.error-icon {
-		font-size: 3rem;
-		opacity: 0.5;
-	}
-
-	.loading-text,
-	.error-text {
-		font-size: var(--font-size-base);
-		color: var(--color-text-secondary);
-		margin: 0;
-		font-weight: 500;
-	}
-
 	.retry-btn {
-		margin-top: var(--space-md);
-		padding: var(--space-sm) var(--space-lg);
+		margin-top: var(--space-xs);
+		padding: var(--space-xs) var(--space-md);
 		background: var(--color-accent-primary);
-		color: white;
+		color: var(--color-text-inverse);
 		border: none;
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-sm);
 		font-size: var(--font-size-sm);
 		font-weight: 500;
 		cursor: pointer;
-		transition: all var(--transition-fast);
+		transition: background var(--transition-fast);
 	}
 
 	.retry-btn:hover {
@@ -280,20 +368,11 @@
 	}
 
 	@media (max-width: 768px) {
-		.desk-section {
+		.library-section {
 			padding: var(--space-md);
 		}
-
 		.desk-item {
 			padding: var(--space-sm);
-		}
-
-		.item-title {
-			font-size: var(--font-size-sm);
-		}
-
-		.item-last-line {
-			font-size: 0.75rem;
 		}
 	}
 </style>

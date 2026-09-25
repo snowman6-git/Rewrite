@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { Book } from '$lib/types';
-import { PUBLIC_API_URL } from '$env/static/public';
+import { apiBase } from '$api/client';
 
 export interface BookListResponse {
 	books: Book[];
@@ -18,42 +18,49 @@ export interface BookUpdateRequest extends BookCreateRequest {
 }
 
 export async function loadBooks(): Promise<Book[]> {
-	const response = await axios.get(`${PUBLIC_API_URL}/book_listup`, {
+	const response = await axios.get(`${apiBase()}/book_listup`, {
 		withCredentials: true
 	});
 	return response.data;
 }
 
 export async function loadBook_detail(book_id: string): Promise<Book[]> {
-	const response = await axios.get(`${PUBLIC_API_URL}/book_detail?id=${book_id}`, {
+	const response = await axios.get(`${apiBase()}/book_detail?id=${book_id}`, {
 		withCredentials: true
 	});
 	return response.data;
 }
 
-export async function library_listup(): Promise<any[]> {
-	const response = await axios.get(`${PUBLIC_API_URL}/library_listup`, {
+interface LibraryItem {
+	session_id: string;
+	title?: string;
+	lastLine?: string;
+	label?: string;
+}
+
+export async function library_listup(): Promise<LibraryItem[]> {
+	const response = await axios.get(`${apiBase()}/library_listup`, {
 		withCredentials: true
 	});
 	return response.data;
 }
 
 export async function createBook(data: BookCreateRequest): Promise<Book> {
-	const response = await axios.post<Book>(`${PUBLIC_API_URL}/book_create`, data, {
+	const response = await axios.post<Book>(`${apiBase()}/book_create`, data, {
 		withCredentials: true
 	});
 	return response.data;
 }
 
 export async function updateBook(data: BookUpdateRequest): Promise<Book> {
-	const response = await axios.put<Book>(`${PUBLIC_API_URL}/book_update`, data, {
+	const response = await axios.put<Book>(`${apiBase()}/book_update`, data, {
 		withCredentials: true
 	});
 	return response.data;
 }
 
-export async function deleteBook(id: number): Promise<void> {
-	await axios.delete(`${PUBLIC_API_URL}/book_delete`, {
+export async function deleteBook(id: string): Promise<void> {
+	await axios.delete(`${apiBase()}/book_delete`, {
 		params: { id },
 		withCredentials: true
 	});
@@ -88,17 +95,18 @@ export async function uploadFiles(files: File[], type: 'zip' | 'toml'): Promise<
 	}
 
 	try {
-		const response = await axios.post(`${PUBLIC_API_URL}/book_upload`, formData, {
+		const response = await axios.post(`${apiBase()}/book_upload`, formData, {
 			withCredentials: true
 		});
 
 		return response.data;
-	} catch (error: any) {
-		console.error('[uploadFiles] axios error:', error);
-		console.error('[uploadFiles] error response:', error.response?.data);
+	} catch (error) {
+		const e = error as { response?: { data?: { error?: string } }; message?: string };
+		console.error('[uploadFiles] axios error:', e);
+		console.error('[uploadFiles] error response:', e.response?.data);
 
 		// 서버에서 반환한 에러 메시지 추출
-		const errorMessage = error.response?.data?.error || error.message || '업로드 실패';
-		throw new Error(errorMessage);
+		const errorMessage = e.response?.data?.error || e.message || '업로드 실패';
+		throw new Error(errorMessage, { cause: error });
 	}
 }

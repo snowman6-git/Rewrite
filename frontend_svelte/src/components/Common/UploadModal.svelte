@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Icon from './Icon.svelte';
+
 	export interface Props {
 		onUploadZip: () => void;
 		onUploadToml: () => void;
@@ -29,14 +31,14 @@
 	});
 </script>
 
-<div class="modal-overlay" onclick={handleOverlayClick}>
-	<div class="modal" onclick={handleModalClick}>
+<div class="modal-overlay" role="presentation" onclick={handleOverlayClick}>
+	<div class="modal" role="presentation" onclick={handleModalClick}>
 		<h3 class="modal-title">책 업로드</h3>
 		<p class="modal-text">업로드할 파일 형식을 선택하세요.</p>
 
 		<div class="upload-options">
 			<button class="option-btn" onclick={onUploadZip}>
-				<span class="option-icon">📦</span>
+				<span class="option-icon"><Icon name="archive" size={22} /></span>
 				<div class="option-content">
 					<span class="option-title">ZIP 파일</span>
 					<span class="option-desc">압축 파일로 여러 책 업로드</span>
@@ -45,7 +47,7 @@
 			</button>
 
 			<button class="option-btn" onclick={onUploadToml}>
-				<span class="option-icon">📝</span>
+				<span class="option-icon"><Icon name="file-text" size={22} /></span>
 				<div class="option-content">
 					<span class="option-title">TOML 파일</span>
 					<span class="option-desc">TOML 형식으로 책 데이터 업로드</span>
@@ -89,7 +91,6 @@
 		min-width: 320px;
 		max-width: calc(100vw - 2rem);
 		border: 1px solid var(--color-border);
-		box-shadow: var(--shadow-lg);
 		animation: slideUp 0.2s ease-out;
 	}
 
