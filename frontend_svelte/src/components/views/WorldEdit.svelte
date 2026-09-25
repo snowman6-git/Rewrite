@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { apiBase } from '$api/client';
+	import { chatState } from '$lib/states/chat.svelte';
 	import MinMaxPercent from '$components/MinMaxPercent.svelte';
 	import { modelsState } from '$lib/states/models.svelte';
 	import Btn from '$components/Common/Btn.svelte';
@@ -16,7 +17,7 @@
 
 	async function load_system_prompt() {
 		try {
-			const response = await fetch(`${apiBase()}/world_memory`);
+			const response = await fetch(`${apiBase()}/world_edit?book_id=${chatState.book_id}`);
 			system_prompt = await response.text();
 		} catch {
 			system_prompt = '';
@@ -28,10 +29,10 @@
 	async function handleSave() {
 		is_saving = true;
 		try {
-			const response = await fetch(`${apiBase()}/world_memory`, {
+			const response = await fetch(`${apiBase()}/world_edit`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ prompt: system_prompt })
+				body: JSON.stringify({ book_id: chatState.book_id, prompt: system_prompt })
 			});
 			if (response.ok) {
 				toast.success('저장 완료!');
