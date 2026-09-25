@@ -5,7 +5,7 @@
 <div class="chat-tools">
 	<!-- Logic+ 토글 -->
 	<button
-		class="logic-plus-btn"
+		class="logic-plus-btn icon-btn"
 		class:active={chatState.logic_plus}
 		onclick={() => (chatState.logic_plus = !chatState.logic_plus)}
 		aria-pressed={chatState.logic_plus}
@@ -30,7 +30,7 @@
 
 	<!-- 전송 버튼 -->
 	<button
-		class="send-btn"
+		class="send-btn icon-btn"
 		class:active={chatState.user_input.trim() !== '' && !chatState.isModelResponding}
 		disabled={chatState.isModelResponding}
 		aria-label="전송"
@@ -44,37 +44,21 @@
 	.chat-tools {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		width: 100%;
-		padding: var(--space-xs) 0;
+		justify-content: flex-end;
+		padding: 0;
 		gap: var(--space-sm);
+		flex-shrink: 0;
 	}
 
 	/* ---------- Logic+ ---------- */
 	.logic-plus-btn {
-		width: 2.25rem;
-		height: 2.25rem;
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border: 1.5px solid var(--color-border);
-		border-radius: 50%;
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-secondary);
 		transition: all var(--transition-fast);
-	}
-
-	.logic-plus-btn:hover:not(:disabled) {
-		border-color: var(--color-text-tertiary);
-		background: var(--color-bg-hover);
 	}
 
 	.logic-plus-btn.active {
 		border-color: var(--color-accent-primary);
 		color: var(--color-accent-primary);
 		background: var(--color-accent-glow);
-		box-shadow: var(--shadow-glow);
 	}
 
 	.logic-plus-icon {
@@ -88,35 +72,18 @@
 
 	/* ---------- Send Button ---------- */
 	.send-btn {
-		width: 2.25rem;
-		height: 2.25rem;
-		flex-shrink: 0;
-		border-radius: 50%;
-		border: 1.5px solid var(--color-border);
-		background: var(--color-bg-tertiary);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		transition: all var(--transition-fast);
 		opacity: 0.4;
-	}
-
-	.send-btn:hover:not(:disabled) {
-		border-color: var(--color-accent-primary);
-		background: var(--color-accent-glow);
-		opacity: 0.8;
 	}
 
 	.send-btn.active {
 		opacity: 1;
-		border-color: var(--color-accent-primary);
+		border-color: var(--color-bg-primary);
 		background: var(--color-accent-primary);
-		box-shadow: 0 0 12px var(--color-accent-glow);
 	}
 
 	.send-btn.active:hover {
 		background: var(--color-accent-secondary);
-		border-color: var(--color-accent-secondary);
+		border-color: var(--color-bg-primary);
 	}
 
 	.send-btn:disabled {
@@ -136,13 +103,13 @@
 	}
 
 	.send-btn.active .send-icon {
-		filter: brightness(0) invert(1);
+		filter: brightness(0);
 	}
 
 	/* ---------- Mobile ---------- */
 	@media (max-width: 640px) {
 		.chat-tools {
-			padding: var(--space-xs) 0;
+			padding: 0;
 		}
 
 		.logic-plus-btn {

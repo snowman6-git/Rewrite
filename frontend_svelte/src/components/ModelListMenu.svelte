@@ -60,6 +60,5 @@
 		border-radius: 1rem 1rem 0 0;
 		border-bottom: none;
 		overflow: hidden;
-		box-shadow: var(--shadow-lg);
 	}
 </style>

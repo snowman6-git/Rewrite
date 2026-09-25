@@ -126,6 +126,7 @@ export async function chat(c: Context) {
 		messages: (await read_book(book_id, true)).chat,
 	};
 
+	// 일단은 provider구분 없이, 나중엔 꼭해야함!!
 	if (model.includes('gemini')){
 		let llm_response_result = '';
 		const response = await Gemini_chat(requestBody)

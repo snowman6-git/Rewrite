@@ -1,13 +1,14 @@
 <script lang="ts">
 	import '$lib/assets/app.css';
 	import { page } from '$app/stores';
+	import Icon from '$components/Common/Icon.svelte';
 	let { children } = $props();
 	const tabs = [
-		{ id: 'book', label: '책장', icon: '📚', href: '/book' },
-		{ id: 'production', label: '제작', icon: '🎨', href: '/production' },
-		{ id: 'library', label: '서재', icon: '🖊️', href: '/library' },
-		{ id: 'characters', label: '등장인물', icon: '👥', href: '/characters' },
-		{ id: 'settings', label: '설정', icon: '⚙️', href: '/settings' }
+		{ id: 'book', label: '책장', icon: 'books', href: '/book' },
+		{ id: 'production', label: '제작', icon: 'edit', href: '/production' },
+		{ id: 'library', label: '서재', icon: 'book-open', href: '/library' },
+		{ id: 'characters', label: '등장인물', icon: 'users', href: '/characters' },
+		{ id: 'settings', label: '설정', icon: 'settings', href: '/settings' }
 	];
 
 	let activeTab = $derived(tabs.find((t) => $page.url.pathname.startsWith(t.href))?.id ?? 'book');
@@ -34,7 +35,7 @@
 		<div class="nav-container">
 			{#each tabs as tab (tab.id)}
 				<a href={tab.href} class="nav-item" class:active={activeTab === tab.id}>
-					<span class="nav-icon">{tab.icon}</span>
+					<span class="nav-icon"><Icon name={tab.icon} /></span>
 					<span class="nav-label">{tab.label}</span>
 				</a>
 			{/each}

@@ -99,60 +99,35 @@
 <div class="book-section">
 	<ToastContainer />
 
-	<!-- Search & Sort -->
+	<!-- 컨트롤: 검색 + 정렬 + 업로드 -->
 	<div class="controls">
-		<div class="search-container">
-			<input
-				type="text"
-				class="search-input"
-				placeholder="이어서 쓰기"
-				oninput={handleSearch}
-				aria-label="검색"
-			/>
-		</div>
+		<input
+			type="text"
+			class="search-input"
+			placeholder="이어서 쓰기"
+			oninput={handleSearch}
+			aria-label="검색"
+		/>
 
-		<div class="head-tools">
+		<div class="tools">
 			<div class="sort-buttons">
-				<button
-					class="sort-btn"
-					class:active={sortBy === 'popular'}
-					data-sort="popular"
-					onclick={handleSort}
+				<button class="sort-btn" class:active={sortBy === 'popular'} data-sort="popular"
+					onclick={handleSort}>인기</button
 				>
-					<span class="icon">🔥</span>
-					인기
-				</button>
-				<button
-					class="sort-btn"
-					class:active={sortBy === 'usage'}
-					data-sort="usage"
-					onclick={handleSort}
+				<button class="sort-btn" class:active={sortBy === 'usage'} data-sort="usage"
+					onclick={handleSort}>활성화</button
 				>
-					<span class="icon">📖</span>
-					활성화
-				</button>
-				<button
-					class="sort-btn"
-					class:active={sortBy === 'created'}
-					data-sort="created"
-					onclick={handleSort}
+				<button class="sort-btn" class:active={sortBy === 'created'} data-sort="created"
+					onclick={handleSort}>추가일자</button
 				>
-					<span class="icon">📅</span>
-					추가일자
-				</button>
 			</div>
 
-			<!-- Upload Buttons -->
-			<div class="upload-group">
-				<button
-					class="upload-btn"
-					onclick={() => (showUploadModal = true)}
-					aria-label="책 업로드"
-					title="책 업로드"
-				>
-					<span class="icon">+</span>
-				</button>
-			</div>
+			<button
+				class="upload-btn"
+				onclick={() => (showUploadModal = true)}
+				aria-label="책 업로드"
+				title="책 업로드">+</button
+			>
 		</div>
 	</div>
 
@@ -166,10 +141,7 @@
 	<!-- Empty State -->
 	{#if filteredBooks.length === 0}
 		<div class="empty-state">
-			<p class="empty-icon">📚</p>
-			<p class="empty-text">
-				{searchQuery ? '검색 결과가 없습니다' : '아직 책이 없습니다'}
-			</p>
+			<p class="empty-text">{searchQuery ? '검색 결과가 없습니다' : '아직 책이 없습니다'}</p>
 			<p class="empty-hint">
 				{searchQuery ? '다른 키워드로 검색해보세요' : '새로운 책을 추가해보세요'}
 			</p>
@@ -221,257 +193,125 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
+		gap: var(--space-md);
 	}
+
 	.controls {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--space-md);
+		gap: var(--space-sm);
 		align-items: center;
-		justify-content: space-between;
-		flex-direction: row-reverse;
-	}
-
-	.search-container {
-		position: relative;
-		flex: 1;
-		min-width: 250px;
-		max-width: 400px;
 	}
 
 	.search-input {
-		width: 100%;
-		padding: var(--space-sm) var(--space-lg) var(--space-sm) var(--space-md);
+		flex: 1;
+		min-width: 200px;
+		max-width: 320px;
+		padding: var(--space-sm) var(--space-md);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-sm);
 		background: var(--color-bg-secondary);
 		color: var(--color-text-primary);
 		font-size: var(--font-size-sm);
-		transition: all var(--transition-fast);
 		outline: none;
-		margin-bottom: 1rem;
+		transition: border-color var(--transition-fast);
 	}
 
 	.search-input:focus {
 		border-color: var(--color-accent-primary);
-		box-shadow: 0 0 0 3px var(--color-accent-primary-opacity);
 	}
 
 	.search-input::placeholder {
 		color: var(--color-text-tertiary);
 	}
-	.head-tools {
-		width: 100%;
+
+	.tools {
+		margin-left: auto;
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
+		gap: var(--space-sm);
 	}
+
 	.sort-buttons {
-		height: 2rem;
 		display: flex;
-		gap: var(--space-2xs);
-		padding: var(--space-lg) var(--space-4xl);
-		border-radius: var(--radius-lg);
-		border: 2px solid var(--color-border);
-		max-width: fit-content;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg-secondary);
+		overflow: hidden;
 	}
+
 	.sort-btn {
-		height: 100%;
-		padding: var(--space-lg) var(--space-4xl);
-		border: 2px solid transparent;
+		padding: var(--space-xs) var(--space-sm);
+		border: none;
 		background: transparent;
-		color: var(--color-text-secondary);
-		font-size: var(--font-size-sm);
-		font-weight: 500;
-		border-radius: var(--radius-lg);
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xs);
 		cursor: pointer;
-		transition: all var(--transition-base);
 		white-space: nowrap;
-		display: flex;
-		align-items: center;
-		gap: var(--space-2xs);
+		transition:
+			color var(--transition-fast),
+			background var(--transition-fast);
 	}
 
-	.sort-btn .icon {
-		font-size: 0.85em;
-	}
-
-	.sort-btn:hover {
-		color: var(--color-text-primary);
-		background: var(--color-bg-tertiary);
+	.sort-btn + .sort-btn {
+		border-left: 1px solid var(--color-border);
 	}
 
 	.sort-btn.active {
-		color: var(--color-text-primary);
 		background: var(--color-bg-elevated);
-		border-color: var(--color-accent-primary);
-		box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
-	}
-
-	.upload-group {
-		display: flex;
-		gap: var(--space-2xs);
-		align-items: center;
-	}
-
-	.upload-btn {
-		width: 2rem;
-		height: 2rem;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border: 2px solid var(--color-border);
-		border-radius: var(--radius-md);
-		background: var(--color-bg-secondary);
-		color: var(--color-text-secondary);
-		cursor: pointer;
-		transition: all var(--transition-fast);
-		font-size: 0.9rem;
-	}
-
-	.upload-btn:hover {
-		background: var(--color-bg-tertiary);
-		border-color: var(--color-accent-primary);
 		color: var(--color-text-primary);
 	}
 
 	.upload-btn {
+		width: 2.25rem;
+		height: 2.25rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 40px;
-		height: 40px;
-		border: 2px dashed var(--color-border);
-		border-radius: var(--radius-lg);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
 		background: var(--color-bg-secondary);
 		color: var(--color-text-secondary);
-		font-size: 1.5rem;
+		font-size: var(--font-size-base);
 		cursor: pointer;
-		transition: all var(--transition-base);
+		transition:
+			border-color var(--transition-fast),
+			color var(--transition-fast);
 	}
 
 	.upload-btn:hover {
 		border-color: var(--color-accent-primary);
-		color: var(--color-accent-primary);
-		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
 	}
 
 	.book-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 		gap: var(--space-md);
-		overflow-y: scroll;
+		align-content: start;
+		overflow-y: auto;
 		-webkit-overflow-scrolling: touch;
-	}
-
-	.empty-state {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		padding: var(--space-3xl) var(--space-md);
-		text-align: center;
-		gap: var(--space-sm);
-		height: 100%;
-		width: 100%;
-	}
-
-	.empty-icon {
-		font-size: 3rem;
-		opacity: 0.5;
-	}
-
-	.empty-text {
-		font-size: var(--font-size-base);
-		color: var(--color-text-secondary);
-		margin: 0;
-		font-weight: 500;
-	}
-
-	.empty-hint {
-		font-size: var(--font-size-sm);
-		color: var(--color-text-tertiary);
-		margin: 0;
-	}
-
-	@media (max-width: 1200px) {
-		.book-grid {
-			grid-template-columns: repeat(4, 1fr);
-		}
 	}
 
 	@media (max-width: 768px) {
 		.book-section {
 			padding: var(--space-md);
-			gap: var(--space-md);
 		}
-		.controls {
-			flex-direction: column;
-			align-items: stretch;
+		.tools {
+			margin-left: 0;
+			width: 100%;
+			justify-content: space-between;
 		}
-
-		.search-container {
-			max-width: 100%;
-		}
-
-		.sort-buttons {
-		}
-
 		.book-grid {
 			grid-template-columns: repeat(3, 1fr);
 			gap: var(--space-sm);
-		}
-
-		.book-cover {
-			aspect-ratio: 3 / 4;
-		}
-
-		.book-emoji {
-			font-size: 2rem;
-		}
-
-		.book-info {
-			padding: var(--space-sm);
-			gap: var(--space-2xs);
-		}
-
-		.book-title {
-			font-size: 0.75rem;
-		}
-
-		.book-author {
-			font-size: 0.65rem;
-		}
-
-		.book-category {
-			font-size: 0.6rem;
-			padding: 1px 4px;
-		}
-
-		.book-meta {
-			display: none;
 		}
 	}
 
 	@media (max-width: 480px) {
 		.book-grid {
-			grid-template-columns: repeat(2, 1fr);
-		}
-
-		.book-cover {
-			aspect-ratio: 2 / 3;
-		}
-
-		.book-emoji {
-			font-size: 1.5rem;
-		}
-
-		.sort-buttons {
-			flex-wrap: wrap;
-		}
-
-		.sort-btn {
-			font-size: 0.65rem;
-			padding: 4px 8px;
+			grid-template-columns: repeat(3, 1fr);
+			gap: var(--space-xs);
 		}
 	}
 </style>

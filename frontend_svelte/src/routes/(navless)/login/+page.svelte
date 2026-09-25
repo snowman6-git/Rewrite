@@ -4,7 +4,7 @@
 	import ToastContainer from '$components/Common/ToastContainer.svelte';
 	import InputField from '$components/Common/InputField.svelte';
 	import Btn from '$components/Common/Btn.svelte';
-	import { PUBLIC_API_URL } from '$env/static/public';
+	import { apiBase } from '$api/client';
 
 	let id = $state('');
 	let password = $state('');
@@ -20,7 +20,7 @@
 
 		try {
 			const response = await axios.post(
-				`${PUBLIC_API_URL}/api/user/login`,
+				`${apiBase()}/api/user/login`,
 				{
 					id: id,
 					pw: password
@@ -111,12 +111,10 @@
 	.login-container {
 		width: 100%;
 		max-width: 420px;
-		padding: var(--space-md);
+		padding: var(--space-lg);
 		background: var(--color-bg-secondary);
-		border: 0.15rem solid var(--color-accent-primary);
-		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow-lg);
-		backdrop-filter: blur(10px);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
 	}
 
 	/* Logo Section */
@@ -134,10 +132,7 @@
 	.logo-text {
 		font-size: var(--font-size-3xl);
 		font-weight: 700;
-		background: var(--color-accent-gradient);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
+		color: var(--color-text-primary);
 		margin-bottom: var(--space-xs);
 		letter-spacing: -0.02em;
 	}

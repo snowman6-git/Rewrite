@@ -54,7 +54,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: #4ade80;
+		color: var(--color-success);
 		font-size: 0.875rem;
 		font-weight: 700;
 		flex-shrink: 0;

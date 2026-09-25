@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '$components/Common/Icon.svelte';
 	import type { Book } from '$lib/types';
 
 	let { book, onClick }: { book: Book; onClick?: (book: Book) => void } = $props();
@@ -8,59 +9,47 @@
 	}
 </script>
 
-<div class="book-card" onclick={handleClick}>
+<!--책 판매 사이트 패턴: 표지(이미지 슬롯) → 제목 → 작가-->
+<div
+		class="book-card"
+		role="button"
+		tabindex={0}
+		onclick={handleClick}
+		onkeydown={(e) => {
+			if (e.key === 'Enter' || e.key === ' ') handleClick();
+		}}
+	>
 	<div class="book-cover">
-		<div class="cover-placeholder">
-			<span class="book-emoji">📖</span>
-		</div>
+		<span class="cover-stack"><Icon name="book-stack" size={48} /></span>
 	</div>
 	<div class="book-info">
 		<h3 class="book-title">{book.title}</h3>
-		<p class="book-author">{book.desc}</p>
-		<p class="book-author">{book.author}</p>
-		<span class="book-category">{book.category}</span>
-		<div class="book-meta">
-			<span class="meta-item">
-				<span class="meta-icon">📊</span>
-				<span>{book.usageCount} 회</span>
-			</span>
-			<span class="meta-item">
-				<span class="meta-icon">📅</span>
-						<span>{book.createdAt ? new Date(book.createdAt).toLocaleDateString('ko-KR') : ''}</span>
-			</span>
-		</div>
+		{#if book.author}<p class="book-author">{book.author}</p>{/if}
 	</div>
 </div>
 
 <style>
 	.book-card {
 		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		overflow: hidden;
-		transition: all var(--transition-base);
-		border: 1px solid var(--color-border);
 		cursor: pointer;
-		min-height: 280px;
 		display: flex;
 		flex-direction: column;
+		transition: border-color var(--transition-fast);
 	}
 
 	.book-card:hover {
-		box-shadow: var(--shadow-md);
 		border-color: var(--color-accent-primary);
 	}
 
+	/* 표지 = 향후 실제 사진 슬롯. 3:4(실제 책 비율) */
 	.book-cover {
 		position: relative;
 		width: 100%;
 		aspect-ratio: 3 / 4;
 		overflow: hidden;
-		background: var(--color-bg-elevated);
-	}
-
-	.cover-placeholder {
-		width: 100%;
-		height: 100%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -71,67 +60,38 @@
 		);
 	}
 
-	.book-emoji {
-		font-size: 3rem;
+	.cover-stack {
+		color: var(--color-text-tertiary);
 		opacity: 0.5;
 	}
 
 	.book-info {
-		padding: var(--space-md);
+		padding: var(--space-sm);
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-sm);
+		gap: 2px;
 	}
 
 	.book-title {
-		font-size: var(--font-size-sm);
+		font-size: var(--font-size-xs);
 		font-weight: 600;
 		color: var(--color-text-primary);
 		margin: 0;
 		line-height: 1.4;
-		padding: var(--space-2xs) 0;
 		display: -webkit-box;
+		line-clamp: 2;
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
 	}
 
 	.book-author {
-		font-size: 0.75rem;
+		font-size: 0.7rem;
 		color: var(--color-text-secondary);
 		margin: 0;
 		line-height: 1.4;
-		padding: var(--space-2xs) 0;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-	}
-
-	.book-category {
-		font-size: 0.65rem;
-		padding: var(--space-2xs) var(--space-xs);
-		background: var(--color-bg-elevated);
-		border-radius: var(--radius-xs);
-		color: var(--color-text-tertiary);
-		align-self: flex-start;
-	}
-
-	.book-meta {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-xs);
-		margin-top: var(--space-2xs);
-	}
-
-	.meta-item {
-		display: flex;
-		align-items: center;
-		gap: 2px;
-		font-size: 0.65rem;
-		color: var(--color-text-tertiary);
-	}
-
-	.meta-icon {
-		font-size: 0.7rem;
 	}
 </style>

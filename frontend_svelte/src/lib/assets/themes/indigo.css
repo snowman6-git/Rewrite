@@ -1,0 +1,22 @@
+/* [THEME] 인디고(원본) — 동적 import로만 주입되는 오버라이드. app.css에 넣지 않는다. */
+:root[data-theme='indigo'] {
+	--color-accent-primary: #6366f1;
+	--color-accent-secondary: #8b5cf6;
+	--color-accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+	--color-accent-glow: rgba(99, 102, 241, 0.15);
+	--color-user-bubble: #1e1e2e;
+	--color-user-bubble-border: #313244;
+	--color-ai-bubble: #16161e;
+	--color-ai-bubble-border: #2a2a3a;
+	--color-loading: #6366f1;
+	--color-code-bg: #1a1b26;
+	--color-code-border: #313244;
+	--color-code-text: #c0caf5;
+	--color-code-header-bg: #16161e;
+	--shadow-glow: 0 0 20px #6366f11a;
+	--shadow-glow-lg: 0 0 40px #6366f126;
+}
+
+:root[data-theme='indigo'] .nav-item.active {
+	color: white;
+}

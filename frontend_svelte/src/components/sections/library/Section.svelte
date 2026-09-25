@@ -4,10 +4,21 @@
 	import LibrarySection from './LibrarySection.svelte';
 
 	interface DeskBook {
-		id: number;
+		id: string;
 		title: string;
 		lastLine: string;
 		label: string;
+	}
+
+	interface RawLibraryItem {
+		session_id: string;
+		title?: string;
+		lastLine?: string;
+		label?: string;
+	}
+
+	function errMsg(error: unknown, fallback: string): string {
+		return error instanceof Error && error.message ? error.message : fallback;
 	}
 
 	let books = $state<DeskBook[]>([]);
@@ -21,16 +32,16 @@
 		errorMessage = '';
 
 		try {
-			const data = await library_listup();
-			books = data.map((book: any) => ({
+			const data = (await library_listup()) as RawLibraryItem[];
+			books = data.map((book) => ({
 				id: book.session_id,
 				title: book.title || '제목 없음',
 				lastLine: book.lastLine || '',
 				label: book.label || '분류 없음'
 			}));
-		} catch (error: any) {
+		} catch (error) {
 			isError = true;
-			errorMessage = error.message || '서재를 불러오는데 실패했습니다.';
+			errorMessage = errMsg(error, '서재를 불러오는데 실패했습니다.');
 			toast.error(errorMessage);
 		} finally {
 			isLoading = false;
@@ -47,14 +58,11 @@
 			await deleteBook(book.id);
 			toast.success('책이 삭제되었습니다.');
 			books = books.filter((b) => b.id !== book.id);
-		} catch (error: any) {
-			toast.error(error.message || '삭제에 실패했습니다.');
+		} catch (error) {
+			toast.error(errMsg(error, '삭제에 실패했습니다.'));
 		}
 	}
 
-	function handleBookClick(book: DeskBook) {
-		window.location.href = `/book/${book.id}`;
-	}
 </script>
 
 <LibrarySection
@@ -64,5 +72,4 @@
 	{errorMessage}
 	onDelete={handleDelete}
 	onRefresh={loadBooksData}
-	onBookClick={handleBookClick}
 />

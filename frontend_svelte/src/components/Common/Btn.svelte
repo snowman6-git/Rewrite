@@ -57,24 +57,23 @@
 
 	.btn-save {
 		background: var(--color-accent-primary);
-		color: #fff;
+		color: var(--color-text-inverse);
 		border-color: var(--color-accent-primary);
 	}
 
 	.btn-save:hover:not(:disabled) {
 		background: var(--color-accent-secondary);
 		border-color: var(--color-accent-secondary);
-		box-shadow: var(--shadow-glow);
 	}
 
 	.btn-reset {
 		background: transparent;
-		color: #ef4444;
-		border-color: rgba(239, 68, 68, 0.3);
+		color: var(--color-error);
+		border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
 	}
 
 	.btn-reset:hover:not(:disabled) {
-		background: rgba(239, 68, 68, 0.1);
-		border-color: #ef4444;
+		background: color-mix(in srgb, var(--color-error) 10%, transparent);
+		border-color: var(--color-error);
 	}
 </style>

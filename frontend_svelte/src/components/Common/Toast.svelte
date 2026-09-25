@@ -8,8 +8,8 @@
 
 	const typeConfig: Record<ToastType, { icon: string; color: string }> = {
 		success: { icon: '✓', color: 'var(--color-accent-primary)' },
-		error: { icon: '✕', color: '#ef4444' },
-		warning: { icon: '⚠', color: '#f59e0b' },
+		error: { icon: '✕', color: 'var(--color-error)' },
+		warning: { icon: '⚠', color: 'var(--color-warning)' },
 		info: { icon: 'ℹ', color: 'var(--color-accent-secondary)' }
 	};
 
@@ -39,7 +39,6 @@
 		border-radius: var(--radius-md);
 		background: var(--color-bg-secondary);
 		border: 1px solid var(--color-border);
-		box-shadow: var(--shadow-lg);
 		font-size: var(--font-size-sm);
 		color: var(--color-text-primary);
 		min-width: 280px;
