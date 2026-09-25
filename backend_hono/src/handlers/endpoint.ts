@@ -13,12 +13,14 @@ import { ModelInfo, ChatInfo } from '../types/index';
 import { args_only } from '../lib/parser';
 import { memo } from 'hono/jsx';
 import { add_chat_history, load_chat_history, reset_chat_history } from '../services/session';
-import { read_book } from '../lib/db';
+import { read_book, ReadBook } from '../lib/db';
 import { Gemini_chat, Gemini_models } from '../test/Gemini-api';
 
 dotenv.config();
 const LLM_API_URL = process.env.LLM_API_URL;
 const API_KEY = process.env.API_KEY;
+
+const readbook = new ReadBook()
 
 // 차후 세션의 분리와 함께 해당 함수의 세션 분간용 인자를 통해 수정
 export async function chat_listup(c: Context) {
@@ -59,9 +61,11 @@ export async function getTokenSize(c: Context) {
 }
 
 // GET하나 UPDATE하나 해서 보기만 하기 업데이트하기 이런거 추가
-export async function world_memory(c: Context) {
-	let memory = await load_chat_history();
-	return c.json(memory[0]['content']);
+export async function world_edit(c: Context) {
+	const { book_id } = c.req.query();
+	console.log(book_id)
+	let memory =  ReadBook.system(book_id) 
+	return c.json(memory.system);
 }
 
 export async function reset_world_memory(c: Context) {
@@ -70,13 +74,13 @@ export async function reset_world_memory(c: Context) {
 }
 
 export async function models(c: Context) {
-	let models_api = await axios.get(`${LLM_API_URL}/models`, {
-		headers: {
-			Authorization: `Bearer ${API_KEY}`,
-			'Content-Type': 'application/json',
-		},
-	});
-	let models_api_data = models_api.data.data;
+	// let models_api = await axios.get(`${LLM_API_URL}/models`, {
+	// 	headers: {
+	// 		Authorization: `Bearer ${API_KEY}`,
+	// 		'Content-Type': 'application/json',
+	// 	},
+	// });
+	let models_api_data = await Gemini_models()
 	// let chat_list = models_api_data.map((model: ModelInfo) => {
 	// 	// 1. 매핑 테이블에서 해당 모델용 정보를 가져옴
 	// 	const config = MODEL_DISPLAY_CONFIG[model.id];
@@ -91,14 +95,11 @@ export async function models(c: Context) {
 	// 		// context_size: args_only(model.status?.args ?? "")
 	// 	};
 	// });
-	let chat_list = await Gemini_models()
-	console.log(chat_list)
-	return c.json(chat_list);
+	return c.json(models_api_data);
 }
 
 export async function chat(c: Context) {
 	const { book_id, chat, model, custom_note, logic_plus } = await c.req.json();
-	console.log(model)
 	// 초기화 하고 리턴에서 참조가능하게 상위변수 지정
 	let thinking_tokens = 0;
 	if (logic_plus == false) {
@@ -109,7 +110,7 @@ export async function chat(c: Context) {
 	// 유저입력을 추가
 	await add_chat_history(book_id, 'user', chat);
 	const requestBody = {
-		model: model,
+		model: model.id,
 		// Advance parameters
 		min_p: 0.5,
 		temperature: 1.2,
@@ -125,9 +126,9 @@ export async function chat(c: Context) {
 		// 채팅기록을 불러옴, 이때 방금 막 추가한 메세지도 불러와 사용됌
 		messages: (await read_book(book_id, true)).chat,
 	};
-
 	// 일단은 provider구분 없이, 나중엔 꼭해야함!!
-	if (model.includes('gemini')){
+	console.log(model.provider)
+	if (model.provider == "gemini"){
 		let llm_response_result = '';
 		const response = await Gemini_chat(requestBody)
 		return streamText(c, async (stream) => {

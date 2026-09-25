@@ -1,2 +1,5 @@
 https://www.svgrepo.com/collection/bigmug-interface-icons/
 https://www.svgrepo.com/collection/dazzle-line-icons
+# Icon.svelte 신규 아이콘 출처 (2026-09-25)
+- chevron-left / chevron-right / menu / plus: Feather Icons (MIT) — https://feathericons.com / https://github.com/feathericons/feather
+- ink (잉크 방울): 직접 그림 (수작업 드로잉, feather에 없음)

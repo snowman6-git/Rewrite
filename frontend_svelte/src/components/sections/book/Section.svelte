@@ -1,9 +1,11 @@
 <script lang="ts">
 	import UploadModal from '$components/Common/UploadModal.svelte';
 	import ToastContainer from '$components/Common/ToastContainer.svelte';
+	import ContextMenu from '$components/Common/ContextMenu.svelte';
+	import Modal from '$components/Common/Modal.svelte';
 	import BookCard from '$components/sections/book/BookCard.svelte';
 	import BookPreview from '$components/sections/book/BookPreview.svelte';
-	import { uploadFiles, loadBooks } from '$lib/api/book';
+	import { uploadFiles, loadBooks, deleteBookshelf, renameBook } from '$lib/api/book';
 	import { toast } from '$lib/stores/toast.svelte';
 	import type { Book } from '$lib/types';
 
@@ -17,6 +19,52 @@
 	let showUploadModal = $state(false);
 	let loaded = $state(false);
 	let selectedBook = $state<Book | null>(null);
+	let ctxMenu = $state<{ x: number; y: number; book: Book | null }>({ x: 0, y: 0, book: null });
+	let confirmDeleteBook = $state<Book | null>(null);
+	let renameBookTarget = $state<Book | null>(null);
+	let renameValue = $state('');
+
+	function showContextMenu(x: number, y: number, book: Book) {
+		ctxMenu = { x, y, book };
+	}
+
+	function hideContextMenu() {
+		ctxMenu = { x: 0, y: 0, book: null };
+	}
+
+	let menuItems = $derived.by(() => {
+		if (!ctxMenu.book) return [];
+		const b = ctxMenu.book;
+		return [
+			{ label: '정보 보기', onClick: () => (selectedBook = b) },
+			{ label: '제목 변경', onClick: () => (renameValue = b.title, (renameBookTarget = b)) },
+			{ label: '삭제', danger: true, onClick: () => (confirmDeleteBook = b) }
+		];
+	});
+
+	async function handleRenameBook(book: Book, title: string) {
+		try {
+			await renameBook(book.id, title);
+			toast.success('제목이 변경되었습니다.');
+			books = books.map((b) => (b.id === book.id ? { ...b, title } : b));
+		} catch (error) {
+			toast.error(
+				error instanceof Error && error.message ? error.message : '제목 변경에 실패했습니다.'
+			);
+		}
+	}
+
+	async function handleDeleteBook(book: Book) {
+		try {
+			await deleteBookshelf(book.id);
+			toast.success('책이 삭제되었습니다.');
+			books = books.filter((b) => b.id !== book.id);
+		} catch (error) {
+			toast.error(
+				error instanceof Error && error.message ? error.message : '삭제에 실패했습니다.'
+			);
+		}
+	}
 
 	function handleSearch(event: Event) {
 		searchQuery = (event.target as HTMLInputElement).value;
@@ -134,7 +182,11 @@
 	<!-- Grid -->
 	<div class="book-grid">
 		{#each filteredBooks as book (book.id)}
-			<BookCard {book} onClick={(b) => (selectedBook = b)} />
+			<BookCard
+				{book}
+				onClick={(b) => (selectedBook = b)}
+				onContext={(x, y, b) => showContextMenu(x, y, b)}
+			/>
 		{/each}
 	</div>
 
@@ -164,6 +216,42 @@
 
 	{#if selectedBook}
 		<BookPreview book={selectedBook} onClose={() => (selectedBook = null)} />
+	{/if}
+
+	<!-- Context Menu -->
+	<ContextMenu items={menuItems} {...ctxMenu} onClose={hideContextMenu} />
+
+	<!-- Delete Confirmation Modal -->
+	{#if confirmDeleteBook}
+		<Modal
+			title="삭제 확인"
+			message="{confirmDeleteBook.title} 책을 삭제하시겠습니까?"
+			variant="danger"
+			confirmText="삭제"
+			cancelText="취소"
+			onConfirm={() => {
+				const b = confirmDeleteBook;
+				confirmDeleteBook = null;
+				if (b) handleDeleteBook(b);
+			}}
+			onCancel={() => (confirmDeleteBook = null)}
+		/>
+	{/if}
+
+	<!-- Rename Modal -->
+	{#if renameBookTarget}
+		<Modal
+			title="제목 변경"
+			message="{renameBookTarget.title}의 제목을 변경합니다."
+			inputValue={renameValue}
+			inputPlaceholder="새 제목"
+			onConfirm={(v) => {
+				const b = renameBookTarget;
+				renameBookTarget = null;
+				if (b && v) handleRenameBook(b, v);
+			}}
+			onCancel={() => (renameBookTarget = null)}
+		/>
 	{/if}
 
 	<!-- Hidden file inputs -->

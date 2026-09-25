@@ -5,7 +5,7 @@ import {
 	models,
 	chat,
 	chat_listup,
-	world_memory,
+	world_edit,
 	reset_world_memory,
 	getTokenSize,
 } from './handlers/endpoint';
@@ -50,7 +50,7 @@ app.get('/', (c) => {
 // GET
 app.get('/chat_listup', chat_listup);
 app.get('/models', models);
-app.get('/world_memory', world_memory);
+app.get('/world_edit', world_edit);
 app.get('/api/chat/stream', chatSSE_listen);
 app.get('/book_listup', book_listup);
 app.get('/library_listup', library_listup);

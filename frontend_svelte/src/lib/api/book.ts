@@ -66,6 +66,17 @@ export async function deleteBook(id: string): Promise<void> {
 	});
 }
 
+export async function deleteBookshelf(id: string): Promise<void> {
+	await axios.delete(`${apiBase()}/bookshelf_delete`, {
+		params: { id },
+		withCredentials: true
+	});
+}
+
+export async function renameBook(id: string, title: string): Promise<void> {
+	await axios.post(`${apiBase()}/book_rename`, { id, title }, { withCredentials: true });
+}
+
 export interface UploadBookResult {
 	message: string;
 	books: Array<{

@@ -6,7 +6,7 @@ import { sql } from './sql';
 const db = new Database('main.db');
 // db.run("PRAGMA journal_mode = WAL;");
 
-class ReadBook {
+export class ReadBook {
 	static chat(book_id: string) {
 		let chat_list = db
 			.prepare(sql`
@@ -41,6 +41,20 @@ class ReadBook {
 			`)
 			.all(book_id);
 		return header;
+	}
+	static system(book_id: string) {
+		let system = db
+			.query(sql`
+				SELECT
+					Header.system
+				FROM
+					I_Header AS Header
+					JOIN F_Book AS Book ON Header.session_id = Book.session_id
+				WHERE
+					Header.session_id = ?
+			`)
+			.get(book_id);
+		return system;
 	}
 }
 
