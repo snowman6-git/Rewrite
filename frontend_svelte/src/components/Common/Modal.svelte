@@ -1,12 +1,16 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	export interface Props {
 		title: string;
 		message: string;
-		onConfirm: () => void;
+		onConfirm: (value?: string) => void;
 		onCancel: () => void;
 		variant?: 'danger' | 'default';
 		confirmText?: string;
 		cancelText?: string;
+		/** 지정하면 input 렌더, onConfirm에 값 전달 */
+		inputValue?: string;
+		inputPlaceholder?: string;
 	}
 
 	let {
@@ -16,11 +20,25 @@
 		onCancel,
 		variant = 'default',
 		confirmText = '확인',
-		cancelText = '취소'
+		cancelText = '취소',
+		inputValue,
+		inputPlaceholder = ''
 	}: Props = $props();
+
+	let value = $state(inputValue ?? '');
+	let inputEl = $state<HTMLInputElement>();
+
+	onMount(() => {
+		inputEl?.focus();
+	});
 
 	function handleOverlayClick() {
 		onCancel();
+	}
+
+	function handleConfirm() {
+		if (inputValue !== undefined && value.trim() === '') return;
+		onConfirm(inputValue !== undefined ? value.trim() : undefined);
 	}
 
 	function handleModalClick(e: MouseEvent) {
@@ -44,10 +62,22 @@
 <div class="modal-overlay" role="presentation" onclick={handleOverlayClick}>
 	<div class="modal" role="presentation" class:danger={variant === 'danger'} onclick={handleModalClick}>
 		<h3 class="modal-title">{title}</h3>
-		<p class="modal-text">{message}</p>
+		{#if message}<p class="modal-text">{message}</p>{/if}
+		{#if inputValue !== undefined}
+			<input
+				class="modal-input"
+				type="text"
+				bind:value
+				bind:this={inputEl}
+				placeholder={inputPlaceholder}
+				onkeydown={(e) => {
+					if (e.key === 'Enter') handleConfirm();
+				}}
+			/>
+		{/if}
 		<div class="modal-actions">
 			<button class="btn btn-cancel" onclick={onCancel}>{cancelText}</button>
-			<button class="btn btn-confirm" class:danger={variant === 'danger'} onclick={onConfirm}
+			<button class="btn btn-confirm" class:danger={variant === 'danger'} onclick={handleConfirm}
 				>{confirmText}</button
 			>
 		</div>
@@ -113,6 +143,28 @@
 		color: var(--color-text-secondary);
 		margin: 0 0 var(--space-lg);
 		line-height: 1.6;
+	}
+
+	.modal-input {
+		width: 100%;
+		padding: var(--space-sm) var(--space-md);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg-secondary);
+		color: var(--color-text-primary);
+		font-size: var(--font-size-sm);
+		font-family: inherit;
+		outline: none;
+		margin-bottom: var(--space-lg);
+		transition: border-color var(--transition-fast);
+	}
+
+	.modal-input:focus {
+		border-color: var(--color-accent-primary);
+	}
+
+	.modal-input::placeholder {
+		color: var(--color-text-tertiary);
 	}
 
 	.modal-actions {

@@ -56,6 +56,7 @@ class ChatState {
 		if (!isReload) {
 			this.list = [...this.list, { pid: uuidv4(), role: 'user', content: input }];
 			this.list = [...this.list, { pid: uuidv4(), role: 'assistant', content: '', live_token: 0 }];
+			this.user_input = ''; // 전송 성공 = 인풋 공백. 실패 시 아래에서 복원
 		} else {
 			this.list = [...this.list, { pid: uuidv4(), role: 'assistant', content: '', live_token: 0 }];
 		}
@@ -87,7 +88,13 @@ class ChatState {
 
 			const reader = response.body?.getReader();
 			const decoder = new TextDecoder();
-			if (!reader) return;
+			if (!reader) {
+				toast.error('메시지 전송에 실패했습니다.');
+				this.isModelResponding = false;
+				if (!isReload) this.user_input = input;
+				this.list = this.list.slice(0, -1);
+				return;
+			}
 
 			while (true) {
 				const { done, value } = await reader.read();

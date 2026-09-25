@@ -2,12 +2,16 @@
 	import Modal from '$components/Common/Modal.svelte';
 	import ContextMenu from '$components/Common/ContextMenu.svelte';
 	import Icon from '$components/Common/Icon.svelte';
+	import { longPress } from '$lib/longpress';
+	import { renameBook } from '$lib/api/book';
+	import { toast } from '$lib/stores/toast.svelte';
 
 	export interface DeskBook {
 		id: string;
 		title: string;
 		lastLine: string;
 		label: string;
+		bookId?: string;
 	}
 
 	export interface LibrarySectionProps {
@@ -33,8 +37,15 @@
 		y: 0,
 		book: null
 	});
+	// 터치 롱프레스는 동시에 1개만 발생하므로 공유 인스턴스 사용
+	let lpTarget = $state<DeskBook | null>(null);
+	const deskLp = longPress((x, y) => {
+		if (lpTarget) showContextMenu(x, y, lpTarget);
+	});
 
 	let confirmDeleteBook = $state<DeskBook | null>(null);
+	let renameBookTarget = $state<DeskBook | null>(null);
+	let renameValue = $state('');
 
 	// — 풀투리프레시(모바일): scrollTop 0에서 아래로 당겨 새로고침 —
 	let pull = $state(0);
@@ -72,10 +83,8 @@
 		}
 	}
 
-	function showContextMenu(e: MouseEvent, book: DeskBook) {
-		e.preventDefault();
-		e.stopPropagation();
-		contextMenu = { x: e.clientX, y: e.clientY, book };
+	function showContextMenu(x: number, y: number, book: DeskBook) {
+		contextMenu = { x, y, book };
 	}
 
 	function hideContextMenu() {
@@ -103,11 +112,25 @@
 		confirmDeleteBook = null;
 	}
 
+	async function handleRename(book: DeskBook, title: string) {
+		try {
+			// 책장: spine id / 서재: session_id (백엔드가 둘다 해석, book_rename-doc.md)
+			await renameBook(book.bookId ?? book.id, title);
+			toast.success('제목이 변경되었습니다.');
+			books = books.map((b) => (b.id === book.id ? { ...b, title } : b));
+		} catch (error) {
+			const msg = error instanceof Error && error.message ? error.message : '제목 변경에 실패했습니다.';
+			toast.error(msg);
+		}
+	}
+
 	let menuItems = $derived.by(() => {
 		if (!contextMenu.book) return [];
+		const b = contextMenu.book;
 		return [
-			{ label: '삭제', onClick: handleDeleteFromMenu },
-			{ label: '정보 보기', onClick: handleInfoFromMenu, disabled: true }
+			{ label: '정보 보기', onClick: handleInfoFromMenu, disabled: true },
+			{ label: '제목 변경', onClick: () => (renameValue = b.title, (renameBookTarget = b)) },
+			{ label: '삭제', danger: true, onClick: handleDeleteFromMenu }
 		];
 	});
 </script>
@@ -159,6 +182,7 @@
 					role="button"
 					tabindex={0}
 					onclick={() => {
+						if (deskLp.consume()) return;
 						window.location.href = `/book/${book.id}`;
 						/* TODO: 열기 */
 					}}
@@ -168,7 +192,18 @@
 							window.location.href = `/book/${book.id}`;
 						}
 					}}
-					oncontextmenu={(e) => showContextMenu(e, book)}
+					oncontextmenu={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						showContextMenu(e.clientX, e.clientY, book);
+					}}
+					ontouchstart={(e) => {
+						lpTarget = book;
+						deskLp.ontouchstart(e);
+					}}
+					ontouchmove={deskLp.ontouchmove}
+					ontouchend={deskLp.ontouchend}
+					ontouchcancel={deskLp.ontouchcancel}
 				>
 					<div class="item-content">
 						<div class="item-top">
@@ -207,6 +242,22 @@
 			cancelText="취소"
 			onConfirm={handleConfirmDelete}
 			onCancel={handleCancelDelete}
+		/>
+	{/if}
+
+	<!-- Rename Modal -->
+	{#if renameBookTarget}
+		<Modal
+			title="제목 변경"
+			message="{renameBookTarget.title}의 제목을 변경합니다."
+			inputValue={renameValue}
+			inputPlaceholder="새 제목"
+			onConfirm={(v) => {
+				const b = renameBookTarget;
+				renameBookTarget = null;
+				if (b && v) handleRename(b, v);
+			}}
+			onCancel={() => (renameBookTarget = null)}
 		/>
 	{/if}
 </div>
@@ -293,6 +344,7 @@
 		cursor: pointer;
 		transition: border-color var(--transition-fast);
 		user-select: none;
+		-webkit-touch-callout: none;
 	}
 
 	.desk-item:hover {

@@ -1,22 +1,30 @@
 <script lang="ts">
-	import { fly } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
+import { fly } from 'svelte/transition';
+import { cubicOut } from 'svelte/easing';
 
-	import WorldEdit from './views/WorldEdit.svelte';
-	import Persona from './views/Persona.svelte';
-	import Memory from './views/Memory.svelte';
+import Icon from '$components/Common/Icon.svelte';
+import Desc from '$components/Common/Desc.svelte';
+import { inkState } from '$lib/states/ink.svelte';
+import WorldEdit from './views/WorldEdit.svelte';
+import Persona from './views/Persona.svelte';
+import Memory from './views/Memory.svelte';
+import Tuning from './views/Tuning.svelte';
+import CustomPrompt from './views/CustomPrompt.svelte';
 
-	let isHammenu_open = $state(false);
-	let menu_now = $state(0);
-	let menus = ['메뉴', '월드에딧', '페르소나', '메모리'];
+let isHammenu_open = $state(false);
+let menu_now = $state(0);
+let menus = ['메뉴', '월드에딧', '페르소나', '메모리', '커스텀 프롬프트'];
+let showInkUsage = $state(false);
 
-	function handleXClick() {
-		if (menu_now === 0) {
-			isHammenu_open = false;
-		} else {
-			menu_now = 0;
-		}
-	}
+function handleXClick() {
+if (showInkUsage) {
+showInkUsage = false;
+} else if (menu_now === 0) {
+isHammenu_open = false;
+} else {
+menu_now = 0;
+}
+}
 </script>
 
 <button
@@ -25,6 +33,7 @@
 	onclick={() => (isHammenu_open = !isHammenu_open)}
 	aria-label="메뉴"
 >
+	<Icon name="menu" size={20} />
 </button>
 
 {#if isHammenu_open}
@@ -38,20 +47,51 @@
 	></div>
 	<div class="side_menu" transition:fly={{ x: 100, duration: 250, easing: cubicOut }}>
 		<div class="menu_header">
-			<span class="menu_title">{menus[menu_now]}</span>
+			<span class="menu_title">{showInkUsage ? '잉크 사용 내역' : menus[menu_now]}</span>
 			<button class="x_button" onclick={handleXClick} aria-label="닫기">
-				<span class="x_icon"></span>
+				<Icon name="chevron-right" size={22} />
 			</button>
 		</div>
 		<div class="menu_content">
-			{#if menu_now === 1}
+			{#if showInkUsage}
+				<div class="ink-usage">
+					<Desc>잉크 소모 기록. 소모값이 쌓이면 평균과 예상 횟수에 반영된다.</Desc>
+					{#if inkState.usage.length === 0}
+						<p class="usage-empty">아직 사용 내역이 없습니다</p>
+					{:else}
+						<div class="usage-list">
+							{#each inkState.usage as u (u.label + u.amount)}
+								<div class="usage-row">
+									<span class="usage-label">{u.label}</span>
+									<span class="usage-amount">-{u.amount.toLocaleString()}</span>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			{:else if menu_now === 1}
 				<WorldEdit />
 			{:else if menu_now === 2}
 				<Persona />
 			{:else if menu_now === 3}
 				<Memory />
-			{:else}
-				<div class="menu_list">
+			{:else if menu_now === 4}
+				<CustomPrompt />
+				{:else}
+					<button
+						class="ink-row"
+						onclick={() => (showInkUsage = true)}
+						aria-label="잉크 사용 내역 보기"
+					>
+						<span class="ink-left">
+							<Icon name="ink" size={18} />
+							<span class="ink-amount">{inkState.balance.toLocaleString()} / {inkState.costPerUse.toLocaleString()}</span>
+						</span>
+						<span class="ink-est">
+							{inkState.estimatedUses === null ? '∞' : `~${inkState.estimatedUses.toLocaleString()}회`}
+						</span>
+					</button>
+					<div class="menu_list">
 					{#each menus as menu, number (menu)}
 						{#if number > 0}
 							<button
@@ -64,6 +104,7 @@
 						{/if}
 					{/each}
 				</div>
+				<Tuning />
 			{/if}
 		</div>
 	</div>
@@ -78,33 +119,22 @@
 		border: none;
 		border-radius: var(--radius-md);
 		background: transparent;
+		color: var(--color-text-primary);
 		cursor: pointer;
-		position: relative;
-		transition: background var(--transition-fast);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition:
+			background var(--transition-fast),
+			color var(--transition-fast);
 	}
 
 	.h_button:hover {
 		background: var(--color-bg-hover);
 	}
 
-	.h_button::before {
-		content: '';
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		width: 1.25rem;
-		height: 1rem;
-		background-image: url('../lib/assets/h_menu.svg');
-		background-position: center;
-		background-repeat: no-repeat;
-		background-size: contain;
-		filter: brightness(0) invert(1);
-		transition: filter var(--transition-fast);
-	}
-
-	.h_button.active::before {
-		filter: brightness(0) invert(0.5) sepia(1) saturate(5) hue-rotate(220deg);
+	.h_button.active {
+		color: var(--color-accent-primary);
 	}
 
 	/* ---------- Overlay ---------- */
@@ -139,7 +169,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: var(--space-md) var(--space-lg);
+		padding: var(--space-md) var(--space-sm) var(--space-md) var(--space-lg);
 		border-bottom: 1px solid var(--color-border);
 		flex-shrink: 0;
 	}
@@ -156,6 +186,7 @@
 		border: none;
 		border-radius: var(--radius-md);
 		background: transparent;
+		color: var(--color-text-primary);
 		cursor: pointer;
 		display: flex;
 		align-items: center;
@@ -167,17 +198,6 @@
 		background: var(--color-bg-hover);
 	}
 
-	.x_icon {
-		width: 1.25rem;
-		height: 1.25rem;
-		background-image: url('../lib/assets/back.svg');
-		background-position: center;
-		background-repeat: no-repeat;
-		background-size: contain;
-		transform: rotate(180deg);
-		filter: brightness(0) invert(1);
-	}
-
 	/* ---------- Menu Content ---------- */
 	.menu_content {
 		flex: 1;
@@ -187,6 +207,90 @@
 		flex-direction: column;
 		min-height: 0;
 		height: 100%;
+	}
+
+	/* ---------- Ink (home) ---------- */
+	.ink-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		margin: var(--space-xs) var(--space-xs) 0;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: transparent;
+		color: var(--color-text-secondary);
+		font-family: inherit;
+		font-variant-numeric: tabular-nums;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		width: calc(100% - 2 * var(--space-xs));
+		box-sizing: border-box;
+	}
+
+	.ink-row:hover {
+		background: var(--color-bg-hover);
+	}
+
+	.ink-left {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		min-width: 0;
+	}
+
+	.ink-amount {
+		font-size: var(--font-size-sm);
+		font-weight: 500;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.ink-est {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+		white-space: nowrap;
+	}
+
+	/* ---------- Ink Usage View ---------- */
+	.ink-usage {
+		height: 100%;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-xs);
+	}
+
+	.usage-list {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.usage-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-sm);
+		font-size: var(--font-size-sm);
+		color: var(--color-text-primary);
+	}
+
+	.usage-amount {
+		color: var(--color-text-tertiary);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.usage-empty {
+		text-align: center;
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-sm);
+		padding: var(--space-xl) 0;
+		margin: 0;
 	}
 
 	/* ---------- Menu List (Home) ---------- */
@@ -228,7 +332,7 @@
 		}
 
 		.menu_header {
-			padding: var(--space-sm) var(--space-md);
+			padding: var(--space-sm) var(--space-xs) var(--space-sm) var(--space-md);
 		}
 
 		.menu_title {

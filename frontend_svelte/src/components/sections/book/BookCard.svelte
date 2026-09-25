@@ -1,12 +1,15 @@
 <script lang="ts">
 	import Icon from '$components/Common/Icon.svelte';
+	import { longPress } from '$lib/longpress';
 	import type { Book } from '$lib/types';
 
-	let { book, onClick }: { book: Book; onClick?: (book: Book) => void } = $props();
+	let { book, onClick, onContext }: {
+		book: Book;
+		onClick?: (book: Book) => void;
+		onContext?: (x: number, y: number, book: Book) => void;
+	} = $props();
 
-	function handleClick() {
-		onClick?.(book);
-	}
+	const lp = longPress((x, y) => onContext?.(x, y, book));
 </script>
 
 <!--책 판매 사이트 패턴: 표지(이미지 슬롯) → 제목 → 작가-->
@@ -14,10 +17,22 @@
 		class="book-card"
 		role="button"
 		tabindex={0}
-		onclick={handleClick}
-		onkeydown={(e) => {
-			if (e.key === 'Enter' || e.key === ' ') handleClick();
+		onclick={() => {
+			if (lp.consume()) return;
+			onClick?.(book);
 		}}
+		oncontextmenu={(e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			onContext?.(e.clientX, e.clientY, book);
+		}}
+		onkeydown={(e) => {
+			if (e.key === 'Enter' || e.key === ' ') onClick?.(book);
+		}}
+		ontouchstart={lp.ontouchstart}
+		ontouchmove={lp.ontouchmove}
+		ontouchend={lp.ontouchend}
+		ontouchcancel={lp.ontouchcancel}
 	>
 	<div class="book-cover">
 		<span class="cover-stack"><Icon name="book-stack" size={48} /></span>
@@ -38,6 +53,8 @@
 		display: flex;
 		flex-direction: column;
 		transition: border-color var(--transition-fast);
+		user-select: none;
+		-webkit-touch-callout: none;
 	}
 
 	.book-card:hover {

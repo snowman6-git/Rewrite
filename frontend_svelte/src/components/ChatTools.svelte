@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '$components/Common/Icon.svelte';
 	import { chatState } from '$lib/states/chat.svelte';
 </script>
 
@@ -11,7 +12,7 @@
 		aria-pressed={chatState.logic_plus}
 		aria-label="Logic+ 토글"
 	>
-		<span class="logic-plus-icon"></span>
+		<Icon name="plus" size={16} />
 	</button>
 
 	<!-- 메모리 바 (사용 안 함) -->
@@ -36,7 +37,7 @@
 		aria-label="전송"
 		onclick={() => chatState.sendMessage()}
 	>
-		<span class="send-icon"></span>
+		<Icon name="edit" size={16} />
 	</button>
 </div>
 
@@ -61,21 +62,15 @@
 		background: var(--color-accent-glow);
 	}
 
-	.logic-plus-icon {
-		width: 1rem;
-		height: 1rem;
-		background-image: url('../lib/assets/logic_plus.svg');
-		background-position: center;
-		background-repeat: no-repeat;
-		background-size: contain;
-	}
-
 	/* ---------- Send Button ---------- */
 	.send-btn {
+		color: var(--color-text-primary);
 		opacity: 0.4;
+		transition: all var(--transition-fast);
 	}
 
 	.send-btn.active {
+		color: var(--color-text-inverse);
 		opacity: 1;
 		border-color: var(--color-bg-primary);
 		background: var(--color-accent-primary);
@@ -91,21 +86,6 @@
 		cursor: not-allowed;
 	}
 
-	.send-icon {
-		width: 1rem;
-		height: 1rem;
-		background-image: url('../lib/assets/pen.svg');
-		background-position: center;
-		background-repeat: no-repeat;
-		background-size: contain;
-		filter: brightness(0) invert(1);
-		transition: filter var(--transition-fast);
-	}
-
-	.send-btn.active .send-icon {
-		filter: brightness(0);
-	}
-
 	/* ---------- Mobile ---------- */
 	@media (max-width: 640px) {
 		.chat-tools {
@@ -117,19 +97,9 @@
 			height: 2rem;
 		}
 
-		.logic-plus-icon {
-			width: 0.85rem;
-			height: 0.85rem;
-		}
-
 		.send-btn {
 			width: 2rem;
 			height: 2rem;
-		}
-
-		.send-icon {
-			width: 0.85rem;
-			height: 0.85rem;
 		}
 	}
 </style>

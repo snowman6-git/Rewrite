@@ -4,6 +4,7 @@
 		icon?: string;
 		onClick?: () => void;
 		disabled?: boolean;
+		danger?: boolean;
 		separator?: boolean;
 	}
 
@@ -63,7 +64,7 @@
 					{#if item.icon}
 						<span class="menu-icon">{item.icon}</span>
 					{/if}
-					<span class="menu-label">{item.label}</span>
+					<span class="menu-label" class:danger={item.danger}>{item.label}</span>
 				</button>
 			{/if}
 		{/each}
@@ -132,6 +133,10 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	.menu-label.danger {
+		color: var(--color-error);
 	}
 
 	.context-menu-separator {
