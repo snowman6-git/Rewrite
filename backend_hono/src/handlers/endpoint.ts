@@ -124,10 +124,9 @@ export async function chat(c: Context) {
 		return_progress: true,
 		timings_per_token: true,
 		// 채팅기록을 불러옴, 이때 방금 막 추가한 메세지도 불러와 사용됌
-		messages: (await read_book(book_id, true)).chat,
+		messages: (await read_book(book_id, true)),
 	};
 	// 일단은 provider구분 없이, 나중엔 꼭해야함!!
-	console.log(model.provider)
 	if (model.provider == "gemini"){
 		let llm_response_result = '';
 		const response = await Gemini_chat(requestBody)
@@ -135,7 +134,7 @@ export async function chat(c: Context) {
 			for await (const event of response) {
 				try {
 					// 이게 최선인지 알아보기
-					const content = event["delta"].text;
+					const content = event["delta"]!.text;
 					if (content != undefined ){
 						const res = {
 							content: content,
@@ -144,7 +143,7 @@ export async function chat(c: Context) {
 						llm_response_result += content;
 					}
 				} catch (error) {
-					console.log(error)
+					// console.log(error)
 				}
 			}
 			// 응답 종료시 메세지 묶어서 저장
