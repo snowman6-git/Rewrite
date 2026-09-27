@@ -5,6 +5,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { sql } from './sql';
 const db = new Database('main.db');
 // db.run("PRAGMA journal_mode = WAL;");
+import * as dotenv from 'dotenv';
+
+dotenv.config
+const SYSTEM_HEADER = process.env.SYSTEM_HEADER;
 
 export class ReadBook {
 	static chat(book_id: string) {
@@ -28,7 +32,7 @@ export class ReadBook {
 		return chat_list;
 	}
 	static header(book_id: string) {
-		let header = db
+		let db_header = db
 			.prepare(sql`
 				SELECT
 					Header.system,
@@ -40,6 +44,12 @@ export class ReadBook {
 					Header.session_id = ?
 			`)
 			.all(book_id);
+
+		const header = {
+			pid: "0",
+			role: "user",
+			content: SYSTEM_HEADER! + "\n" + db_header[0].system
+		}
 		return header;
 	}
 	static system(book_id: string) {
@@ -224,13 +234,18 @@ export async function read_bookdetail(id: string) {
 	return book_details;
 }
 
-export async function read_book(book_id: string, type: ReadType[]) {
-	const header = ReadBook.header(book_id);
+export async function read_book(book_id: string, is_request: boolean) {
+	let request;
 	const chat = ReadBook.chat(book_id);
-	const request = {
-		header,
-		chat,
-	};
+	if (is_request) {
+		const header = ReadBook.header(book_id);
+		request = [
+			header,
+			...chat,
+		]
+	} else {
+		request = chat
+	}
 	return request;
 }
 
