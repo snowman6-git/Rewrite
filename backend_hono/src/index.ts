@@ -18,13 +18,13 @@ import {
 	library_listup,
 } from './handlers/book';
 import { login } from './handlers/user';
-
 // 프론트 에러를 동의 없이 수집해도 되는지 알아보기
 import { auto_report } from './handlers/collect';
 import { serveStatic } from 'hono/bun';
 
 import { authMiddleware } from './middleware/auth';
 import { init } from './lib/db';
+import { book_remove } from './handlers/management';
 init();
 
 const app = new Hono();
@@ -33,7 +33,7 @@ app.use(
 		origin: '*',
 		// ["http://localhost:5173", "http://192.168.0.72:5173"],
 		// allowHeaders: ['X-Custom-Header', 'Upgrade-Insecure-Requests'],
-		allowMethods: ['POST', 'GET', 'OPTIONS'],
+		allowMethods: ['POST', 'GET', 'OPTIONS', 'DELETE'],
 		// exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
 		// maxAge: 600,
 		credentials: true,
@@ -66,6 +66,9 @@ app.post('/book_upload', book_upload);
 app.post('/book_unfolds', book_unfolds);
 
 app.post('/api/user/login', login);
+
+// DELETE
+app.delete('/book_delete', book_remove)
 
 export default {
 	port: 3000,

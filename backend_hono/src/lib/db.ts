@@ -14,19 +14,28 @@ export class ReadBook {
 	static chat(book_id: string) {
 		let chat_list = db
 			.prepare(sql`
-				SELECT
-					Pages.pid,
-					Pages.role,
-					Pages.content
-				FROM
-					F_Book AS Book
-					JOIN G_Pages AS Pages ON Book.session_id = Pages.session_id
-				WHERE
-					Pages.session_id = ?
-				ORDER BY
-					Pages.create_at ASC
-				LIMIT
-					50 --갯수는 나중에 조절 가능하게 하기
+				SELECT 
+					pid, 
+					role, 
+					content
+				FROM (
+					SELECT
+						Pages.pid,
+						Pages.role,
+						Pages.content,
+						Pages.create_at -- 정렬을 위해 서브쿼리에 포함
+					FROM
+						F_Book AS Book
+						JOIN G_Pages AS Pages ON Book.session_id = Pages.session_id
+					WHERE
+						Pages.session_id = ?
+					ORDER BY
+						Pages.create_at DESC
+					LIMIT
+						50 -- 최신 50개 먼저 추출 (61번 -> 12번 순서)
+				) --가져올땐 최근 50개로
+				ORDER BY 
+					create_at ASC; -- 추출된 50개를 다시 과거 순으로 정렬 (12번 -> 61번 순서)
 			`)
 			.all(book_id);
 		return chat_list;
@@ -245,6 +254,7 @@ export async function read_book(book_id: string, is_request: boolean) {
 		]
 	} else {
 		request = chat
+		console.log(request)
 	}
 	return request;
 }
