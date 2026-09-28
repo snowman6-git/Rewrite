@@ -143,7 +143,7 @@ export async function chat(c: Context) {
 						llm_response_result += content;
 					}
 				} catch (error) {
-					// console.log(error)
+					console.log(error)
 				}
 			}
 			// 응답 종료시 메세지 묶어서 저장
