@@ -1,4 +1,4 @@
-# book_delete API 요구사항
+# book_delete API 요구사항 [v]
 
 ## 엔드포인트
 

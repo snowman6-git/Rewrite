@@ -55,7 +55,7 @@
 		align-items: center;
 		justify-content: center;
 		color: var(--color-success);
-		font-size: 0.875rem;
+		font-size: var(--font-size-sm);
 		font-weight: 700;
 		flex-shrink: 0;
 		margin-right: var(--space-xs);

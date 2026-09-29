@@ -74,6 +74,9 @@ body::-webkit-scrollbar {
 	--space-xl: 2rem;
 	--space-2xl: 3rem;
 
+	--space-2xs: 0.25rem;
+
+	--radius-xs: 0.25rem;
 	--radius-sm: 0.5rem;
 	--radius-md: 0.75rem;
 	--radius-lg: 1rem;

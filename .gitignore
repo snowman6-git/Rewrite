@@ -12,6 +12,9 @@ sqlite_test
 # LLM Create Folder
 A_*
 Orinthia*
+.pi*
+.serena
+hotpatch-hub
 
 *_prototype
 /test/*
@@ -41,5 +44,3 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 vitest-examples
-
-.pi

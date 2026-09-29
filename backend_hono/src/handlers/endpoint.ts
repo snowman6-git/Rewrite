@@ -63,7 +63,6 @@ export async function getTokenSize(c: Context) {
 // GET하나 UPDATE하나 해서 보기만 하기 업데이트하기 이런거 추가
 export async function world_edit(c: Context) {
 	const { book_id } = c.req.query();
-	console.log(book_id)
 	let memory =  ReadBook.system(book_id) 
 	return c.json(memory.system);
 }
@@ -105,7 +104,7 @@ export async function chat(c: Context) {
 	if (logic_plus == false) {
 		thinking_tokens = 0;
 	} else {
-		thinking_tokens = 2500;
+		thinking_tokens = 1024;
 	}
 	// 유저입력을 추가
 	await add_chat_history(book_id, 'user', chat);
@@ -131,10 +130,10 @@ export async function chat(c: Context) {
 		let llm_response_result = '';
 		const response = await Gemini_chat(requestBody)
 		return streamText(c, async (stream) => {
-			for await (const event of response) {
+				for await (const chunk of response) {
 				try {
 					// 이게 최선인지 알아보기
-					const content = event["delta"]!.text;
+					const content = chunk.text;
 					if (content != undefined ){
 						const res = {
 							content: content,
