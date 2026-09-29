@@ -254,7 +254,6 @@ export async function read_book(book_id: string, is_request: boolean) {
 		]
 	} else {
 		request = chat
-		console.log(request)
 	}
 	return request;
 }

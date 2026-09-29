@@ -396,7 +396,7 @@
 	}
 
 	.item-arrow {
-		font-size: 1.25rem;
+		font-size: var(--font-size-lg);
 		color: var(--color-text-tertiary);
 		font-weight: 300;
 		flex-shrink: 0;

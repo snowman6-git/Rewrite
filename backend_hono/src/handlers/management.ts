@@ -6,7 +6,7 @@ import { sql } from '../lib/sql';
 const db = new Database('main.db');
 
 class ManageBook {
-	static delete(id: string) {
+	static book_delete(id: string) {
 		try {
 			const book = db.prepare("DELETE FROM F_Book WHERE session_id = ?;").run(id);
 			const header = db.prepare("DELETE FROM I_Header WHERE session_id = ?;").run(id);
@@ -16,14 +16,37 @@ class ManageBook {
 			return error
 		}
 	}
+	static chat_delete(id: string) {
+		try {
+			const chat = db.prepare("DELETE FROM G_Pages WHERE pid = ?;").run(id);
+			return true
+		} catch (error) {
+			return error
+		}
+	}
 }
 
+// 안돼면 삭제는 합치고 쿼리문으로 구분하던가
 export async function book_remove(c: Context) {
 	const { id } = c.req.query();
 	// 북 시작시 북, 헤더, 페이지가 생성되고, 이는 세션아이디가 프라이머리키
 	// = 삭제시 그거 기준으로 테이블 3개를 조져야함
 	try {
-		const book_delete = ManageBook.delete(id)
+		const book_delete = ManageBook.book_delete(id)
+		return c.json({ "message": "ok" })
+	} catch (error) {
+		// aa2 일단은 이렇게 두고, 나중에 세분회
+		c.status(500)
+		return c.json({ "message": "server error" })
+	}
+}
+
+export async function chat_delete(c: Context) {
+	const { id } = c.req.query();
+	// 북 시작시 북, 헤더, 페이지가 생성되고, 이는 세션아이디가 프라이머리키
+	// = 삭제시 그거 기준으로 테이블 3개를 조져야함
+	try {
+		const book_delete = ManageBook.book_delete(id)
 		return c.json({ "message": "ok" })
 	} catch (error) {
 		// aa2 일단은 이렇게 두고, 나중에 세분회

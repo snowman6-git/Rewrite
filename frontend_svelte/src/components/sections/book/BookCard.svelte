@@ -103,7 +103,7 @@
 	}
 
 	.book-author {
-		font-size: 0.7rem;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-secondary);
 		margin: 0;
 		line-height: 1.4;

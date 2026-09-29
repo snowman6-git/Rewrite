@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { apiBase, setApiBase } from '$lib/api/client';
 	import { applyTheme, isThemeKey, type ThemeKey } from '$lib/assets/theme';
+	import { checkHotpatch, installedVersion, patchStatus, setHubBase } from '$lib/hotpatch/loader.svelte';
 	import { toast } from '$lib/stores/toast.svelte';
 
 	const THEME_LABELS: Record<ThemeKey, string> = {
@@ -10,6 +11,8 @@
 
 	let url = $state(typeof window === 'undefined' ? '' : (localStorage.getItem('rewrite_api_base') ?? apiBase()));
 	let saved = $state(false);
+	let hub = $state(typeof window === 'undefined' ? '' : (localStorage.getItem('rewrite_hotpatch_hub') ?? ''));
+	let hubSaved = $state(false);
 	let theme = $state<ThemeKey>(
 		typeof window === 'undefined'
 			? 'mono'
@@ -32,6 +35,30 @@
 		url = apiBase();
 		saved = false;
 		toast.success('기본값으로 복원 — 새로고침 시 반영');
+	}
+
+	async function checkUpdate() {
+		await checkHotpatch(true);
+		if (patchStatus.phase === 'latest') toast.success(`최신입니다 (v${patchStatus.version}).`);
+		else if (patchStatus.phase === 'error') toast.error(`업데이트 실패: ${patchStatus.message}`);
+	}
+
+	function saveHub() {
+		const v = hub.trim();
+		if (!v) {
+			toast.error('주소를 입력하세요.');
+			return;
+		}
+		setHubBase(v);
+		hubSaved = true;
+		toast.success('저장됨 — 다음 확인부터 바로 반영');
+	}
+
+	function resetHub() {
+		setHubBase(null);
+		hub = '';
+		hubSaved = false;
+		toast.success('기본값으로 복원 — 다음 확인부터 바로 반영');
 	}
 </script>
 
@@ -62,8 +89,44 @@
 	</div>
 
 	<div class="card">
-		<label class="card-label" for="theme-select">테마 (임시)</label>
+		<label class="card-label" for="hub-url">업데이트 주소 (핫패치)</label>
+		<p class="card-hint">version.json과 UI 패치 zip을 서빙하는 서버. 비워두면 빌드 시 기본 주소 사용.</p>
 		<div class="card-row">
+			<input
+				id="hub-url"
+				class="api-input"
+				type="text"
+				bind:value={hub}
+				oninput={() => (hubSaved = false)}
+				placeholder="http://192.168.0.36:3999"
+				spellcheck="false"
+			/>
+		</div>
+		<div class="card-actions">
+			<button class="save-btn" onclick={saveHub}>저장</button>
+			<button class="reset-btn" onclick={resetHub}>기본값</button>
+		</div>
+		{#if hubSaved}
+			<p class="card-note">저장 완료. 다음 확인부터 바로 적용.</p>
+		{/if}
+	</div>
+
+	<div class="card">
+		<p class="card-label">UI/UX 패치 (인앱 업데이트)</p>
+		<p class="card-hint">새 UI가 배포되면 앱 시작 시 자동으로 설치된다. 여기서 수동 확인도 가능. Tauri 앱 전용.</p>
+		<div class="card-row">
+			<button class="save-btn" onclick={checkUpdate} disabled={patchStatus.phase === 'checking' || patchStatus.phase === 'downloading' || patchStatus.phase === 'applying'}>업데이트 확인</button>
+			{#if patchStatus.phase === 'downloading' && patchStatus.total > 0}
+				<span class="card-note">{Math.min(100, Math.round((patchStatus.received / patchStatus.total) * 100))}%</span>
+			{/if}
+		</div>
+		<p class="card-note">
+			{#if patchStatus.phase === 'checking'}확인중…{:else if patchStatus.phase === 'downloading'}다운로드중…{:else if patchStatus.phase === 'applying'}적용중…{:else if patchStatus.phase === 'latest'}최신 (v{patchStatus.version}){:else if patchStatus.phase === 'error'}실패: {patchStatus.message} — 임베드 유지{:else}설치됨: v{installedVersion()}{/if}
+		</p>
+	</div>
+
+	<div class="card">
+		<label class="card-label" for="theme-select">테마 (임시)</label>		<div class="card-row">
 			<select id="theme-select" class="theme-select" bind:value={theme} onchange={() => {
 				localStorage.setItem('rewrite_theme', theme);
 				applyTheme(theme);

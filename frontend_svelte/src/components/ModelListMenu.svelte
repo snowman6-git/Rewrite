@@ -57,7 +57,7 @@
 		display: flex;
 		flex-direction: column;
 		border: 0.15rem solid var(--color-accent-primary);
-		border-radius: 1rem 1rem 0 0;
+		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 		border-bottom: none;
 		overflow: hidden;
 	}

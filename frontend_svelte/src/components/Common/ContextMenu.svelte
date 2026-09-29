@@ -122,7 +122,7 @@
 	}
 
 	.menu-icon {
-		font-size: 1rem;
+		font-size: var(--font-size-base);
 		width: 20px;
 		text-align: center;
 		flex-shrink: 0;

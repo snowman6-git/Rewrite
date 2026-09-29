@@ -151,7 +151,7 @@
 		border: none;
 		background: transparent;
 		color: var(--color-text-secondary);
-		font-size: 1.2rem;
+		font-size: var(--font-size-lg);
 		cursor: pointer;
 		border-radius: var(--radius-md);
 		transition: all var(--transition-fast);
