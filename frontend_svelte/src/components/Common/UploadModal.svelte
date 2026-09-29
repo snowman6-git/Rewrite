@@ -145,7 +145,7 @@
 	}
 
 	.option-icon {
-		font-size: 1.5rem;
+		font-size: var(--font-size-xl);
 		flex-shrink: 0;
 	}
 
@@ -164,12 +164,12 @@
 	}
 
 	.option-desc {
-		font-size: 0.8rem;
+		font-size: var(--font-size-sm);
 		color: var(--color-text-tertiary);
 	}
 
 	.option-arrow {
-		font-size: 1.5rem;
+		font-size: var(--font-size-xl);
 		color: var(--color-text-tertiary);
 		font-weight: 300;
 		flex-shrink: 0;

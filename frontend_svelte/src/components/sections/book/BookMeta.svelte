@@ -80,7 +80,7 @@
 	}
 
 	.meta-tag {
-		font-size: 0.75rem;
+		font-size: var(--font-size-xs);
 		padding: var(--space-2xs) var(--space-xs);
 		background: var(--color-bg-elevated);
 		border-radius: var(--radius-xs);
@@ -88,7 +88,7 @@
 	}
 
 	.book-created {
-		font-size: 0.75rem;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-tertiary);
 		margin: 0;
 	}

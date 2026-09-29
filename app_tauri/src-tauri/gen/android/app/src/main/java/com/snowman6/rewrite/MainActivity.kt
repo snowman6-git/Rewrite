@@ -12,14 +12,14 @@ class MainActivity : TauriActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
-    
+
     // 3. 상단바 높이만큼 웹뷰 콘텐츠만 아래로 밀어내기 (헤더 겹침 방지)
     findViewById<android.view.View>(android.R.id.content)?.let { rootView ->
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(view.paddingLeft, insets.top, view.paddingRight, view.paddingBottom)
-            windowInsets
-        }
+      ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
+        val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+        view.setPadding(view.paddingLeft, insets.top, view.paddingRight, view.paddingBottom)
+        windowInsets
+      }
     }
   }
 }

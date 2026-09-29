@@ -161,7 +161,7 @@
 	}
 
 	.nav-icon {
-		font-size: 1.5rem;
+		font-size: var(--font-size-xl);
 	}
 
 	.nav-label {
@@ -176,11 +176,11 @@
 		}
 
 		.nav-icon {
-			font-size: 1.1rem;
+			font-size: var(--font-size-lg);
 		}
 
 		.nav-label {
-			font-size: 0.6rem;
+			font-size: var(--font-size-xs);
 		}
 	}
 </style>
