@@ -1,0 +1,306 @@
+/* [THEME] 뉴모피즘(블랙) — 서비스 퀄리티. 이중 그림자(어두운 #000계 / 밝은 #2c2c2c계), 보더 최소화, 인셋 눌림 */
+:root[data-theme='neu'] {
+	--color-bg-primary: #141414;
+	--color-bg-secondary: #181818;
+	--color-bg-tertiary: #1d1d1d;
+	--color-bg-elevated: #1f1f1f;
+	--color-bg-hover: #232323;
+	--color-bg-active: #2a2a2a;
+
+	--color-text-primary: #e5e5e5;
+	--color-text-secondary: #9a9a9a;
+	--color-text-tertiary: #616161;
+	--color-text-inverse: #111111;
+
+	--color-accent-primary: #e8e8e8;
+	--color-accent-secondary: #bdbdbd;
+	--color-accent-gradient: linear-gradient(135deg, #e8e8e8 0%, #bdbdbd 100%);
+	--color-accent-glow: rgba(255, 255, 255, 0.08);
+
+	--color-user-bubble: #1e1e1e;
+	--color-user-bubble-border: transparent;
+	--color-ai-bubble: #191919;
+	--color-ai-bubble-border: transparent;
+
+	--color-loading: #e8e8e8;
+	--color-code-bg: #161616;
+	--color-code-border: #262626;
+	--color-code-text: rgba(255, 255, 255, 0.8);
+	--color-code-header-bg: #1a1a1a;
+	--color-code-header-text: #9a9a9a;
+
+	--color-border: #232323;
+	--color-border-subtle: #1a1a1a;
+
+	--radius-sm: 1rem;
+	--radius-md: 1.4rem;
+	--radius-lg: 1.8rem;
+	--radius-xl: 2.4rem;
+
+	--shadow-sm: 4px 4px 8px #000000a6, -4px -4px 8px #2e2e2e;
+	--shadow-md: 8px 8px 16px #000000b3, -8px -8px 16px #2f2f2f;
+	--shadow-lg: 14px 14px 28px #000000cc, -14px -14px 28px #303030;
+	--shadow-glow: 0 0 20px rgba(255, 255, 255, 0.06);
+	--shadow-glow-lg: 0 0 40px rgba(255, 255, 255, 0.1);
+}
+
+/* — 카드 계열 — */
+:root[data-theme='neu'] .card,
+:root[data-theme='neu'] .book-card,
+:root[data-theme='neu'] .desk-item {
+	background: var(--color-bg-secondary);
+	border-color: transparent;
+	box-shadow: var(--shadow-md);
+}
+
+:root[data-theme='neu'] .book-cover {
+	box-shadow: var(--shadow-sm);
+}
+
+/* — 네비 / 메뉴 — */
+:root[data-theme='neu'] .nav-item {
+	border-radius: var(--radius-full);
+}
+
+:root[data-theme='neu'] .nav-item.active {
+	background: var(--color-bg-elevated);
+	box-shadow: inset 3px 3px 6px #000000b3, inset -3px -3px 6px #2f2f2f;
+	color: var(--color-text-primary);
+}
+
+:root[data-theme='neu'] .side_menu,
+:root[data-theme='neu'] .menu_content {
+	background: var(--color-bg-elevated);
+	box-shadow: var(--shadow-lg);
+}
+
+:root[data-theme='neu'] .menu_option {
+	border-radius: var(--radius-md);
+}
+
+:root[data-theme='neu'] .menu_option:hover,
+:root[data-theme='neu'] .menu_option:active {
+	box-shadow: inset 3px 3px 6px #000000a6, inset -3px -3px 6px #2e2e2e;
+}
+
+/* — 버튼 — */
+:root[data-theme='neu'] .icon-btn,
+:root[data-theme='neu'] .send-btn,
+:root[data-theme='neu'] .logic-plus-btn,
+:root[data-theme='neu'] .sort-btn,
+:root[data-theme='neu'] .upload-btn,
+:root[data-theme='neu'] .h_button {
+	border-color: transparent;
+	box-shadow: var(--shadow-sm);
+}
+
+:root[data-theme='neu'] .save-btn,
+:root[data-theme='neu'] .reset-btn,
+:root[data-theme='neu'] .edit-btn,
+:root[data-theme='neu'] .retry-btn,
+:root[data-theme='neu'] .login-btn,
+:root[data-theme='neu'] .btn {
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-sm);
+}
+
+:root[data-theme='neu'] .send-btn,
+:root[data-theme='neu'] .icon-btn {
+	border-radius: var(--radius-full);
+}
+
+/* — 인풋(인셋) — */
+:root[data-theme='neu'] .api-input,
+:root[data-theme='neu'] .theme-select,
+:root[data-theme='neu'] .user-input,
+:root[data-theme='neu'] .edit-textarea,
+:root[data-theme='neu'] .search-input,
+:root[data-theme='neu'] .input-field {
+	border-color: transparent;
+	box-shadow: inset 4px 4px 8px #000000b3, inset -4px -4px 8px #2f2f2f;
+}
+
+/* — 채팅 — */
+:root[data-theme='neu'] .message-bubble {
+	background: var(--color-user-bubble);
+	padding: var(--space-sm) var(--space-md);
+	box-shadow: var(--shadow-sm);
+}
+
+:root[data-theme='neu'] .menu-sheet,
+:root[data-theme='neu'] .modal {
+	background: var(--color-bg-elevated);
+	box-shadow: var(--shadow-lg);
+	border-color: transparent;
+}
+
+:root[data-theme='neu'] .action-btn {
+	border-radius: var(--radius-sm);
+}
+
+:root[data-theme='neu'] .resize-grip {
+	box-shadow: 1px 1px 2px #000000cc, -1px -1px 2px #2e2e2e;
+}
+
+/* — 공통 — */
+:root[data-theme='neu'] .empty-state {
+	background: var(--color-bg-secondary);
+	border-color: transparent;
+	box-shadow: var(--shadow-md);
+}
+
+:root[data-theme='neu'] .toast-container > * {
+	background: var(--color-bg-elevated);
+	border-color: transparent;
+	box-shadow: var(--shadow-md);
+}
+
+/* — 인터랙션 상태(hover/focus/active) — */
+:root[data-theme='neu'] .icon-btn,
+:root[data-theme='neu'] .send-btn,
+:root[data-theme='neu'] .logic-plus-btn,
+:root[data-theme='neu'] .sort-btn,
+:root[data-theme='neu'] .upload-btn,
+:root[data-theme='neu'] .h_button,
+:root[data-theme='neu'] .save-btn,
+:root[data-theme='neu'] .reset-btn,
+:root[data-theme='neu'] .edit-btn,
+:root[data-theme='neu'] .retry-btn,
+:root[data-theme='neu'] .login-btn,
+:root[data-theme='neu'] .btn {
+	transition: box-shadow var(--transition-fast), transform var(--transition-fast), background var(--transition-fast);
+}
+
+:root[data-theme='neu'] .icon-btn:hover,
+:root[data-theme='neu'] .send-btn:hover,
+:root[data-theme='neu'] .logic-plus-btn:hover,
+:root[data-theme='neu'] .sort-btn:hover,
+:root[data-theme='neu'] .upload-btn:hover,
+:root[data-theme='neu'] .h_button:hover,
+:root[data-theme='neu'] .save-btn:hover,
+:root[data-theme='neu'] .reset-btn:hover,
+:root[data-theme='neu'] .edit-btn:hover,
+:root[data-theme='neu'] .retry-btn:hover,
+:root[data-theme='neu'] .login-btn:hover,
+:root[data-theme='neu'] .btn:hover {
+	background: var(--color-bg-hover);
+}
+
+:root[data-theme='neu'] .icon-btn:active,
+:root[data-theme='neu'] .send-btn:active,
+:root[data-theme='neu'] .logic-plus-btn:active,
+:root[data-theme='neu'] .sort-btn:active,
+:root[data-theme='neu'] .upload-btn:active,
+:root[data-theme='neu'] .h_button:active,
+:root[data-theme='neu'] .save-btn:active,
+:root[data-theme='neu'] .reset-btn:active,
+:root[data-theme='neu'] .edit-btn:active,
+:root[data-theme='neu'] .retry-btn:active,
+:root[data-theme='neu'] .login-btn:active,
+:root[data-theme='neu'] .btn:active {
+	box-shadow: inset 4px 4px 8px #000000b3, inset -4px -4px 8px #2f2f2f;
+	transform: translateY(1px);
+}
+
+:root[data-theme='neu'] .book-card {
+	transition: transform var(--transition-base);
+}
+
+:root[data-theme='neu'] .book-card:hover {
+	transform: translateY(-2px);
+}
+
+:root[data-theme='neu'] .book-card:active {
+	transform: translateY(0);
+}
+
+:root[data-theme='neu'] .api-input:focus,
+:root[data-theme='neu'] .theme-select:focus,
+:root[data-theme='neu'] .user-input:focus,
+:root[data-theme='neu'] .edit-textarea:focus,
+:root[data-theme='neu'] .search-input:focus,
+:root[data-theme='neu'] .input-field:focus {
+	box-shadow: inset 4px 4px 8px #000000b3, inset -4px -4px 8px #2f2f2f, 0 0 0 1px var(--color-accent-glow);
+	border-color: transparent;
+}
+
+/* — 인터랙션 상태(hover/focus/active) — */
+:root[data-theme='neu'] .icon-btn,
+:root[data-theme='neu'] .send-btn,
+:root[data-theme='neu'] .logic-plus-btn,
+:root[data-theme='neu'] .sort-btn,
+:root[data-theme='neu'] .upload-btn,
+:root[data-theme='neu'] .h_button,
+:root[data-theme='neu'] .save-btn,
+:root[data-theme='neu'] .reset-btn,
+:root[data-theme='neu'] .edit-btn,
+:root[data-theme='neu'] .retry-btn,
+:root[data-theme='neu'] .login-btn,
+:root[data-theme='neu'] .btn {
+	transition: box-shadow var(--transition-fast), transform var(--transition-fast), background var(--transition-fast);
+}
+
+:root[data-theme='neu'] .icon-btn:hover,
+:root[data-theme='neu'] .send-btn:hover,
+:root[data-theme='neu'] .logic-plus-btn:hover,
+:root[data-theme='neu'] .sort-btn:hover,
+:root[data-theme='neu'] .upload-btn:hover,
+:root[data-theme='neu'] .h_button:hover,
+:root[data-theme='neu'] .save-btn:hover,
+:root[data-theme='neu'] .reset-btn:hover,
+:root[data-theme='neu'] .edit-btn:hover,
+:root[data-theme='neu'] .retry-btn:hover,
+:root[data-theme='neu'] .login-btn:hover,
+:root[data-theme='neu'] .btn:hover {
+	background: var(--color-bg-hover);
+}
+
+:root[data-theme='neu'] .icon-btn:active,
+:root[data-theme='neu'] .send-btn:active,
+:root[data-theme='neu'] .logic-plus-btn:active,
+:root[data-theme='neu'] .sort-btn:active,
+:root[data-theme='neu'] .upload-btn:active,
+:root[data-theme='neu'] .h_button:active,
+:root[data-theme='neu'] .save-btn:active,
+:root[data-theme='neu'] .reset-btn:active,
+:root[data-theme='neu'] .edit-btn:active,
+:root[data-theme='neu'] .retry-btn:active,
+:root[data-theme='neu'] .login-btn:active,
+:root[data-theme='neu'] .btn:active {
+	box-shadow: inset 4px 4px 8px #000000b3, inset -4px -4px 8px #2f2f2f;
+	transform: translateY(1px);
+}
+
+:root[data-theme='neu'] .book-card {
+	transition: transform var(--transition-base);
+}
+
+:root[data-theme='neu'] .book-card:hover {
+	transform: translateY(-2px);
+}
+
+:root[data-theme='neu'] .book-card:active {
+	transform: translateY(0);
+}
+
+:root[data-theme='neu'] .api-input:focus,
+:root[data-theme='neu'] .theme-select:focus,
+:root[data-theme='neu'] .user-input:focus,
+:root[data-theme='neu'] .edit-textarea:focus,
+:root[data-theme='neu'] .search-input:focus,
+:root[data-theme='neu'] .input-field:focus {
+	box-shadow: inset 4px 4px 8px #000000b3, inset -4px -4px 8px #2f2f2f, 0 0 0 1px var(--color-accent-glow);
+	border-color: transparent;
+}
+
+/* — 로그인 — */
+:root[data-theme='neu'] .login-form,
+:root[data-theme='neu'] .input-group {
+	background: var(--color-bg-secondary);
+	border-color: transparent;
+	box-shadow: var(--shadow-md);
+}
+
+:root[data-theme='neu'] .login-page {
+	background: var(--color-bg-primary);
+}

@@ -2,43 +2,9 @@
 // Tauri 환경에서만 동작. 웹/개발 = 즉시 skip.
 // 실패는 "임베드 프론트로 폴백" — 앱 부팅을 막아선 안 됨.
 
-const DEFAULT_HUB = import.meta.env.PUBLIC_HOTPATCH_HUB ?? 'https://forgejo.aa2.uk/aa2/rewrite-ui';
-const HUB_LS = 'rewrite_hotpatch_hub';
+const HUB = import.meta.env.PUBLIC_HOTPATCH_HUB ?? 'https://forgejo.aa2.uk/aa2/rewrite-ui';
 const LS_KEY = 'rewrite_ui_ver';
 const TIMEOUT_MS = 5000;
-const ENABLED_LS = 'rewrite_hotpatch_enabled';
-
-// 자동 확인 토글: 기본 ON, '0'만 OFF (수동 확인은 항상 가능)
-export function hotpatchEnabled(): boolean {
-	try {
-		return localStorage.getItem(ENABLED_LS) !== '0';
-	} catch {
-		return true;
-	}
-}
-export function setHotpatchEnabled(v: boolean): void {
-	try {
-		localStorage.setItem(ENABLED_LS, v ? '1' : '0');
-	} catch {
-		/* 접근 불가 */
-	}
-}
-
-// 라이브 hub: 설정에서 저장한 주소 > env > 기본 (백엔드 주소와 동일 패턴)
-export function hubBase(): string {
-	try {
-		const v = localStorage.getItem(HUB_LS);
-		if (v && v.trim()) return v.trim().replace(/\/+$/, '');
-	} catch {
-		/* SSR/접근 불가 */
-	}
-	return DEFAULT_HUB;
-}
-
-export function setHubBase(v: string | null) {
-	if (v && v.trim()) localStorage.setItem(HUB_LS, v.trim().replace(/\/+$/, ''));
-	else localStorage.removeItem(HUB_LS);
-}
 
 export type PatchPhase =
 	| 'idle' // 자동: 무관심(웹/최신/오류 후 숨김)
@@ -50,13 +16,7 @@ export type PatchPhase =
 	| 'error'; // 수동: 실패 (message에 원인)
 
 // 스플래시/설정이 공유하는 상태
-export const patchStatus = $state<{
-	phase: PatchPhase;
-	received: number;
-	total: number;
-	version: number;
-	message: string;
-}>({
+export const patchStatus = $state<{ phase: PatchPhase; received: number; total: number; version: number; message: string }>({
 	phase: 'idle',
 	received: 0,
 	total: 0,
@@ -114,20 +74,6 @@ interface VersionManifest {
 	ver: number;
 	sha256: string;
 	url: string;
-	contentHash?: string; // 빌드 트리 콘텐츠 해시 (버전 판단 1순위)
-}
-
-// 로컬 콘텐츠 해시 — origin/.hp-hash (release: rewrite://가 active/ 우선 → 이미 패치됨이면 hub와 동일)
-// dev/웹: 404 → null → 레거시 ver 비교로 폴백
-async function localContentHash(): Promise<string | null> {
-	try {
-		const r = await fetchWithTimeout(`${location.protocol}//${location.host}/.hp-hash`, TIMEOUT_MS);
-		if (!r.ok) return null;
-		const t = (await r.text()).trim();
-		return t || null;
-	} catch {
-		return null;
-	}
 }
 
 let running = false;
@@ -137,7 +83,6 @@ let running = false;
  * 새 버전 설치 성공 시 ?hotpatch=1과 함께 페이지를 리로드한다.
  */
 export async function checkHotpatch(manual = false): Promise<void> {
-	if (!manual && !hotpatchEnabled()) return;
 	if (running) return;
 	running = true;
 	const st = patchStatus;
@@ -155,18 +100,10 @@ export async function checkHotpatch(manual = false): Promise<void> {
 		st.total = 0;
 		st.message = '';
 
-		const resp = await fetchWithTimeout(`${hubBase()}/version.json`, TIMEOUT_MS);
+		const resp = await fetchWithTimeout(`${HUB}/version.json`, TIMEOUT_MS);
 		if (!resp.ok) throw new Error(`version.json ${resp.status}`);
 		const manifest = (await resp.json()) as VersionManifest;
-		if (!manifest) throw new Error('manifest empty');
-		// 콘텐츠 해시 일치 = 같은 UI → 최신 (ver 무관). 첫 실행(임베드==hub)도 여기서 스킵
-		const localHash = await localContentHash();
-		if (manifest.contentHash && localHash && manifest.contentHash === localHash) {
-			st.phase = 'latest';
-			st.version = installed;
-			return;
-		}
-		if (!Number.isFinite(manifest.ver) || manifest.ver <= installed) {
+		if (!manifest || !Number.isFinite(manifest.ver) || manifest.ver <= installed) {
 			st.phase = 'latest';
 			st.version = installed;
 			return;
@@ -212,10 +149,7 @@ export async function checkHotpatch(manual = false): Promise<void> {
 			}
 		).__TAURI_INTERNALS__?.invoke;
 		if (typeof invoke !== 'function') throw new Error('invoke unavailable');
-		await invoke('hotpatch_save', {
-			ver: String(manifest.ver),
-			dataBase64: bufferToBase64(buf.buffer)
-		});
+		await invoke('hotpatch_save', { ver: String(manifest.ver), dataBase64: bufferToBase64(buf.buffer) });
 		await invoke('hotpatch_extract', { ver: String(manifest.ver) });
 
 		localStorage.setItem(LS_KEY, String(manifest.ver));
@@ -225,8 +159,12 @@ export async function checkHotpatch(manual = false): Promise<void> {
 		console.error('[hotpatch] 폴백: 임베드 프론트 사용', err);
 		st.phase = 'error';
 		st.message = err instanceof Error ? err.message : String(err);
-		// 자동: 에러는 스플래시 안 뜸(설정 카드 텍스트로만). 수동: 카드에서 error 표시
-		if (!manual) st.phase = 'idle';
+		// 자동 실행 시 스플래시를 잠시 보여주고 임베드로 폴백
+		if (!manual) {
+			setTimeout(() => {
+				if (patchStatus.phase === 'error') patchStatus.phase = 'idle';
+			}, 900);
+		}
 	} finally {
 		running = false;
 	}

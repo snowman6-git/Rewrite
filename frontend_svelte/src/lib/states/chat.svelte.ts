@@ -161,6 +161,17 @@ class ChatState {
 		toast.warning('삭제: 백엔드 연동 대기');
 	}
 
+	deleteMany(pids: string[]) {
+		//백엔드에 메시지 삭제 endpoint가 없어 프론트에서만 제거(연동 대기)
+		const set = new Set(pids);
+		const n = pids.length;
+		this.list = this.list.filter((m) => !set.has(m.pid));
+		toast.warning(`삭제 ${n}건: 백엔드 연동 대기`);
+	}
+
+
+
+
 	//메시지 내용 직접 수정 + 백엔드 DB 저장(수정 버튼용)
 	async editMessage(index: number, newContent: string) {
 		const msg = this.list[index];

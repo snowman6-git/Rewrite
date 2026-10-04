@@ -1,0 +1,63 @@
+/* [THEME] 클레이모피즘 — 크리미 배경, 두꺼운 라벤더 보더, 묵직한 라운드 + 내측 하이라이트 */
+:root[data-theme='clay'] {
+	--color-bg-primary: #f6f1ff;
+	--color-bg-secondary: #ffffff;
+	--color-bg-tertiary: #f0e9ff;
+	--color-bg-elevated: #faf7ff;
+	--color-bg-hover: #ece3ff;
+	--color-bg-active: #e2d6ff;
+
+	--color-text-primary: #4a3f66;
+	--color-text-secondary: #7c6f9c;
+	--color-text-tertiary: #a89ec2;
+	--color-text-inverse: #ffffff;
+
+	--color-accent-primary: #7c5cff;
+	--color-accent-secondary: #b18cff;
+	--color-accent-gradient: linear-gradient(135deg, #7c5cff 0%, #b18cff 100%);
+	--color-accent-glow: rgba(124, 92, 255, 0.3);
+
+	--color-user-bubble: #ffffff;
+	--color-user-bubble-border: #d9ccf5;
+	--color-ai-bubble: #f7f3ff;
+	--color-ai-bubble-border: #d9ccf5;
+
+	--color-loading: #7c5cff;
+	--color-code-bg: #f3eeff;
+	--color-code-border: #d9ccf5;
+	--color-code-text: #4a3f66;
+	--color-code-header-bg: #ebe2ff;
+	--color-code-header-text: #7c6f9c;
+
+	--color-border: #d9ccf5;
+	--color-border-subtle: #e7ddfa;
+
+	--radius-sm: 0.9rem;
+	--radius-md: 1.25rem;
+	--radius-lg: 1.75rem;
+	--radius-xl: 2.5rem;
+
+	--shadow-sm: 0 3px 8px rgba(124, 92, 255, 0.12);
+	--shadow-md: 0 8px 18px rgba(124, 92, 255, 0.18);
+	--shadow-lg: 0 14px 30px rgba(124, 92, 255, 0.25);
+	--shadow-glow: 0 0 20px rgba(124, 92, 255, 0.3);
+	--shadow-glow-lg: 0 0 40px rgba(124, 92, 255, 0.4);
+}
+
+:root[data-theme='clay'] .card,
+:root[data-theme='clay'] .icon-btn {
+	border-width: 2px;
+	box-shadow: var(--shadow-md), inset 0 3px 0 rgba(255, 255, 255, 0.85);
+}
+
+:root[data-theme='clay'] .nav-item.active {
+	box-shadow: var(--shadow-sm);
+}
+
+:root[data-theme='clay'] .api-input,
+:root[data-theme='clay'] .theme-select,
+:root[data-theme='clay'] .user-input,
+:root[data-theme='clay'] .edit-textarea {
+	border-width: 2px;
+	box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.9);
+}

@@ -34,17 +34,15 @@
 (왜 Forgejo: https 고정 URL, 무료, 토큰 이미 보유. SMB는 URL이 아니므로 불가)
 
 ### version.json
-
 ```json
 {
-	"ver": 3,
-	"sha256": "<ui-v3.zip 전체 해시, 소문자 hex>",
-	"url": "https://forgejo.aa2.uk/aa2/rewrite-ui/releases/v3/download/ui-v3.zip"
+  "ver": 3,
+  "sha256": "<ui-v3.zip 전체 해시, 소문자 hex>",
+  "url": "https://forgejo.aa2.uk/aa2/rewrite-ui/releases/v3/download/ui-v3.zip"
 }
 ```
 
 ### ui-v{ver}.zip 레이아웃
-
 - `bun run build`의 **`.svelte-kit/output/client`를 그대로** 압축 (루트 = `index.html` + `_app/` 등, zip 내 폴더 래핑 없음)
 - 압축 스크립트: `frontend_svelte/scripts/hotpatch.mjs` — 빌드 → zip → sha256 → Forgejo 릴리스 업로드 (토큰 env)
 
@@ -59,7 +57,6 @@
 ## 5. Rust 측 요구 (2개소)
 
 ### 5-1. 에셋 프로토콜 리졸버 (핵심)
-
 `tauri://localhost`(기본 에셋 프로토콜)가 서빙할 경로를 **패치目录 우선**으로:
 
 ```rust
@@ -74,7 +71,6 @@
 `active` = `hotpatch_extract`이 `ui-v{ver}/`을 무압축해 `active` 링크(디렉터리 교체)로 세운 위치.
 
 ### 5-2. 해제/저장 커맨드
-
 ```rust
 #[tauri::command]
 async fn hotpatch_save(state: tauri::State<...>, ver: String, data_base64: String) -> Result<(), String>
@@ -91,13 +87,13 @@ async fn hotpatch_extract(ver: String) -> Result<(), String>
 
 ## 6. 폴백/실패 매트릭스
 
-| 상황                        | 동작                                                                                   |
-| --------------------------- | -------------------------------------------------------------------------------------- |
-| version.json 404/네트워크   | 임베드 부팅, 로그만                                                                    |
-| zip sha256 불일치           | 임베드 부팅 + 토스트 1회                                                               |
-| extract invoke 실패         | 임베드 부팅 + 토스트                                                                   |
-| active目录 존재, ver 불일치 | 프로토콜이 active 자체 서빙 (version.json과 무관, 마지막 설치분)                       |
-| 리로드 후 active가 빈 zip   | sha256이 압축 **전** 파일 전체를 검증하므로 이론상 불가, 재발 시 active 삭제 후 리로드 |
+| 상황 | 동작 |
+|---|---|
+| version.json 404/네트워크 | 임베드 부팅, 로그만 |
+| zip sha256 불일치 | 임베드 부팅 + 토스트 1회 |
+| extract invoke 실패 | 임베드 부팅 + 토스트 |
+| active目录 존재, ver 불일치 | 프로토콜이 active 자체 서빙 (version.json과 무관, 마지막 설치분) |
+| 리로드 후 active가 빈 zip | sha256이 압축 **전** 파일 전체를 검증하므로 이론상 불가, 재발 시 active 삭제 후 리로드 |
 
 ## 7. 보안
 

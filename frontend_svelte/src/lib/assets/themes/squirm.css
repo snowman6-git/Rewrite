@@ -1,0 +1,91 @@
+/* [THEME] 스쿼름모피즘 — 유기적 블롭, 흔들리는 모폴프, 비비드 그라디언트 */
+@keyframes squirm-morph {
+	0%,
+	100% {
+		border-radius: 56% 44% 52% 48% / 46% 56% 44% 54%;
+	}
+	33% {
+		border-radius: 45% 55% 48% 52% / 55% 45% 58% 42%;
+	}
+	66% {
+		border-radius: 52% 48% 56% 44% / 48% 52% 44% 56%;
+	}
+}
+
+:root[data-theme='squirm'] {
+	--color-bg-primary: #ffd6e8;
+	--color-bg-secondary: rgba(255, 255, 255, 0.55);
+	--color-bg-tertiary: rgba(255, 255, 255, 0.4);
+	--color-bg-elevated: rgba(255, 255, 255, 0.7);
+	--color-bg-hover: rgba(255, 255, 255, 0.65);
+	--color-bg-active: rgba(255, 255, 255, 0.8);
+
+	--color-text-primary: #4b2a6b;
+	--color-text-secondary: #7a5ba3;
+	--color-text-tertiary: #a689c9;
+	--color-text-inverse: #ffffff;
+
+	--color-accent-primary: #ff5ca8;
+	--color-accent-secondary: #7c5cff;
+	--color-accent-gradient: linear-gradient(135deg, #ff5ca8 0%, #7c5cff 100%);
+	--color-accent-glow: rgba(255, 92, 168, 0.35);
+
+	--color-user-bubble: rgba(255, 255, 255, 0.55);
+	--color-user-bubble-border: rgba(255, 255, 255, 0.6);
+	--color-ai-bubble: rgba(255, 255, 255, 0.45);
+	--color-ai-bubble-border: rgba(255, 255, 255, 0.5);
+
+	--color-loading: #ff5ca8;
+	--color-code-bg: rgba(255, 255, 255, 0.5);
+	--color-code-border: rgba(255, 255, 255, 0.5);
+	--color-code-text: #4b2a6b;
+	--color-code-header-bg: rgba(255, 255, 255, 0.45);
+	--color-code-header-text: #7a5ba3;
+
+	--color-border: rgba(255, 255, 255, 0.55);
+	--color-border-subtle: rgba(255, 255, 255, 0.35);
+
+	--radius-sm: 1.5rem 1.9rem 1.6rem 2rem;
+	--radius-md: 2rem 2.6rem 2.2rem 2.8rem;
+	--radius-lg: 2.5rem 3.2rem 2.8rem 3.4rem;
+	--radius-xl: 3rem 4rem 3.4rem 4.2rem;
+
+	--shadow-sm: 0 6px 16px rgba(124, 92, 255, 0.2);
+	--shadow-md: 0 10px 26px rgba(255, 92, 168, 0.28);
+	--shadow-lg: 0 16px 40px rgba(124, 92, 255, 0.35);
+	--shadow-glow: 0 0 24px rgba(255, 92, 168, 0.4);
+	--shadow-glow-lg: 0 0 48px rgba(124, 92, 255, 0.5);
+}
+
+:root[data-theme='squirm'] .app-layout {
+	background: linear-gradient(135deg, #ffd6e8 0%, #c9b6ff 55%, #a1f0e1 100%);
+}
+
+:root[data-theme='squirm'] .card {
+	backdrop-filter: blur(10px);
+	animation: squirm-morph 9s ease-in-out infinite;
+}
+
+:root[data-theme='squirm'] .nav-item,
+:root[data-theme='squirm'] .icon-btn {
+	border-radius: 48% 52% 46% 54% / 55% 45% 58% 42%;
+}
+
+:root[data-theme='squirm'] .nav-item.active {
+	color: var(--color-text-inverse);
+	animation: squirm-morph 7s ease-in-out infinite;
+}
+
+:root[data-theme='squirm'] .message-bubble {
+	background: var(--color-user-bubble);
+	backdrop-filter: blur(8px);
+	animation: squirm-morph 11s ease-in-out infinite;
+}
+
+:root[data-theme='squirm'] .api-input,
+:root[data-theme='squirm'] .theme-select,
+:root[data-theme='squirm'] .user-input,
+:root[data-theme='squirm'] .edit-textarea {
+	background: rgba(255, 255, 255, 0.5);
+	backdrop-filter: blur(8px);
+}

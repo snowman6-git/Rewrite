@@ -6,6 +6,6 @@ src/static/*.txt
 src/static/prompt.ts
 src/static/model.ts
 error-code.ts
-*.db
+*.db*
 test
 models.ts

@@ -14,28 +14,19 @@ export class ReadBook {
 	static chat(book_id: string) {
 		let chat_list = db
 			.prepare(sql`
-				SELECT 
-					pid, 
-					role, 
-					content
-				FROM (
-					SELECT
-						Pages.pid,
-						Pages.role,
-						Pages.content,
-						Pages.create_at -- 정렬을 위해 서브쿼리에 포함
-					FROM
-						F_Book AS Book
-						JOIN G_Pages AS Pages ON Book.session_id = Pages.session_id
-					WHERE
-						Pages.session_id = ?
-					ORDER BY
-						Pages.create_at DESC
-					LIMIT
-						50 -- 최신 50개 먼저 추출 (61번 -> 12번 순서)
-				) --가져올땐 최근 50개로
-				ORDER BY 
-					create_at ASC; -- 추출된 50개를 다시 과거 순으로 정렬 (12번 -> 61번 순서)
+				-- 캐시 히트용: append-only 전체 히스토리 (슬라이딩 윈도우 제거 → 매 턴 prefix 안정)
+				-- rowid tiebreak: 초 단위 create_at 동점 시에도 순서 고정 (캐시 무효 방지)
+				SELECT
+					Pages.pid,
+					Pages.role,
+					Pages.content
+				FROM
+					F_Book AS Book
+					JOIN G_Pages AS Pages ON Book.session_id = Pages.session_id
+				WHERE
+					Pages.session_id = ?
+				ORDER BY
+					Pages.create_at ASC, Pages.rowid ASC;
 			`)
 			.all(book_id);
 		return chat_list;
@@ -54,15 +45,11 @@ export class ReadBook {
 			`)
 			.all(book_id);
 
-		const header = {
-			pid: "0",
-			role: "user",
-			content: SYSTEM_HEADER! + "\n" + db_header[0].system
-		}
-		return header;
+		const header_combine = SYSTEM_HEADER! + "\n" + ReadBook.system(book_id)
+		return header_combine;
 	}
 	static system(book_id: string) {
-		let system = db
+		let get_system: any = db
 			.query(sql`
 				SELECT
 					Header.system
@@ -73,7 +60,7 @@ export class ReadBook {
 					Header.session_id = ?
 			`)
 			.get(book_id);
-		return system;
+		return get_system.system;
 	}
 }
 
@@ -104,6 +91,7 @@ export async function init() {
 
 		CREATE TABLE IF NOT EXISTS F_Book (
 			id TEXT NOT NULL,
+			title TEXT NOT NULL,
 			session_id TEXT NOT NULL,
 			create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
@@ -243,19 +231,15 @@ export async function read_bookdetail(id: string) {
 	return book_details;
 }
 
-export async function read_book(book_id: string, is_request: boolean) {
-	let request;
-	const chat = ReadBook.chat(book_id);
-	if (is_request) {
-		const header = ReadBook.header(book_id);
-		request = [
-			header,
-			...chat,
-		]
-	} else {
-		request = chat
-	}
-	return request;
+// 조건문으로 구분짓기 vs 함수로 나누기
+// 디비 두번 호출인데 이게 옳을까?
+export async function read_chat(book_id: string) {
+	const pages = ReadBook.chat(book_id);
+	return pages;
+}
+export async function read_header(book_id: string) {
+	const header = ReadBook.header(book_id);
+	return header;
 }
 
 // 이거 시발 나중에 꼭 정규화해서 최적화 해야함, 아무리봐도 여기가 병목임 < 기초는 했음. 26.08.22
@@ -273,12 +257,13 @@ export async function add_page(book_id: string, role: string, content: string) {
 	return book_id;
 }
 
-export async function update_page(c: Context) {
-  const { book_id, pid, content } = await c.req.json();
-  if (!book_id || !pid || content == null) return c.json({ success: false, error: '필수 값 부족' }, 400);
-  await update_page(book_id, pid, content);
-  return c.json({ success: true });
-}
+// export async function update_page(c: Context) {
+//   const { book_id, pid, content } = await c.req.json();
+//   if (!book_id || !pid || content == null) return c.json({ success: false, error: '필수 값 부족' }, 400);
+//   await update_page(book_id, pid, content);
+//   return c.json({ success: true });
+// }
+
 // 비효율적이어도 구현 먼저하자
 // book이 가져야할것
 // 1. 오리진 ID, 2. uuid4기반 ID, 3. 챗 ID, 챗내용
@@ -286,54 +271,35 @@ export async function update_page(c: Context) {
 export async function clone_book(origin_id: string, point_id: string) {
 	const book_id = uuidv4(); //클론 후 조인용 세션 아이디
 	const page_id = uuidv4(); //최초 생성시 스타팅 포인트가 가질 페이지 아이디(For Svelte each_key_duplicate)
+	try {
+		// 하나의 트랜잭션 함수로 정의 (전체가 다 성공하거나, 하나라도 실패하면 롤백)
+		const initializeBookSession = db.transaction((book_id, origin_id, page_id, point_id) => {
+			// 1. F_Book 삽입
+			db.prepare(sql`
+				INSERT INTO F_Book (id, title, session_id)
+				SELECT id, title, ? FROM C_Bookspine
+				WHERE id = ?
+			`).run(book_id, origin_id);
+			// 2. G_Pages 삽입
+			db.prepare(sql`
+				INSERT INTO G_Pages (session_id, pid, role, content)
+				SELECT ?, ?, ?, content FROM E_Starting
+				WHERE point_id = ? AND id = ?
+			`).run(book_id, page_id, "system", point_id, origin_id);
+			// 3. I_Header 삽입
+			db.prepare(sql`
+				INSERT INTO I_Header (session_id, system)
+				SELECT ?, system FROM D_Bookshelf
+				WHERE id = ?
+			`).run(book_id, origin_id);
+		});
 
-	const get_starting = db
-		.query(sql`
-			SELECT
-				content
-			FROM
-				E_Starting
-			WHERE
-				id = ?
-				AND point_id = ?;
-		`)
-		.get(origin_id, point_id);
-	const get_system = db
-		.query(sql`
-			SELECT
-				system
-			FROM
-				D_Bookshelf
-			WHERE
-				id = ?;
-		`)
-		.get(origin_id);
+		// 실행할 때는 아래처럼 호출
+		initializeBookSession(book_id, origin_id, page_id, point_id);
 
-	const inject_starting = db
-		.query(sql`
-			INSERT INTO
-				G_Pages (session_id, pid, role, content)
-			VALUES
-				(?, ?, ?, ?)
-		`)
-		.run([book_id, page_id, 'system', get_starting.content]);
-
-	const inject_system = db
-		.query(sql`
-			INSERT INTO
-				I_Header (session_id, system)
-			VALUES
-				(?, ?)
-		`)
-		.run([book_id, get_system.system]);
-
-	const inject_book = db
-		.query(sql`
-			INSERT INTO
-				F_Book (id, session_id)
-			VALUES
-				(?, ?)
-		`)
-		.run([origin_id, book_id]);
-	return book_id;
+		return book_id;
+	} catch (error) {
+		console.log(error)
+		return error
+	}
 }

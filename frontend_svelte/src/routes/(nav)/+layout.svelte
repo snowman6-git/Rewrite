@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '$lib/assets/app.css';
+	import { applyTheme, isThemeKey } from '$lib/assets/theme';
 	import { page } from '$app/stores';
 	import Icon from '$components/Common/Icon.svelte';
 	let { children } = $props();
@@ -12,6 +13,24 @@
 	];
 
 	let activeTab = $derived(tabs.find((t) => $page.url.pathname.startsWith(t.href))?.id ?? 'book');
+
+	$effect(() => {
+		const saved = localStorage.getItem('rewrite_theme');
+		applyTheme(isThemeKey(saved) ? saved : 'mono');
+	});
+
+	$effect(() => {
+		applyTheme(localStorage.getItem('rewrite_theme') === 'indigo' ? 'indigo' : 'mono');
+	});
+
+	$effect(() => {
+		const saved = localStorage.getItem('rewrite_theme');
+		applyTheme(isThemeKey(saved) ? saved : 'mono');
+	});
+
+	$effect(() => {
+		applyTheme(localStorage.getItem('rewrite_theme') === 'indigo' ? 'indigo' : 'mono');
+	});
 </script>
 
 <div class="app-layout">

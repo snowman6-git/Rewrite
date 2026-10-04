@@ -10,12 +10,12 @@
 
 ## 2. 추가할 endpoint
 
-| 항목              | 값                                                 |
-| ----------------- | -------------------------------------------------- |
-| Method            | `DELETE` (안 되면 `POST`)                          |
-| Path              | `/message/delete`                                  |
-| Body              | `{ book_id, pid }`                                 |
-| Response(success) | `{ success: true }`                                |
+| 항목              | 값                                             |
+| ----------------- | ---------------------------------------------- |
+| Method            | `DELETE` (안 되면 `POST`)                      |
+| Path              | `/message/delete`                               |
+| Body              | `{ book_id, pid }`                             |
+| Response(success) | `{ success: true }`                            |
 | Response(error)   | `{ success: false, error: string }` (HTTP 400/500) |
 
 - `book_id` = `G_Pages.session_id` (프론트가 보내는 식별자).

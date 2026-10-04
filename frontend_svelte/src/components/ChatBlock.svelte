@@ -169,7 +169,8 @@
 					{#if remove && isLast}
 						<button
 							class="menu-item danger"
-							onclick={() => {
+							onclick={(e) => {
+								e.stopPropagation(); //선택 모드 진입 후 같은 클릭이 row 토글로 번지지 않게
 								remove();
 								closeMenu();
 							}}>삭제</button
