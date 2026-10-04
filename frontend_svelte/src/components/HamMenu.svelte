@@ -5,6 +5,8 @@ import { cubicOut } from 'svelte/easing';
 import Icon from '$components/Common/Icon.svelte';
 import Desc from '$components/Common/Desc.svelte';
 import { inkState } from '$lib/states/ink.svelte';
+import { chatState } from '$lib/states/chat.svelte';
+import { modelsState } from '$lib/states/models.svelte';
 import WorldEdit from './views/WorldEdit.svelte';
 import Persona from './views/Persona.svelte';
 import Memory from './views/Memory.svelte';
@@ -15,6 +17,59 @@ let isHammenu_open = $state(false);
 let menu_now = $state(0);
 let menus = ['메뉴', '월드에딧', '페르소나', '메모리', '커스텀 프롬프트'];
 let showInkUsage = $state(false);
+
+// 모델별 가격 — USD / 1M 토큰, 공식 docs(ai.google.dev) 기준 2026-11
+// gemini-3.8-flash: introductory $0.75/$3.75 (2026-12-31까지, 2027-01-01부터 $1.50/$7.50로 2배)
+// output 가격은 thinking 토큰 포함. 미등재 모델 = 가격 미표시('—'), 토큰 추정만
+const MODEL_PRICE: Record<string, { label: string; input: number; output: number }> = {
+'gemini-3.8-flash': { label: 'Gemini 3.8 Flash', input: 0.75, output: 3.75 }
+};
+
+// 백엔드 thinkingBudget 상시 1024 — 턴당 thinking 상한을 output에 반영(실측 아님, 상한 추정)
+const THINKING_EST = 1024;
+
+// 환율 상수 (2026-11 시세 1,344–1,358 기준, 반올림) — 환율 변동 시 갱신
+const USD_KRW = 1350;
+
+// 클라이언트 토큰 추정: 한글/CJK 약 2자/토큰, 그 외 약 4자/토큰 (정확한 요금은 아님, 참고용)
+function estTokens(text: string): number {
+let cjk = 0;
+let other = 0;
+for (const ch of text) {
+const c = ch.codePointAt(0) ?? 0;
+const isCjk =
+(c >= 0x1100 && c <= 0x11ff) || // 한글 자모
+(c >= 0x3040 && c <= 0x30ff) || // CJK 음절
+(c >= 0x3400 && c <= 0x9fff) || // CJK 통합
+(c >= 0xac00 && c <= 0xd7a3) || // 한글 음절
+(c >= 0xa960 && c <= 0xa97f); // 한글 호환
+if (isCjk) cjk++;
+else other++;
+}
+return Math.ceil(cjk / 2) + Math.ceil(other / 4);
+}
+
+// 책(현재 대화)의 내용 토큰 → 입력/출력 구분해서 모델 가격에 곱셈
+let cost = $derived.by(() => {
+let inTok = 0;
+let outTok = 0;
+for (const m of chatState.list) {
+const t = estTokens(m.content);
+if (m.role === 'user') inTok += t;
+else {
+outTok += t + THINKING_EST;
+}
+}
+const price = MODEL_PRICE[modelsState.selectedModel?.id ?? ''];
+const usd = price ? (inTok / 1e6) * price.input + (outTok / 1e6) * price.output : null; // 가격 미등재 모델
+return { inTok, outTok, usd, label: price?.label ?? modelsState.selectedModel?.name ?? '모델 미선택' };
+});
+
+function fmtKrw(v: number | null): string {
+if (v === null) return '—';
+if (v <= 0) return '₩0';
+return `₩${Math.round(v * USD_KRW).toLocaleString()}`;
+}
 
 function handleXClick() {
 if (showInkUsage) {
@@ -77,9 +132,16 @@ menu_now = 0;
 				<Memory />
 			{:else if menu_now === 4}
 				<CustomPrompt />
-				{:else}
-					<button
-						class="ink-row"
+					{:else}
+						<div class="cost-row" aria-label="책 토큰 비용">
+							<span class="cost-left">
+								<span class="cost-model">{cost.label}</span>
+								<span class="cost-tokens">in {cost.inTok.toLocaleString()} · out {cost.outTok.toLocaleString()} (추정)</span>
+							</span>
+							<span class="cost-amount">{fmtKrw(cost.usd)}</span>
+						</div>
+						<button
+							class="ink-row"
 						onclick={() => (showInkUsage = true)}
 						aria-label="잉크 사용 내역 보기"
 					>
@@ -207,6 +269,51 @@ menu_now = 0;
 		flex-direction: column;
 		min-height: 0;
 		height: 100%;
+	}
+
+	/* ---------- Cost (모델별) ---------- */
+	.cost-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		margin: var(--space-xs) var(--space-xs) 0;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: transparent;
+		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
+		width: calc(100% - 2 * var(--space-xs));
+		box-sizing: border-box;
+	}
+
+	.cost-left {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	.cost-model {
+		font-size: var(--font-size-sm);
+		font-weight: 500;
+		color: var(--color-text-primary);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.cost-tokens {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+	}
+
+	.cost-amount {
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		color: var(--color-text-primary);
+		white-space: nowrap;
 	}
 
 	/* ---------- Ink (home) ---------- */

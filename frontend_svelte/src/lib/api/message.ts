@@ -22,16 +22,63 @@ export interface MessageDeleteResponse {
 	error?: string;
 }
 
-/**
- * 메시지 내용을 직접 수정하여 백엔드 DB에 저장.
- * 구현은 backend_hono 측 task로 이격 — doc/message-update-doc.md 참조.
- */
+export interface MessageDeleteRequest {
+	book_id: string;
+	pid: string;
+}
+
+export interface MessageDeleteResponse {
+	success: boolean;
+	error?: string;
+}
+
+export interface MessageDeleteRequest {
+	book_id: string;
+	pid: string;
+}
+
+export interface MessageDeleteResponse {
+	success: boolean;
+	error?: string;
+}
+
+export interface MessageDeleteRequest {
+	book_id: string;
+	pid: string;
+}
+
+export interface MessageDeleteResponse {
+	success: boolean;
+	error?: string;
+}
+
+export interface MessageDeleteRequest {
+	book_id: string;
+	pid: string;
+}
+
+export interface MessageDeleteResponse {
+	success: boolean;
+	error?: string;
+}
+
+export interface MessageDeleteRequest {
+	book_id: string;
+	pid: string;
+}
+
+export interface MessageDeleteResponse {
+	success: boolean;
+	error?: string;
+}
+
 export async function updateMessage(req: MessageUpdateRequest): Promise<MessageUpdateResponse> {
 	const response = await axios.patch<MessageUpdateResponse>(`${apiBase()}/message/update`, req, {
 		withCredentials: true
 	});
 	return response.data;
 }
+
 
 /**
  * 메시지를 백엔드 DB에서 삭제.

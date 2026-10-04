@@ -1,8 +1,7 @@
 <script lang="ts">
 	import Modal from '$components/Common/Modal.svelte';
-	import ContextMenu from '$components/Common/ContextMenu.svelte';
 	import Icon from '$components/Common/Icon.svelte';
-	import { longPress } from '$lib/longpress';
+	import ContextMenu from '$components/Common/ContextMenu.svelte';
 	import { renameBook } from '$lib/api/book';
 	import { toast } from '$lib/stores/toast.svelte';
 
@@ -37,15 +36,8 @@
 		y: 0,
 		book: null
 	});
-	// 터치 롱프레스는 동시에 1개만 발생하므로 공유 인스턴스 사용
-	let lpTarget = $state<DeskBook | null>(null);
-	const deskLp = longPress((x, y) => {
-		if (lpTarget) showContextMenu(x, y, lpTarget);
-	});
 
 	let confirmDeleteBook = $state<DeskBook | null>(null);
-	let renameBookTarget = $state<DeskBook | null>(null);
-	let renameValue = $state('');
 
 	// — 풀투리프레시(모바일): scrollTop 0에서 아래로 당겨 새로고침 —
 	let pull = $state(0);
@@ -82,9 +74,13 @@
 			pull = 0;
 		}
 	}
+	let renameBookTarget = $state<DeskBook | null>(null);
+	let renameValue = $state('');
 
-	function showContextMenu(x: number, y: number, book: DeskBook) {
-		contextMenu = { x, y, book };
+	function showContextMenu(e: MouseEvent, book: DeskBook) {
+		e.preventDefault();
+		e.stopPropagation();
+		contextMenu = { x: e.clientX, y: e.clientY, book };
 	}
 
 	function hideContextMenu() {
@@ -114,7 +110,7 @@
 
 	async function handleRename(book: DeskBook, title: string) {
 		try {
-			// 책장: spine id / 서재: session_id (백엔드가 둘다 해석, book_rename-doc.md)
+			// 책/서재 모두 session_id 전송 (book_rename-doc.md v2: F_Book.title 갱신)
 			await renameBook(book.bookId ?? book.id, title);
 			toast.success('제목이 변경되었습니다.');
 			books = books.map((b) => (b.id === book.id ? { ...b, title } : b));
@@ -130,19 +126,12 @@
 		return [
 			{ label: '정보 보기', onClick: handleInfoFromMenu, disabled: true },
 			{ label: '제목 변경', onClick: () => (renameValue = b.title, (renameBookTarget = b)) },
-			{ label: '삭제', danger: true, onClick: handleDeleteFromMenu }
+			{ label: '삭제', danger: true, onClick: () => (confirmDeleteBook = b) }
 		];
 	});
 </script>
 
-<div
-		class="library-section"
-		role="presentation"
-		ontouchstart={p2pTouchStart}
-		ontouchmove={p2pTouchMove}
-		ontouchend={p2pEnd}
-	>
-	<!-- 풀투리프레시 지표 -->
+<div class="library-section" ontouchstart={p2pTouchStart} ontouchmove={p2pTouchMove} ontouchend={p2pEnd}>
 	<div class="p2p" class:hidden={pull === 0} class:anim={!p2pActive} class:p2p-spin={p2pSpin} style={`height: ${pull}px`}>
 		<div class="p2p-indicator" style={`transform: rotate(${pull * 2.25}deg); opacity: ${Math.min(pull / 40, 1)}`}>
 			<Icon name="refresh" size={22} />
@@ -152,21 +141,21 @@
 	<div class="lib-header">
 		<h2 class="lib-title">서재 <span class="lib-count">{books.length}</span></h2>
 		{#if onRefresh}
-			<button class="refresh-btn icon-btn" onclick={onRefresh} aria-label="새로고침" title="새로고침"><Icon name="refresh" size={16}/></button>
+			<button class="refresh-btn" onclick={onRefresh} aria-label="새로고침" title="새로고침">↻</button>
 		{/if}
 	</div>
 
 	<!-- 로딩 상태 -->
 	{#if isLoading}
-		<div class="empty-state">
-			<p>서재를 불러오는 중...</p>
+		<div class="center-state">
+			<p class="state-text">서재를 불러오는 중...</p>
 		</div>
 	{/if}
 
 	<!-- 에러 상태 -->
 	{#if isError}
-		<div class="empty-state">
-			<p>{errorMessage}</p>
+		<div class="center-state">
+			<p class="state-text">{errorMessage}</p>
 			{#if onRefresh}
 				<button class="retry-btn" onclick={onRefresh}>다시 시도</button>
 			{/if}
@@ -182,7 +171,6 @@
 					role="button"
 					tabindex={0}
 					onclick={() => {
-						if (deskLp.consume()) return;
 						window.location.href = `/book/${book.id}`;
 						/* TODO: 열기 */
 					}}
@@ -192,18 +180,7 @@
 							window.location.href = `/book/${book.id}`;
 						}
 					}}
-					oncontextmenu={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						showContextMenu(e.clientX, e.clientY, book);
-					}}
-					ontouchstart={(e) => {
-						lpTarget = book;
-						deskLp.ontouchstart(e);
-					}}
-					ontouchmove={deskLp.ontouchmove}
-					ontouchend={deskLp.ontouchend}
-					ontouchcancel={deskLp.ontouchcancel}
+					oncontextmenu={(e) => showContextMenu(e, book)}
 				>
 					<div class="item-content">
 						<div class="item-top">
@@ -223,8 +200,8 @@
 
 		<!-- Empty State -->
 		{#if books.length === 0}
-			<div class="empty-state">
-				<p>서재에 책이 없습니다</p>
+			<div class="center-state">
+				<p class="state-text">서재에 책이 없습니다</p>
 			</div>
 		{/if}
 	{/if}
@@ -241,24 +218,7 @@
 			confirmText="삭제"
 			cancelText="취소"
 			onConfirm={handleConfirmDelete}
-			onCancel={handleCancelDelete}
-		/>
-	{/if}
-
-	<!-- Rename Modal -->
-	{#if renameBookTarget}
-		<Modal
-			title="제목 변경"
-			message="{renameBookTarget.title}의 제목을 변경합니다."
-			inputValue={renameValue}
-			inputPlaceholder="새 제목"
-			onConfirm={(v) => {
-				const b = renameBookTarget;
-				renameBookTarget = null;
-				if (b && v) handleRename(b, v);
-			}}
-			onCancel={() => (renameBookTarget = null)}
-		/>
+			onCancel={handleCancelDelete}		/>
 	{/if}
 </div>
 
@@ -273,7 +233,10 @@
 		gap: var(--space-md);
 	}
 
-	/* — 풀투리프레시 — */
+	.library-section.dragging {
+		user-select: none;
+	}
+
 	.p2p {
 		overflow: hidden;
 		display: flex;
@@ -291,9 +254,6 @@
 		transition: height 0.25s ease;
 	}
 
-	.p2p-indicator {
-		line-height: 0;
-	}
 
 	.p2p-spin .p2p-indicator {
 		animation: p2p-rot 0.8s linear infinite;
@@ -304,7 +264,6 @@
 			transform: rotate(360deg);
 		}
 	}
-
 	.lib-header {
 		display: flex;
 		align-items: center;
@@ -327,6 +286,28 @@
 		color: var(--color-text-tertiary);
 	}
 
+	.refresh-btn {
+		width: 2.25rem;
+		height: 2.25rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg-secondary);
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-base);
+		cursor: pointer;
+		transition:
+			border-color var(--transition-fast),
+			color var(--transition-fast);
+	}
+
+	.refresh-btn:hover {
+		border-color: var(--color-accent-primary);
+		color: var(--color-text-primary);
+	}
+
 	.desk-list {
 		display: flex;
 		flex-direction: column;
@@ -344,7 +325,6 @@
 		cursor: pointer;
 		transition: border-color var(--transition-fast);
 		user-select: none;
-		-webkit-touch-callout: none;
 	}
 
 	.desk-item:hover {
@@ -390,6 +370,7 @@
 		line-height: 1.4;
 		display: -webkit-box;
 		line-clamp: 2;
+		line-clamp: 2;
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
@@ -400,6 +381,22 @@
 		color: var(--color-text-tertiary);
 		font-weight: 300;
 		flex-shrink: 0;
+	}
+
+	.center-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-2xl) var(--space-md);
+		text-align: center;
+		gap: var(--space-sm);
+	}
+
+	.state-text {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+		margin: 0;
 	}
 
 	.retry-btn {
@@ -426,5 +423,26 @@
 		.desk-item {
 			padding: var(--space-sm);
 		}
+	}/* — 풀투리프레시 — */
+
+	.p2p.hidden {
+		display: none;
 	}
+
+	.p2p.anim {
+		transition: height 0.25s ease;
+	}
+
+
+	.p2p-spin svg {
+		animation: p2p-rot 0.8s linear infinite;
+	}
+
+	@keyframes p2p-rot {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+
 </style>

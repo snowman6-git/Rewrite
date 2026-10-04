@@ -1,7 +1,7 @@
 #차후 릴리즈
 app_rewrite 
 *.code-workspace
-
+tools
 
 # opencode
 .codegraph
@@ -15,7 +15,8 @@ Orinthia*
 .pi*
 .serena
 hotpatch-hub
-
+graphify-out
+scripts
 *_prototype
 /test/*
 

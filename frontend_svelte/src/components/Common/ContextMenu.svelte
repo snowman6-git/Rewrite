@@ -16,6 +16,17 @@
 	}
 
 	let { items, x, y, onClose }: Props = $props();
+	let menuEl = $state<HTMLDivElement | null>(null);
+
+	// 뷰포트 클램프 — bind:this가 $state라 엘리먼트 마운트 시 효과 재실행
+	$effect(() => {
+		const el = menuEl;
+		if (!el) return;
+		const r = el.getBoundingClientRect();
+		const M = 8;
+		el.style.left = `${Math.max(M, Math.min(x, window.innerWidth - r.width - M))}px`;
+		el.style.top = `${Math.max(M, Math.min(y, window.innerHeight - r.height - M))}px`;
+	});
 
 	function handleContextMenu(e: MouseEvent) {
 		e.preventDefault();
@@ -48,7 +59,7 @@
 </script>
 
 {#if items.length > 0}
-	<div class="context-menu" style="left: {x}px; top: {y}px;">
+	<div class="context-menu" bind:this={menuEl}>
 		{#each items as item (item.label)}
 			{#if item.separator}
 				<div class="context-menu-separator"></div>

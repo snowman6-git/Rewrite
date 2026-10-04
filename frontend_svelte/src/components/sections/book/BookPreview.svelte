@@ -6,6 +6,7 @@
 	import Icon from '$components/Common/Icon.svelte';
 	import BookMeta from './BookMeta.svelte';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import type { Book } from '$lib/types';
 
 	let { book, onClose }: { book: Book; onClose: () => void } = $props();
@@ -47,7 +48,7 @@
 		);
 
 		if (story_unfolds.status >= 200 && story_unfolds.status < 300) {
-			window.location.href = `/book/${story_unfolds.data['table_id']}`;
+			goto(`/book/${story_unfolds.data['table_id']}`);
 		} else {
 			toast.error('생성에 실패했어요');
 		}

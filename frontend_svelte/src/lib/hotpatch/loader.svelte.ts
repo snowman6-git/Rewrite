@@ -6,6 +6,23 @@ const DEFAULT_HUB = import.meta.env.PUBLIC_HOTPATCH_HUB ?? 'https://forgejo.aa2.
 const HUB_LS = 'rewrite_hotpatch_hub';
 const LS_KEY = 'rewrite_ui_ver';
 const TIMEOUT_MS = 5000;
+const ENABLED_LS = 'rewrite_hotpatch_enabled';
+
+// 자동 확인 토글: 기본 ON, '0'만 OFF (수동 확인은 항상 가능)
+export function hotpatchEnabled(): boolean {
+	try {
+		return localStorage.getItem(ENABLED_LS) !== '0';
+	} catch {
+		return true;
+	}
+}
+export function setHotpatchEnabled(v: boolean): void {
+	try {
+		localStorage.setItem(ENABLED_LS, v ? '1' : '0');
+	} catch {
+		/* 접근 불가 */
+	}
+}
 
 // 라이브 hub: 설정에서 저장한 주소 > env > 기본 (백엔드 주소와 동일 패턴)
 export function hubBase(): string {
@@ -97,6 +114,20 @@ interface VersionManifest {
 	ver: number;
 	sha256: string;
 	url: string;
+	contentHash?: string; // 빌드 트리 콘텐츠 해시 (버전 판단 1순위)
+}
+
+// 로컬 콘텐츠 해시 — origin/.hp-hash (release: rewrite://가 active/ 우선 → 이미 패치됨이면 hub와 동일)
+// dev/웹: 404 → null → 레거시 ver 비교로 폴백
+async function localContentHash(): Promise<string | null> {
+	try {
+		const r = await fetchWithTimeout(`${location.protocol}//${location.host}/.hp-hash`, TIMEOUT_MS);
+		if (!r.ok) return null;
+		const t = (await r.text()).trim();
+		return t || null;
+	} catch {
+		return null;
+	}
 }
 
 let running = false;
@@ -106,6 +137,7 @@ let running = false;
  * 새 버전 설치 성공 시 ?hotpatch=1과 함께 페이지를 리로드한다.
  */
 export async function checkHotpatch(manual = false): Promise<void> {
+	if (!manual && !hotpatchEnabled()) return;
 	if (running) return;
 	running = true;
 	const st = patchStatus;
@@ -126,7 +158,15 @@ export async function checkHotpatch(manual = false): Promise<void> {
 		const resp = await fetchWithTimeout(`${hubBase()}/version.json`, TIMEOUT_MS);
 		if (!resp.ok) throw new Error(`version.json ${resp.status}`);
 		const manifest = (await resp.json()) as VersionManifest;
-		if (!manifest || !Number.isFinite(manifest.ver) || manifest.ver <= installed) {
+		if (!manifest) throw new Error('manifest empty');
+		// 콘텐츠 해시 일치 = 같은 UI → 최신 (ver 무관). 첫 실행(임베드==hub)도 여기서 스킵
+		const localHash = await localContentHash();
+		if (manifest.contentHash && localHash && manifest.contentHash === localHash) {
+			st.phase = 'latest';
+			st.version = installed;
+			return;
+		}
+		if (!Number.isFinite(manifest.ver) || manifest.ver <= installed) {
 			st.phase = 'latest';
 			st.version = installed;
 			return;

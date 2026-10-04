@@ -31,7 +31,7 @@ const app = new Hono();
 app.use(
 	cors({
 		origin: '*',
-		// ["http://localhost:5173", "http://192.168.0.72:5173"],
+		// ["http://localhost:5173", "http://<LAN-IP>:5173"],
 		// allowHeaders: ['X-Custom-Header', 'Upgrade-Insecure-Requests'],
 		allowMethods: ['POST', 'GET', 'OPTIONS', 'DELETE'],
 		// exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],

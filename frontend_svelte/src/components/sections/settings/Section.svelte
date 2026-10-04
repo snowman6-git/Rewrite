@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { apiBase, setApiBase } from '$lib/api/client';
 	import { applyTheme, isThemeKey, type ThemeKey } from '$lib/assets/theme';
-	import { checkHotpatch, installedVersion, patchStatus, setHubBase } from '$lib/hotpatch/loader.svelte';
+	import { checkHotpatch, hotpatchEnabled, installedVersion, patchStatus, setHubBase, setHotpatchEnabled } from '$lib/hotpatch/loader.svelte';
 	import { toast } from '$lib/stores/toast.svelte';
 
 	const THEME_LABELS: Record<ThemeKey, string> = {
@@ -13,6 +13,7 @@
 	let saved = $state(false);
 	let hub = $state(typeof window === 'undefined' ? '' : (localStorage.getItem('rewrite_hotpatch_hub') ?? ''));
 	let hubSaved = $state(false);
+	let hpOn = $state(typeof window === 'undefined' ? true : hotpatchEnabled());
 	let theme = $state<ThemeKey>(
 		typeof window === 'undefined'
 			? 'mono'
@@ -60,22 +61,28 @@
 		hubSaved = false;
 		toast.success('기본값으로 복원 — 다음 확인부터 바로 반영');
 	}
+
+	function toggleHp() {
+		hpOn = !hpOn;
+		setHotpatchEnabled(hpOn);
+		toast.success(hpOn ? '앱 시작 시 자동 확인: ON' : '앱 시작 시 자동 확인: OFF (수동 확인은 그대로)');
+	}
 </script>
 
 <div class="settings-section">
 	<h2 class="section-title">설정</h2>
 
 	<div class="card">
-		<label class="card-label" for="api-url">백엔드 주소</label>
+		<label class="card-label" for="api-url">백엔드 API</label>
 		<p class="card-hint">API 요청이 가는 서버 주소. 비워두면 자동으로 감 (접속한 호스트:3000).</p>
 		<div class="card-row">
 			<input
 				id="api-url"
 				class="api-input"
 				type="text"
-				bind:value={url}
+				value={url}
 				oninput={() => (saved = false)}
-				placeholder="http://192.168.0.36:3000"
+				placeholder="http://<LAN-IP>:3000"
 				spellcheck="false"
 			/>
 		</div>
@@ -84,7 +91,7 @@
 			<button class="reset-btn" onclick={reset}>기본값</button>
 		</div>
 		{#if saved}
-			<p class="card-note">저장 완료. 다음 요청부터 바로 적용돼.</p>
+			<p class="card-note">저장 완료. 새로고침하면 적용돼.</p>
 		{/if}
 	</div>
 
@@ -96,9 +103,9 @@
 				id="hub-url"
 				class="api-input"
 				type="text"
-				bind:value={hub}
+				value={hub}
 				oninput={() => (hubSaved = false)}
-				placeholder="http://192.168.0.36:3999"
+				placeholder="http://<LAN-IP>:3999"
 				spellcheck="false"
 			/>
 		</div>
@@ -114,8 +121,18 @@
 	<div class="card">
 		<p class="card-label">UI/UX 패치 (인앱 업데이트)</p>
 		<p class="card-hint">새 UI가 배포되면 앱 시작 시 자동으로 설치된다. 여기서 수동 확인도 가능. Tauri 앱 전용.</p>
+		<div class="card-row switch-row">
+			<span class="switch-label">앱 시작 시 자동 확인</span>
+			<button class="switch" role="switch" aria-checked={hpOn} aria-label="앱 시작 시 자동 확인" onclick={toggleHp}>
+				<span class="knob"></span>
+			</button>
+		</div>
 		<div class="card-row">
-			<button class="save-btn" onclick={checkUpdate} disabled={patchStatus.phase === 'checking' || patchStatus.phase === 'downloading' || patchStatus.phase === 'applying'}>업데이트 확인</button>
+			<button
+				class="save-btn"
+				onclick={checkUpdate}
+				disabled={patchStatus.phase === 'checking' || patchStatus.phase === 'downloading' || patchStatus.phase === 'applying'}
+			>업데이트 확인</button>
 			{#if patchStatus.phase === 'downloading' && patchStatus.total > 0}
 				<span class="card-note">{Math.min(100, Math.round((patchStatus.received / patchStatus.total) * 100))}%</span>
 			{/if}
@@ -126,12 +143,18 @@
 	</div>
 
 	<div class="card">
-		<label class="card-label" for="theme-select">테마 (임시)</label>		<div class="card-row">
-			<select id="theme-select" class="theme-select" bind:value={theme} onchange={() => {
-				localStorage.setItem('rewrite_theme', theme);
-				applyTheme(theme);
-				toast.success(`테마: ${THEME_LABELS[theme]}`);
-			}}>
+		<label class="card-label" for="theme-select">테마</label>
+		<div class="card-row">
+			<select
+				id="theme-select"
+				class="theme-select"
+				bind:value={theme}
+				onchange={() => {
+					localStorage.setItem('rewrite_theme', theme);
+					applyTheme(theme);
+					toast.success(`테마: ${THEME_LABELS[theme]}`);
+				}}
+			>
 				<option value="mono">모노크롬(기본)</option>
 				<option value="indigo">인디고(원본)</option>
 			</select>
@@ -147,6 +170,9 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-md);
+		min-height: 0;
+		overflow-y: auto;
+		-webkit-overflow-scrolling: touch;
 	}
 
 	.section-title {
@@ -244,12 +270,61 @@
 		margin: 0;
 	}
 
+	.switch-row {
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.switch-label {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-primary);
+	}
+
+	.switch {
+		width: 44px;
+		height: 24px;
+		border-radius: 999px;
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-tertiary);
+		position: relative;
+		cursor: pointer;
+		padding: 0;
+		flex-shrink: 0;
+		transition: background var(--transition-fast), border-color var(--transition-fast);
+	}
+
+	.switch[aria-checked='true'] {
+		background: var(--color-accent-primary);
+		border-color: var(--color-accent-primary);
+	}
+
+	.switch .knob {
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: var(--color-text-secondary);
+		transition: transform var(--transition-fast), background var(--transition-fast);
+	}
+
+	.switch[aria-checked='true'] .knob {
+		transform: translateX(20px);
+		background: var(--color-text-inverse);
+	}
+
 	.theme-select {
 		flex: 1;
-		background: var(--color-bg-tertiary);
+		min-height: 2.25rem;
+		appearance: none;
+		-webkit-appearance: none;
+		background: var(--color-bg-tertiary)
+			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23a0a0a0' stroke-width='1.5'/%3E%3C/svg%3E")
+			no-repeat right var(--space-md) center;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-sm);
-		padding: var(--space-sm) var(--space-md);
+		padding: var(--space-sm) calc(var(--space-md) + 1.5rem) var(--space-sm) var(--space-md);
 		color: var(--color-text-primary);
 		font-family: var(--font-family);
 		font-size: var(--font-size-sm);
