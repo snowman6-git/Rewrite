@@ -7,15 +7,19 @@ const db = new Database('main.db');
 // db.run("PRAGMA journal_mode = WAL;");
 import * as dotenv from 'dotenv';
 
-dotenv.config
+dotenv.config;
 const SYSTEM_HEADER = process.env.SYSTEM_HEADER;
 
 export class ReadBook {
 	static chat(book_id: string) {
+		// [cache-window] 50개 스텝 윈도우: 앵커가 50턴마다만 이동 → 에포크 내 prefix byte-안정 (캐시 ~98%)
+		// 순 슬라이딩(last-50 고정)은 매 턴 prefix 불일치 = 캐시 100% 미스라 금지
+		const total = db
+			.prepare(`SELECT COUNT(*) AS c FROM G_Pages WHERE session_id = ?`)
+			.get(book_id) as { c: number };
+		const anchor = Math.max(0, Math.floor((total.c - 1) / 50) * 50);
 		let chat_list = db
 			.prepare(sql`
-				-- 캐시 히트용: append-only 전체 히스토리 (슬라이딩 윈도우 제거 → 매 턴 prefix 안정)
-				-- rowid tiebreak: 초 단위 create_at 동점 시에도 순서 고정 (캐시 무효 방지)
 				SELECT
 					Pages.pid,
 					Pages.role,
@@ -26,10 +30,70 @@ export class ReadBook {
 				WHERE
 					Pages.session_id = ?
 				ORDER BY
-					Pages.create_at ASC, Pages.rowid ASC;
+					Pages.create_at ASC,
+					Pages.rowid ASC
+				LIMIT
+					50
+				OFFSET
+					?;
 			`)
-			.all(book_id);
+			.all(book_id, anchor);
 		return chat_list;
+	}
+	// [display-window] 화면용: 에포크와 무관하게 항상 최근 N개 (오름차순)
+	static chatRecent(book_id: string, limit = 50) {
+		const rows = db
+			.prepare(sql`
+				SELECT
+					Pages.pid,
+					Pages.role,
+					Pages.content
+				FROM
+					F_Book AS Book
+					JOIN G_Pages AS Pages ON Book.session_id = Pages.session_id
+				WHERE
+					Pages.session_id = ?
+				ORDER BY
+					Pages.create_at DESC,
+					Pages.rowid DESC
+				LIMIT
+					?;
+			`)
+			.all(book_id, limit) as { pid: string; role: string; content: string }[];
+		return rows.reverse();
+	}
+	static chatCount(book_id: string) {
+		const total = db
+			.prepare(`SELECT COUNT(*) AS c FROM G_Pages WHERE session_id = ?`)
+			.get(book_id) as { c: number };
+		return total.c;
+	}
+	// [context-window] LLM용: append-only 프리픽스 + 최근 꼬리
+	// Gemini 암묵 캐시는 "가장 긴 공통 접두어"에 걸리므로, 접두어는 붙어가는 쪽으로만 변해야 한다.
+	// 예산을 넘길 때만 앞쪽을 에포크(50행) 단위로 잘라낸다 → 접두어 시작점은 에포크 경계에서만 움직인다.
+	static chatContext(book_id: string, budget = 400, epoch = 50) {
+		const total = ReadBook.chatCount(book_id);
+		const start = total <= budget ? 0 : Math.floor((total - budget) / epoch) * epoch;
+		return db
+			.prepare(sql`
+				SELECT
+					Pages.pid,
+					Pages.role,
+					Pages.content
+				FROM
+					F_Book AS Book
+					JOIN G_Pages AS Pages ON Book.session_id = Pages.session_id
+				WHERE
+					Pages.session_id = ?
+				ORDER BY
+					Pages.create_at ASC,
+					Pages.rowid ASC
+				LIMIT
+					?
+				OFFSET
+					?;
+			`)
+			.all(book_id, Math.max(0, total - start), start);
 	}
 	static header(book_id: string) {
 		let db_header = db
@@ -45,7 +109,7 @@ export class ReadBook {
 			`)
 			.all(book_id);
 
-		const header_combine = SYSTEM_HEADER! + "\n" + ReadBook.system(book_id)
+		const header_combine = SYSTEM_HEADER! + '\n' + ReadBook.system(book_id);
 		return header_combine;
 	}
 	static system(book_id: string) {
@@ -77,8 +141,8 @@ export async function init() {
 		CREATE TABLE IF NOT EXISTS D_Bookshelf (
 			id TEXT UNIQUE NOT NULL,
 			cover BLOB,
-			desc TEXT NOT NULL,
-			system TEXT NOT NULL
+			DESC TEXT NOT NULL,
+			SYSTEM TEXT NOT NULL
 		);
 
 		CREATE TABLE IF NOT EXISTS E_Starting (
@@ -114,7 +178,7 @@ export async function init() {
 
 		CREATE TABLE IF NOT EXISTS I_Header (
 			session_id TEXT NOT NULL,
-			system TEXT NOT NULL,
+			SYSTEM TEXT NOT NULL,
 			rule TEXT
 		);
 
@@ -142,7 +206,7 @@ export async function bookshelf_add(book: BookStruct) {
 
 	db.query(sql`
 		INSERT
-		OR REPLACE INTO D_Bookshelf (id, desc, system)
+		OR REPLACE INTO D_Bookshelf (id, DESC, SYSTEM)
 		VALUES
 			(?, ?, ?)
 	`).run([book.id, book.desc, book.system]);
@@ -185,14 +249,15 @@ export async function activebook_listup() {
 			SELECT
 				Bookspine.title,
 				Book.session_id,
-				SUBSTR(Pages.content, 1, 40) || '...' AS lastLine, --SQL배우다보니까 신기한거 개많음, 애초에 백에서 줄여서 보내 네트워크 오버헤드 줄이자(이게 더 나은지는 검증필요)
-				Pages.session_id 
+				SUBSTR (Pages.content, 1, 40) || '...' AS lastLine, --SQL배우다보니까 신기한거 개많음, 애초에 백에서 줄여서 보내 네트워크 오버헤드 줄이자(이게 더 나은지는 검증필요)
+				Pages.session_id
 			FROM
 				C_Bookspine AS Bookspine
 				JOIN F_Book AS Book ON Bookspine.id = Book.id
 				JOIN G_Pages AS Pages ON Book.session_id = Pages.session_id
 			GROUP BY
 				Book.session_id;
+
 			ORDER BY
 				Pages.create_at DESC --최신순
 		`)
@@ -276,21 +341,43 @@ export async function clone_book(origin_id: string, point_id: string) {
 		const initializeBookSession = db.transaction((book_id, origin_id, page_id, point_id) => {
 			// 1. F_Book 삽입
 			db.prepare(sql`
-				INSERT INTO F_Book (id, title, session_id)
-				SELECT id, title, ? FROM C_Bookspine
-				WHERE id = ?
+				INSERT INTO
+					F_Book (id, title, session_id)
+				SELECT
+					id,
+					title,
+					?
+				FROM
+					C_Bookspine
+				WHERE
+					id = ?
 			`).run(book_id, origin_id);
 			// 2. G_Pages 삽입
 			db.prepare(sql`
-				INSERT INTO G_Pages (session_id, pid, role, content)
-				SELECT ?, ?, ?, content FROM E_Starting
-				WHERE point_id = ? AND id = ?
-			`).run(book_id, page_id, "system", point_id, origin_id);
+				INSERT INTO
+					G_Pages (session_id, pid, role, content)
+				SELECT
+					?,
+					?,
+					?,
+					content
+				FROM
+					E_Starting
+				WHERE
+					point_id = ?
+					AND id = ?
+			`).run(book_id, page_id, 'system', point_id, origin_id);
 			// 3. I_Header 삽입
 			db.prepare(sql`
-				INSERT INTO I_Header (session_id, system)
-				SELECT ?, system FROM D_Bookshelf
-				WHERE id = ?
+				INSERT INTO
+					I_Header (session_id, SYSTEM)
+				SELECT
+					?,
+					SYSTEM
+				FROM
+					D_Bookshelf
+				WHERE
+					id = ?
 			`).run(book_id, origin_id);
 		});
 
@@ -299,7 +386,7 @@ export async function clone_book(origin_id: string, point_id: string) {
 
 		return book_id;
 	} catch (error) {
-		console.log(error)
-		return error
+		console.log(error);
+		return error;
 	}
 }

@@ -12,6 +12,7 @@ sqlite_test
 # LLM Create Folder
 A_*
 Orinthia*
+frontend_svelte_backup_*
 .pi*
 .serena
 hotpatch-hub
@@ -19,7 +20,7 @@ graphify-out
 scripts
 *_prototype
 /test/*
-
+.venv-laya
 node_modules
 
 # Output
@@ -45,3 +46,8 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 vitest-examples
+.vitest/
+
+# 백엔드 요구 문서 (공개 리포에 취약점 설명서를 올리지 않기 위한 제외)
+# 이미 추적된 doc는 gitignore가 못 막는다 — git rm -r --cached frontend_svelte/doc 로 먼저 추척 해제해야 한다
+frontend_svelte/doc/

@@ -3,7 +3,7 @@ import { getSystemPrompt, getAssistantPrompt } from '../static/prompt';
 import { Context } from 'hono';
 
 import * as dotenv from 'dotenv';
-import { add_page, read_book } from '../lib/db';
+import { add_page } from '../lib/db';
 dotenv.config();
 
 // const db = new Database(":memory:");

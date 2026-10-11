@@ -8,10 +8,16 @@
 	// 수동(설정)은 카드에서 진행률 표시
 	let active = $derived(!manual && ['downloading', 'applying'].includes(patchStatus.phase));
 	let label = $derived(
-		patchStatus.phase === 'checking' ? '확인중' : patchStatus.phase === 'applying' ? '적용중' : '다운로드중'
+		patchStatus.phase === 'checking'
+			? '확인중'
+			: patchStatus.phase === 'applying'
+				? '적용중'
+				: '다운로드중'
 	);
 	let pct = $derived(
-		patchStatus.total > 0 ? Math.min(100, Math.round((patchStatus.received / patchStatus.total) * 100)) : 0
+		patchStatus.total > 0
+			? Math.min(100, Math.round((patchStatus.received / patchStatus.total) * 100))
+			: 0
 	);
 </script>
 
@@ -27,15 +33,21 @@
 				aria-valuemax={100}
 				aria-valuenow={patchStatus.total > 0 ? pct : undefined}
 			>
-				<div
-					class="fill"
-					class:indeterminate={patchStatus.total <= 0}
-					style:width={patchStatus.total > 0 ? `${pct}%` : '100%'}
-				></div>
+				{#if patchStatus.total > 0}
+					<div class="fill" style:width={`${pct}%`}></div>
+				{:else}
+					<div class="fill indeterminate"></div>
+				{/if}
 			</div>
 			<p class="pct">{patchStatus.total > 0 ? `${pct}%` : ''}</p>
 		{:else}
-			<div class="pbar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={100}>
+			<div
+				class="pbar"
+				role="progressbar"
+				aria-valuemin={0}
+				aria-valuemax={100}
+				aria-valuenow={100}
+			>
 				<div class="fill" style:width="100%"></div>
 			</div>
 		{/if}
@@ -90,7 +102,7 @@
 	}
 
 	.fill.indeterminate {
-		width: 40% !important;
+		width: 40%;
 		animation: pbar-slide 1.2s ease-in-out infinite;
 	}
 

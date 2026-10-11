@@ -11,20 +11,18 @@
 <button
 	class="model-item"
 	class:selected={isSelected}
+	role="menuitem"
+	aria-current={isSelected ? 'true' : undefined}
 	onclick={() => {
 		modelsState.selectModel(model.id);
 		pageState.isModel_menu_open = false;
 	}}
 >
-	{#if isSelected}
-		<div class="check-icon">✓</div>
-	{/if}
+	<!-- 체크는 자리를 고정한다 (display:none 쓰면 행마다 이름 x 좌표가 어긋난다) -->
+	<span class="check-icon" aria-hidden="true">✓</span>
 	<div class="model-info">
 		<div class="model-name">{model.name}</div>
 		<div class="model-desc">{model.desc}</div>
-	</div>
-	<div class="model-meta">
-		<span class="model-context">메모리: {model.context_size}</span>
 	</div>
 </button>
 
@@ -32,7 +30,6 @@
 	.model-item {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
 		width: 100%;
 		padding: var(--space-sm) var(--space-md);
 		border: 1px solid transparent;
@@ -41,28 +38,37 @@
 		color: var(--color-text-primary);
 		text-align: left;
 		cursor: pointer;
-		transition: all var(--transition-fast);
+		transition:
+			background var(--transition-fast),
+			border-color var(--transition-fast);
 		gap: var(--space-sm);
 	}
 
-	.model-item:hover {
+	/* 선택은 배경으로 알린다 — 테마는 모노크롬, 초록(--color-success) 쓰지 않는다 */
+	.model-item.selected {
 		background: var(--color-bg-hover);
-		border-color: var(--color-border);
+		border-color: var(--color-border-strong);
+	}
+
+	@media (hover: hover) {
+		.model-item:hover {
+			background: var(--color-bg-hover);
+			border-color: var(--color-border-strong);
+		}
 	}
 
 	.check-icon {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: var(--color-success);
+		width: 1rem;
+		flex-shrink: 0;
+		text-align: center;
+		color: var(--color-text-primary);
 		font-size: var(--font-size-sm);
 		font-weight: 700;
-		flex-shrink: 0;
-		margin-right: var(--space-xs);
+		visibility: hidden;
 	}
 
-	.model-item:not(.selected) .check-icon {
-		display: none;
+	.model-item.selected .check-icon {
+		visibility: visible;
 	}
 
 	.model-info {
@@ -86,17 +92,6 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		margin-top: 2px;
-	}
-
-	.model-meta {
-		flex-shrink: 0;
-		text-align: right;
-	}
-
-	.model-context {
-		font-size: var(--font-size-xs);
-		color: var(--color-text-tertiary);
-		font-variant-numeric: tabular-nums;
 	}
 
 	@media (max-width: 640px) {

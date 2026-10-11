@@ -2,7 +2,9 @@
 	"name": "hono_backend",
 	"scripts": {
 		"dev": "bun run --hot src/index.ts",
-		"test": "bun run src/test.ts"
+		"test": "bun run src/test.ts",
+		"format": "prettier --write .",
+		"lint": "prettier --check ."
 	},
 	"dependencies": {
 		"@google/genai": "^2.21.0",
@@ -15,6 +17,9 @@
 		"uuid": "^14.0.1"
 	},
 	"devDependencies": {
-		"@types/bun": "latest"
+		"@types/bun": "latest",
+		"prettier": "^3.9.9",
+		"prettier-plugin-embed": "^0.5.1",
+		"prettier-plugin-sql": "^0.20.0"
 	}
 }

@@ -29,20 +29,14 @@
 
 <style>
 	.btn {
-		flex: 1;
 		padding: var(--space-sm) var(--space-md);
+		min-height: 26px;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
-		font-family: var(--font-family);
 		font-size: var(--font-size-sm);
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		text-align: center;
-	}
-
-	.btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
 	}
 
 	.btn-cancel {
@@ -50,9 +44,11 @@
 		color: var(--color-text-secondary);
 	}
 
-	.btn-cancel:hover:not(:disabled) {
-		background: var(--color-bg-hover);
-		border-color: var(--color-text-tertiary);
+	@media (hover: hover) {
+		.btn-cancel:hover:not(:disabled) {
+			background: var(--color-bg-hover);
+			border-color: var(--color-text-tertiary);
+		}
 	}
 
 	.btn-save {
@@ -61,9 +57,11 @@
 		border-color: var(--color-accent-primary);
 	}
 
-	.btn-save:hover:not(:disabled) {
-		background: var(--color-accent-secondary);
-		border-color: var(--color-accent-secondary);
+	@media (hover: hover) {
+		.btn-save:hover:not(:disabled) {
+			background: var(--color-accent-secondary);
+			border-color: var(--color-accent-secondary);
+		}
 	}
 
 	.btn-reset {
@@ -72,8 +70,10 @@
 		border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
 	}
 
-	.btn-reset:hover:not(:disabled) {
-		background: color-mix(in srgb, var(--color-error) 10%, transparent);
-		border-color: var(--color-error);
+	@media (hover: hover) {
+		.btn-reset:hover:not(:disabled) {
+			background: color-mix(in srgb, var(--color-error) 10%, transparent);
+			border-color: var(--color-error);
+		}
 	}
 </style>

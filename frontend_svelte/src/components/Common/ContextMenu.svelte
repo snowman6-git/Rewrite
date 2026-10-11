@@ -1,7 +1,9 @@
 <script lang="ts">
-	export interface MenuItem {
+	import Icon from '$components/Common/Icon.svelte';
+
+	interface MenuItem {
 		label?: string;
-		icon?: string;
+		icon?: string; // Icon.svelte의 icons/controls 키 (테마 규칙: 이모지 금지)
 		onClick?: () => void;
 		disabled?: boolean;
 		danger?: boolean;
@@ -22,10 +24,10 @@
 	$effect(() => {
 		const el = menuEl;
 		if (!el) return;
-		const r = el.getBoundingClientRect();
 		const M = 8;
-		el.style.left = `${Math.max(M, Math.min(x, window.innerWidth - r.width - M))}px`;
-		el.style.top = `${Math.max(M, Math.min(y, window.innerHeight - r.height - M))}px`;
+		// offsetWidth/Height — 진입 애니메이션(scale 0.95)에 영향받지 않는 레이아웃 크기 (rect는 0.95배로 측정돼 우측 1px 넘침)
+		el.style.left = `${Math.max(M, Math.min(x, window.innerWidth - el.offsetWidth - M))}px`;
+		el.style.top = `${Math.max(M, Math.min(y, window.innerHeight - el.offsetHeight - M))}px`;
 	});
 
 	function handleContextMenu(e: MouseEvent) {
@@ -73,7 +75,7 @@
 					}}
 				>
 					{#if item.icon}
-						<span class="menu-icon">{item.icon}</span>
+						<span class="menu-icon"><Icon name={item.icon} size={16} /></span>
 					{/if}
 					<span class="menu-label" class:danger={item.danger}>{item.label}</span>
 				</button>
@@ -122,20 +124,18 @@
 		text-align: left;
 	}
 
-	.context-menu-item:hover:not(.disabled) {
-		background: var(--color-bg-elevated);
-		color: var(--color-accent-primary);
-	}
-
-	.context-menu-item.disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
+	@media (hover: hover) {
+		.context-menu-item:hover:not(.disabled) {
+			background: var(--color-bg-elevated);
+			color: var(--color-accent-primary);
+		}
 	}
 
 	.menu-icon {
-		font-size: var(--font-size-base);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 		width: 20px;
-		text-align: center;
 		flex-shrink: 0;
 	}
 
@@ -147,7 +147,8 @@
 	}
 
 	.menu-label.danger {
-		color: var(--color-error);
+		/* 모노크롬 테마: 네온 빨강은 튀므로 중립색으로 뺌 — 인식은 분리선+하단 위치가 담당 */
+		color: color-mix(in srgb, var(--color-error) 65%, var(--color-text-tertiary));
 	}
 
 	.context-menu-separator {

@@ -5,15 +5,29 @@
 /* ---------- Chat Body Container ---------- */
 .chat-body {
 	width: 100%;
+	max-width: 100%; /* 열은 화면을 다 쓴다 (측정: 500px에서 말풍선이 90% 캡에 걸려 48px이 놀고 있었음) */
+	margin-inline: auto;
 	flex: 1;
 	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
 	padding: var(--space-sm) var(--space-md);
+	/* ChatComposer가 채팅 위에 얹히는 고정 레이어 — 마지막 메시지가 인풋 뒤로 숨지 않게 비운다
+	   shortcut: 그립16+간격4+패널52+하단32 = 104px 기준. 그립으로 인풋을 늘리면 내용은 인풋 뒤로 지나간다 */
+	padding-bottom: 6.5rem;
 	gap: var(--space-sm);
 	min-height: 0;
 	scroll-behavior: smooth;
+}
+
+/* 시스템 안내: .chat-body가 align-items:flex-start라 폭 명시 필수, 문구는 열 가운데로 */
+.window-note {
+	width: 100%;
+	margin: 0;
+	font-size: var(--font-size-sm);
+	color: var(--color-text-secondary);
+	text-align: center;
 }
 
 /* ---------- Message Bubbles ---------- */
@@ -32,7 +46,6 @@
 }
 
 .message-bubble {
-	min-width: 100%;
 	max-width: 100%;
 	padding: var(--space-sm) var(--space-md);
 	border-radius: var(--radius-lg);
@@ -169,8 +182,10 @@
 	border-bottom: 1px solid transparent;
 	transition: border-color var(--transition-fast);
 }
-.markdown-content a:hover {
-	border-bottom-color: var(--color-accent-primary);
+@media (hover: hover) {
+	.markdown-content a:hover {
+		border-bottom-color: var(--color-accent-primary);
+	}
 }
 
 .markdown-content ul,
@@ -210,13 +225,15 @@
 }
 
 /* ---------- Code Block (투톤 디자인) ---------- */
+/* 긴 줄은 가로 스크롤 대신 줄바꿈한다 (들여쓰기·줄 구조는 pre-wrap이 보존) */
 .markdown-content pre {
 	background: var(--color-code-header-bg);
 	color: var(--color-code-text);
 	padding: var(--space-sm) var(--space-md);
 	border: 1px solid var(--color-code-border);
 	border-radius: var(--radius-md);
-	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
 	margin: var(--space-sm) 0;
 	font-size: var(--font-size-sm);
 	line-height: 1.5;
@@ -228,7 +245,8 @@
 	color: inherit;
 	padding: 0;
 	font-size: inherit;
-	white-space: pre;
+	white-space: inherit;
+	overflow-wrap: inherit;
 	tab-size: 4;
 }
 
@@ -277,12 +295,12 @@
 }
 
 .progress-bar::-webkit-progress-value {
-	background: var(--color-accent-gradient);
+	background: var(--color-accent-primary);
 	border-radius: var(--radius-full);
 }
 
 .progress-bar::-moz-progress-bar {
-	background: var(--color-accent-gradient);
+	background: var(--color-accent-primary);
 	border-radius: var(--radius-full);
 }
 
@@ -301,7 +319,7 @@
 /* ---------- Mobile Responsive ---------- */
 @media (max-width: 640px) {
 	.message-bubble {
-		max-width: 90%;
+		max-width: 100%;
 		padding: var(--space-xs) var(--space-sm);
 		font-size: var(--font-size-sm);
 	}

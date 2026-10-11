@@ -1,11 +1,12 @@
 <script lang="ts">
 	import Modal from '$components/Common/Modal.svelte';
 	import Icon from '$components/Common/Icon.svelte';
+	import { goto } from '$app/navigation';
 	import ContextMenu from '$components/Common/ContextMenu.svelte';
-	import { renameBook } from '$lib/api/book';
-	import { toast } from '$lib/stores/toast.svelte';
+	import Btn from '$components/Common/Btn.svelte';
+	import { useBookMenu } from '$lib/useBookMenu.svelte';
 
-	export interface DeskBook {
+	interface DeskBook {
 		id: string;
 		title: string;
 		lastLine: string;
@@ -13,7 +14,7 @@
 		bookId?: string;
 	}
 
-	export interface LibrarySectionProps {
+	interface LibrarySectionProps {
 		books: DeskBook[];
 		isLoading?: boolean;
 		isError?: boolean;
@@ -31,19 +32,19 @@
 		onRefresh
 	}: LibrarySectionProps = $props();
 
-	let contextMenu = $state<{ x: number; y: number; book: DeskBook | null }>({
-		x: 0,
-		y: 0,
-		book: null
-	});
-
-	let confirmDeleteBook = $state<DeskBook | null>(null);
+	// 컨텍스트메뉴(우클릭)·모바일 롱프레스·삭제 확인 — 책장(sections/book/Section)과 공유
+	const {
+		menu,
+		hide: hideContextMenu,
+		show: showContextMenu,
+		lp: deskLp
+	} = useBookMenu<DeskBook>();
 
 	// — 풀투리프레시(모바일): scrollTop 0에서 아래로 당겨 새로고침 —
 	let pull = $state(0);
 	let p2pSpin = $state(false);
 	let p2pStartY = 0;
-	let p2pActive = false;
+	let p2pActive = $state(false);
 
 	function p2pTouchStart(e: TouchEvent) {
 		const scroller = document.querySelector('.app-main') as HTMLElement | null;
@@ -74,66 +75,51 @@
 			pull = 0;
 		}
 	}
-	let renameBookTarget = $state<DeskBook | null>(null);
-	let renameValue = $state('');
-
-	function showContextMenu(e: MouseEvent, book: DeskBook) {
-		e.preventDefault();
-		e.stopPropagation();
-		contextMenu = { x: e.clientX, y: e.clientY, book };
-	}
-
-	function hideContextMenu() {
-		contextMenu = { x: 0, y: 0, book: null };
-	}
-
-	function handleDeleteFromMenu() {
-		if (!contextMenu.book) return;
-		confirmDeleteBook = contextMenu.book;
-		hideContextMenu();
-	}
-
 	function handleInfoFromMenu() {
 		// TODO: 정보 보기 구현
 		hideContextMenu();
 	}
 
 	function handleConfirmDelete() {
-		if (!confirmDeleteBook || !onDelete) return;
-		onDelete(confirmDeleteBook);
-		confirmDeleteBook = null;
+		if (!menu.confirm || !onDelete) return;
+		onDelete(menu.confirm);
+		menu.confirm = null;
 	}
 
 	function handleCancelDelete() {
-		confirmDeleteBook = null;
-	}
-
-	async function handleRename(book: DeskBook, title: string) {
-		try {
-			// 책/서재 모두 session_id 전송 (book_rename-doc.md v2: F_Book.title 갱신)
-			await renameBook(book.bookId ?? book.id, title);
-			toast.success('제목이 변경되었습니다.');
-			books = books.map((b) => (b.id === book.id ? { ...b, title } : b));
-		} catch (error) {
-			const msg = error instanceof Error && error.message ? error.message : '제목 변경에 실패했습니다.';
-			toast.error(msg);
-		}
+		menu.confirm = null;
 	}
 
 	let menuItems = $derived.by(() => {
-		if (!contextMenu.book) return [];
-		const b = contextMenu.book;
+		if (!menu.book) return [];
+		const b = menu.book;
 		return [
-			{ label: '정보 보기', onClick: handleInfoFromMenu, disabled: true },
-			{ label: '제목 변경', onClick: () => (renameValue = b.title, (renameBookTarget = b)) },
-			{ label: '삭제', danger: true, onClick: () => (confirmDeleteBook = b) }
+			{ label: '정보 보기', icon: 'book', onClick: handleInfoFromMenu, disabled: true },
+			{ separator: true },
+			{ label: '삭제', icon: 'trash', danger: true, onClick: () => (menu.confirm = b) }
 		];
 	});
 </script>
 
-<div class="library-section" ontouchstart={p2pTouchStart} ontouchmove={p2pTouchMove} ontouchend={p2pEnd}>
-	<div class="p2p" class:hidden={pull === 0} class:anim={!p2pActive} class:p2p-spin={p2pSpin} style={`height: ${pull}px`}>
-		<div class="p2p-indicator" style={`transform: rotate(${pull * 2.25}deg); opacity: ${Math.min(pull / 40, 1)}`}>
+<div
+	class="library-section"
+	role="region"
+	aria-label="서재"
+	ontouchstart={p2pTouchStart}
+	ontouchmove={p2pTouchMove}
+	ontouchend={p2pEnd}
+>
+	<div
+		class="p2p"
+		class:hidden={pull === 0}
+		class:anim={!p2pActive}
+		class:p2p-spin={p2pSpin}
+		style={`height: ${pull}px`}
+	>
+		<div
+			class="p2p-indicator"
+			style={`transform: rotate(${pull * 2.25}deg); opacity: ${Math.min(pull / 40, 1)}`}
+		>
 			<Icon name="refresh" size={22} />
 		</div>
 	</div>
@@ -141,7 +127,9 @@
 	<div class="lib-header">
 		<h2 class="lib-title">서재 <span class="lib-count">{books.length}</span></h2>
 		{#if onRefresh}
-			<button class="refresh-btn" onclick={onRefresh} aria-label="새로고침" title="새로고침">↻</button>
+			<button class="refresh-btn" onclick={onRefresh} aria-label="새로고침" title="새로고침"
+				>↻</button
+			>
 		{/if}
 	</div>
 
@@ -157,7 +145,7 @@
 		<div class="center-state">
 			<p class="state-text">{errorMessage}</p>
 			{#if onRefresh}
-				<button class="retry-btn" onclick={onRefresh}>다시 시도</button>
+				<Btn variant="save" onclick={onRefresh}>다시 시도</Btn>
 			{/if}
 		</div>
 	{/if}
@@ -171,16 +159,23 @@
 					role="button"
 					tabindex={0}
 					onclick={() => {
-						window.location.href = `/book/${book.id}`;
-						/* TODO: 열기 */
+						if (deskLp.consume()) return;
+						goto(`/book/${book.id}`);
 					}}
 					onkeydown={(e) => {
 						if (e.key === 'Enter' || e.key === ' ') {
 							e.preventDefault();
-							window.location.href = `/book/${book.id}`;
+							void goto(`/book/${book.id}`);
 						}
 					}}
 					oncontextmenu={(e) => showContextMenu(e, book)}
+					ontouchstart={(e) => {
+						menu.lp = book;
+						deskLp.ontouchstart(e);
+					}}
+					ontouchmove={deskLp.ontouchmove}
+					ontouchend={deskLp.ontouchend}
+					ontouchcancel={deskLp.ontouchcancel}
 				>
 					<div class="item-content">
 						<div class="item-top">
@@ -207,18 +202,19 @@
 	{/if}
 
 	<!-- Context Menu -->
-	<ContextMenu items={menuItems} {...contextMenu} onClose={hideContextMenu} />
+	<ContextMenu items={menuItems} x={menu.x} y={menu.y} onClose={hideContextMenu} />
 
 	<!-- Delete Confirmation Modal -->
-	{#if confirmDeleteBook}
+	{#if menu.confirm}
 		<Modal
 			title="삭제 확인"
-			message="{confirmDeleteBook.title} 책을 삭제하시겠습니까?"
+			message="{menu.confirm.title} 책을 삭제하시겠습니까?"
 			variant="danger"
 			confirmText="삭제"
 			cancelText="취소"
 			onConfirm={handleConfirmDelete}
-			onCancel={handleCancelDelete}		/>
+			onCancel={handleCancelDelete}
+		/>
 	{/if}
 </div>
 
@@ -231,10 +227,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-md);
-	}
-
-	.library-section.dragging {
-		user-select: none;
 	}
 
 	.p2p {
@@ -253,7 +245,6 @@
 	.p2p.anim {
 		transition: height 0.25s ease;
 	}
-
 
 	.p2p-spin .p2p-indicator {
 		animation: p2p-rot 0.8s linear infinite;
@@ -303,9 +294,11 @@
 			color var(--transition-fast);
 	}
 
-	.refresh-btn:hover {
-		border-color: var(--color-accent-primary);
-		color: var(--color-text-primary);
+	@media (hover: hover) {
+		.refresh-btn:hover {
+			border-color: var(--color-accent-primary);
+			color: var(--color-text-primary);
+		}
 	}
 
 	.desk-list {
@@ -327,8 +320,10 @@
 		user-select: none;
 	}
 
-	.desk-item:hover {
-		border-color: var(--color-accent-primary);
+	@media (hover: hover) {
+		.desk-item:hover {
+			border-color: var(--color-accent-primary);
+		}
 	}
 
 	.item-content {
@@ -399,23 +394,6 @@
 		margin: 0;
 	}
 
-	.retry-btn {
-		margin-top: var(--space-xs);
-		padding: var(--space-xs) var(--space-md);
-		background: var(--color-accent-primary);
-		color: var(--color-text-inverse);
-		border: none;
-		border-radius: var(--radius-sm);
-		font-size: var(--font-size-sm);
-		font-weight: 500;
-		cursor: pointer;
-		transition: background var(--transition-fast);
-	}
-
-	.retry-btn:hover {
-		background: var(--color-accent-secondary);
-	}
-
 	@media (max-width: 768px) {
 		.library-section {
 			padding: var(--space-md);
@@ -423,26 +401,5 @@
 		.desk-item {
 			padding: var(--space-sm);
 		}
-	}/* — 풀투리프레시 — */
-
-	.p2p.hidden {
-		display: none;
 	}
-
-	.p2p.anim {
-		transition: height 0.25s ease;
-	}
-
-
-	.p2p-spin svg {
-		animation: p2p-rot 0.8s linear infinite;
-	}
-
-	@keyframes p2p-rot {
-		to {
-			transform: rotate(360deg);
-		}
-	}
-
-
 </style>

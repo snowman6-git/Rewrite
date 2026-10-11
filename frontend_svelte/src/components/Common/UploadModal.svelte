@@ -1,124 +1,40 @@
 <script lang="ts">
 	import Icon from './Icon.svelte';
+	import Modal from './Modal.svelte';
 
-	export interface Props {
+	interface Props {
 		onUploadZip: () => void;
 		onUploadToml: () => void;
 		onCancel: () => void;
 	}
 
 	let { onUploadZip, onUploadToml, onCancel }: Props = $props();
-
-	function handleOverlayClick() {
-		onCancel();
-	}
-
-	function handleModalClick(e: MouseEvent) {
-		e.stopPropagation();
-	}
-
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			onCancel();
-		}
-	}
-
-	$effect(() => {
-		document.addEventListener('keydown', handleKeydown);
-		return () => {
-			document.removeEventListener('keydown', handleKeydown);
-		};
-	});
 </script>
 
-<div class="modal-overlay" role="presentation" onclick={handleOverlayClick}>
-	<div class="modal" role="presentation" onclick={handleModalClick}>
-		<h3 class="modal-title">책 업로드</h3>
-		<p class="modal-text">업로드할 파일 형식을 선택하세요.</p>
+<!-- 오버레이·시트·타이틀·취소·Esc·스크림은 Modal이 소유 (구 구현은 전부 복제였다) -->
+<Modal title="책 업로드" message="업로드할 파일 형식을 선택하세요." cancelText="취소" {onCancel}>
+	<div class="upload-options">
+		<button class="option-btn" onclick={onUploadZip}>
+			<span class="option-icon"><Icon name="archive" size={22} /></span>
+			<span class="option-content">
+				<span class="option-title">ZIP 파일</span>
+				<span class="option-desc">압축 파일로 여러 책 업로드</span>
+			</span>
+			<span class="option-arrow">›</span>
+		</button>
 
-		<div class="upload-options">
-			<button class="option-btn" onclick={onUploadZip}>
-				<span class="option-icon"><Icon name="archive" size={22} /></span>
-				<div class="option-content">
-					<span class="option-title">ZIP 파일</span>
-					<span class="option-desc">압축 파일로 여러 책 업로드</span>
-				</div>
-				<span class="option-arrow">›</span>
-			</button>
-
-			<button class="option-btn" onclick={onUploadToml}>
-				<span class="option-icon"><Icon name="file-text" size={22} /></span>
-				<div class="option-content">
-					<span class="option-title">TOML 파일</span>
-					<span class="option-desc">TOML 형식으로 책 데이터 업로드</span>
-				</div>
-				<span class="option-arrow">›</span>
-			</button>
-		</div>
-
-		<div class="modal-actions">
-			<button class="btn btn-cancel" onclick={onCancel}>취소</button>
-		</div>
+		<button class="option-btn" onclick={onUploadToml}>
+			<span class="option-icon"><Icon name="file-text" size={22} /></span>
+			<span class="option-content">
+				<span class="option-title">TOML 파일</span>
+				<span class="option-desc">TOML 형식으로 책 데이터 업로드</span>
+			</span>
+			<span class="option-arrow">›</span>
+		</button>
 	</div>
-</div>
+</Modal>
 
 <style>
-	.modal-overlay {
-		position: fixed;
-		inset: 0;
-		background: rgba(0, 0, 0, 0.6);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 9999;
-		backdrop-filter: blur(4px);
-		animation: fadeIn 0.15s ease-out;
-	}
-
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
-	}
-
-	.modal {
-		background: var(--color-bg-tertiary);
-		border-radius: var(--radius-lg);
-		padding: var(--space-xl);
-		min-width: 320px;
-		max-width: calc(100vw - 2rem);
-		border: 1px solid var(--color-border);
-		animation: slideUp 0.2s ease-out;
-	}
-
-	@keyframes slideUp {
-		from {
-			opacity: 0;
-			transform: translateY(12px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	.modal-title {
-		font-size: var(--font-size-lg);
-		font-weight: 600;
-		color: var(--color-text-primary);
-		margin: 0 0 var(--space-sm);
-	}
-
-	.modal-text {
-		font-size: var(--font-size-sm);
-		color: var(--color-text-secondary);
-		margin: 0 0 var(--space-lg);
-		line-height: 1.6;
-	}
-
 	.upload-options {
 		display: flex;
 		flex-direction: column;
@@ -135,18 +51,22 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		cursor: pointer;
-		transition: all var(--transition-fast);
+		transition:
+			background var(--transition-fast),
+			border-color var(--transition-fast);
 		text-align: left;
 	}
 
-	.option-btn:hover {
-		background: var(--color-bg-elevated);
-		border-color: var(--color-accent-primary);
+	@media (hover: hover) {
+		.option-btn:hover {
+			background: var(--color-bg-elevated);
+			border-color: var(--color-accent-primary);
+		}
 	}
 
 	.option-icon {
-		font-size: var(--font-size-xl);
 		flex-shrink: 0;
+		color: var(--color-text-tertiary);
 	}
 
 	.option-content {
@@ -173,40 +93,5 @@
 		color: var(--color-text-tertiary);
 		font-weight: 300;
 		flex-shrink: 0;
-	}
-
-	.modal-actions {
-		display: flex;
-		justify-content: flex-end;
-	}
-
-	.btn {
-		padding: var(--space-sm) var(--space-lg);
-		border-radius: var(--radius-md);
-		font-size: var(--font-size-sm);
-		font-weight: 500;
-		cursor: pointer;
-		transition: all var(--transition-fast);
-		border: none;
-		font-family: inherit;
-	}
-
-	.btn-cancel {
-		background: var(--color-bg-secondary);
-		color: var(--color-text-secondary);
-		border: 1px solid var(--color-border);
-	}
-
-	.btn-cancel:hover {
-		background: var(--color-bg-elevated);
-		color: var(--color-text-primary);
-	}
-
-	@media (max-width: 480px) {
-		.modal {
-			min-width: unset;
-			width: calc(100vw - 2rem);
-			padding: var(--space-lg);
-		}
 	}
 </style>

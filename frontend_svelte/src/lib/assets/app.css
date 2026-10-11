@@ -26,7 +26,6 @@ body::-webkit-scrollbar {
 	--color-bg-tertiary: #1a1a1a;
 	--color-bg-elevated: #222222;
 	--color-bg-hover: #2a2a2a;
-	--color-bg-active: #333333;
 
 	--color-text-primary: #ededed;
 	--color-text-secondary: #a0a0a0;
@@ -35,19 +34,14 @@ body::-webkit-scrollbar {
 
 	--color-accent-primary: #ededed;
 	--color-accent-secondary: #a0a0a0;
-	--color-accent-gradient: linear-gradient(135deg, #ededed 0%, #a0a0a0 100%);
 	--color-accent-glow: rgba(255, 255, 255, 0.1);
 
-	--color-user-bubble: #1a1a1a;
-	--color-user-bubble-border: #2a2a2a;
-
-	--color-ai-bubble: #111111;
-	--color-ai-bubble-border: #2a2a2a;
+	/* 시트·모달 오버레이 (7개 화면이 0.5/0.6/0.7 제각각 → 단일 규범) */
+	--color-scrim: rgba(0, 0, 0, 0.6);
 
 	--color-success: #22c55e;
 	--color-warning: #f59e0b;
 	--color-error: #ef4444;
-	--color-loading: #ededed;
 
 	--color-code-bg: #161616;
 	--color-code-border: #2a2a2a;
@@ -56,9 +50,11 @@ body::-webkit-scrollbar {
 	--color-code-header-text: #a0a0a0;
 
 	--color-border: #2a2a2a;
+	--color-border-strong: #3a3a3a;
 	--color-border-subtle: #1f1f1f;
 
 	--font-family: 'NxMaple', sans-serif;
+	--font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
 	--font-size-xs: 0.7rem;
 	--font-size-sm: 0.85rem;
 	--font-size-base: 1rem;
@@ -75,6 +71,7 @@ body::-webkit-scrollbar {
 	--space-2xl: 3rem;
 
 	--space-2xs: 0.25rem;
+	--space-3xs: 0.125rem;
 
 	--radius-xs: 0.25rem;
 	--radius-sm: 0.5rem;
@@ -83,21 +80,10 @@ body::-webkit-scrollbar {
 	--radius-xl: 1.5rem;
 	--radius-full: 9999px;
 
-	--shadow-sm: 0 1px 2px #0000004d;
-	--shadow-md: 0 4px 12px #0006;
-	--shadow-lg: 0 8px 30px #00000080;
-	--shadow-glow: 0 0 20px rgba(255, 255, 255, 0.06);
-	--shadow-glow-lg: 0 0 40px rgba(255, 255, 255, 0.1);
-
 	--transition-fast: 150ms ease;
 	--transition-base: 250ms ease;
-	--transition-slow: 400ms ease;
 
 	--header-height: 3rem;
-
-	--nav-height: 4rem;
-
-	--input-area-height: auto;
 }
 
 *,
@@ -107,6 +93,7 @@ body::-webkit-scrollbar {
 	margin: 0;
 	padding: 0;
 	user-select: none;
+	touch-action: manipulation;
 
 	-webkit-tap-highlight-color: transparent;
 	scrollbar-width: none;
@@ -168,9 +155,27 @@ body {
 	border-radius: var(--radius-full);
 }
 
-::-webkit-scrollbar-thumb:hover {
-	background: var(--color-text-tertiary);
+@media (hover: hover) {
+	::-webkit-scrollbar-thumb:hover {
+		background: var(--color-text-tertiary);
+	}
 }
+
+/* ---------- 전역 공통 (컴포넌트별 재구현 10곳 흡수) ---------- */
+input::placeholder,
+textarea::placeholder {
+	color: var(--color-text-tertiary);
+}
+
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled,
+.disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+/* 더 옅게 의도한 곳(send 0.3 / icon 0.35 / save 0.4 / production 0.45)은 로컬 유지 */
 
 ::selection {
 	background: var(--color-accent-primary);
@@ -180,6 +185,14 @@ body {
 :focus-visible {
 	outline: 2px solid var(--color-accent-primary);
 	outline-offset: 2px;
+}
+
+/* 폼 컨트롤은 UA 기본 폰트를 쓴다 (body 폰트를 상속하지 않음) — 전역에서 한 번만 잡는다 */
+input,
+textarea,
+select,
+button {
+	font-family: inherit;
 }
 
 button {
@@ -240,6 +253,19 @@ button {
 @media (max-width: 480px) {
 }
 
+/* 하단 fixed nav(4rem) 뒤 숨음 방지 — flex 컨테이너의 padding-bottom은 Chrome이 scrollable overflow에 넣지 않으므로
+   스크롤되는 콘텐츠의 마지막 항목(의사요소)으로 여백을 만든다 */
+.book-section::after,
+.library-section::after,
+.characters-section::after,
+.settings-section::after,
+.form-body::after,
+.studio::after {
+	content: '';
+	display: block;
+	flex: 0 0 4rem;
+}
+
 .search-input {
 	width: 100%;
 	padding: var(--space-md) var(--space-lg) var(--space-md) 2.5rem;
@@ -254,7 +280,7 @@ button {
 
 .search-input:focus {
 	border-color: var(--color-accent-primary);
-	box-shadow: 0 0 0 3px var(--color-accent-glow);
+	box-shadow: 0 0 0 2px var(--color-accent-glow);
 	background: var(--color-bg-elevated);
 }
 
@@ -284,9 +310,11 @@ button {
 	text-align: left;
 }
 
-.nav-item:hover {
-	background: var(--color-bg-elevated);
-	color: var(--color-text-primary);
+@media (hover: hover) {
+	.nav-item:hover {
+		background: var(--color-bg-elevated);
+		color: var(--color-text-primary);
+	}
 }
 
 .nav-item.active {
@@ -340,9 +368,11 @@ button {
 		background var(--transition-fast);
 }
 
-.icon-btn:hover:not(:disabled) {
-	border-color: var(--color-accent-primary);
-	background: var(--color-accent-glow);
+@media (hover: hover) {
+	.icon-btn:hover:not(:disabled) {
+		border-color: var(--color-accent-primary);
+		background: var(--color-accent-glow);
+	}
 }
 
 /* ---------- Shared: Empty State ---------- */
@@ -366,4 +396,17 @@ button {
 	font-size: var(--font-size-sm);
 	color: var(--color-text-tertiary);
 	margin: 0;
+}
+
+/* ---------- 접근성: 모션 감소 ----------
+   무한 애니메이션 5종(로딩 도트 / p2p 스핀 / 선택 스핀 / 프로그레스 / 커서 블링크)을 한 곳에서 끈다 */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }

@@ -25,19 +25,45 @@ export function setHotpatchEnabled(v: boolean): void {
 }
 
 // 라이브 hub: 설정에서 저장한 주소 > env > 기본 (백엔드 주소와 동일 패턴)
+function safeHub(url: string): string {
+	try {
+		const u = new URL(url);
+		const local =
+			u.hostname === 'localhost' ||
+			u.hostname === '127.0.0.1' ||
+			/^10\.\d+\.\d+\.\d+$/.test(u.hostname) ||
+			/^192\.168\.\d+\.\d+$/.test(u.hostname);
+		// 원거리 hub는 https만 — 평문 hub는 앱 코드 교체 경로
+		if (u.protocol === 'https:' || (local && u.protocol === 'http:'))
+			return url.replace(/\/+$/, '');
+	} catch {
+		/* 아래에서 기본값 */
+	}
+	return 'https://forgejo.aa2.uk/aa2/rewrite-ui';
+}
+
 export function hubBase(): string {
 	try {
 		const v = localStorage.getItem(HUB_LS);
-		if (v && v.trim()) return v.trim().replace(/\/+$/, '');
+		if (v && v.trim()) return safeHub(v.trim());
 	} catch {
 		/* SSR/접근 불가 */
 	}
-	return DEFAULT_HUB;
+	return safeHub(DEFAULT_HUB);
 }
 
-export function setHubBase(v: string | null) {
-	if (v && v.trim()) localStorage.setItem(HUB_LS, v.trim().replace(/\/+$/, ''));
-	else localStorage.removeItem(HUB_LS);
+export function setHubBase(v: string | null): boolean {
+	if (v && v.trim()) {
+		const trimmed = v.trim().replace(/\/+$/, '');
+		// safeHub가 기본값으로 바꿔버리면 저장이 안 된 것 → 호출측이 사용자에게 알려야 한다
+		if (safeHub(trimmed) === trimmed) {
+			localStorage.setItem(HUB_LS, trimmed);
+			return true;
+		}
+		return false;
+	}
+	localStorage.removeItem(HUB_LS);
+	return true;
 }
 
 export type PatchPhase =

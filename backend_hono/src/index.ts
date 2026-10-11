@@ -1,14 +1,7 @@
 import axios from 'axios';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import {
-	models,
-	chat,
-	chat_listup,
-	world_edit,
-	reset_world_memory,
-	getTokenSize,
-} from './handlers/endpoint';
+import { models, chat, chat_listup, world_edit, update_world_edit } from './handlers/endpoint';
 import { chatSSE_listen, chatSSE_announcement } from './handlers/chatSSE';
 import {
 	book_upload,
@@ -24,7 +17,7 @@ import { serveStatic } from 'hono/bun';
 
 import { authMiddleware } from './middleware/auth';
 import { init } from './lib/db';
-import { book_remove } from './handlers/management';
+import { book_remove, chat_delete } from './handlers/management';
 init();
 
 const app = new Hono();
@@ -33,7 +26,7 @@ app.use(
 		origin: '*',
 		// ["http://localhost:5173", "http://<LAN-IP>:5173"],
 		// allowHeaders: ['X-Custom-Header', 'Upgrade-Insecure-Requests'],
-		allowMethods: ['POST', 'GET', 'OPTIONS', 'DELETE'],
+		allowMethods: ['POST', 'GET', 'OPTIONS', 'DELETE', "PATCH"],
 		// exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
 		// maxAge: 600,
 		credentials: true,
@@ -58,17 +51,19 @@ app.get('/book_detail', book_detail);
 
 // POST
 app.post('/chat', chat);
-app.post('/reset_world_memory', reset_world_memory);
 app.post('/api/chat/send', chatSSE_announcement);
 app.post('/auto_report/:type', auto_report);
-app.post('/getToken_size/:target', getTokenSize);
 app.post('/book_upload', book_upload);
 app.post('/book_unfolds', book_unfolds);
 
 app.post('/api/user/login', login);
 
 // DELETE
-app.delete('/book_delete', book_remove)
+app.delete('/book_delete', book_remove);
+app.delete('/message/delete', chat_delete);
+
+// UPDATE
+app.patch('/world_edit', update_world_edit);
 
 export default {
 	port: 3000,

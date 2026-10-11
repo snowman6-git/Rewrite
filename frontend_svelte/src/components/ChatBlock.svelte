@@ -3,7 +3,7 @@
 	import DOMPurify from 'dompurify';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import BubbleEdit from './BubbleEdit.svelte';
+	import Icon from './Common/Icon.svelte';
 
 	let {
 		text,
@@ -14,6 +14,8 @@
 		copy,
 		remove,
 		edit,
+		bookmark,
+		isBookmarked = false,
 		isLast = false
 	} = $props<{
 		text: string;
@@ -24,35 +26,36 @@
 		copy?: () => void;
 		remove?: () => void;
 		edit?: (content: string) => void;
+		bookmark?: () => void;
+		isBookmarked?: boolean;
 		//채팅 목록 마지막 버블인지. 삭제 메뉴 노출 조건으로 사용
 		isLast?: boolean;
 	}>();
 
-	let cleanHtml = $derived(DOMPurify.sanitize(text));
+	let cleanHtml = $derived(DOMPurify.sanitize(marked.parse(text) as string));
 	let isStreaming = $derived(cleanHtml.length > 1);
-	let isRespondingProp = $derived(isResponding);
 	let menuOpen = $state(false);
 
-	//callback(재생성/수정/복사/삭제) 없으면 노출 안 함
-	//수정 모드
-	let isEditing = $state(false);
+	//callback(재생성/복사/삭제/수정/책갈피) 없으면 노출 안 함
+	const hasActions = $derived(onReload || copy || remove || edit || bookmark);
+
+	let editing = $state(false);
 	let editDraft = $state('');
 
 	function startEdit() {
 		editDraft = text;
-		isEditing = true;
-	}
-	async function saveEdit() {
-		const content = editDraft;
-		isEditing = false;
-		await edit?.(content);
-	}
-	function cancelEdit() {
-		isEditing = false;
+		editing = true;
+		menuOpen = false;
 	}
 
-	//재생성/수정/복사/삭제 callback 중 하나 있으면 노출
-	const hasActions = $derived(onReload || edit || copy || remove);
+	function saveEdit() {
+		edit?.(editDraft);
+		editing = false;
+	}
+
+	function cancelEdit() {
+		editing = false;
+	}
 
 	let loadingTexts = [
 		'AI 가 이야기를 진행하는중...',
@@ -80,23 +83,25 @@
 
 <div class="message-row {sender}">
 	<div class="message-bubble {sender}">
-		{#if isEditing}
-			<BubbleEdit bind:value={editDraft} onSave={saveEdit} onCancel={cancelEdit} />
+		{#if editing}
+			<textarea class="edit-area" bind:value={editDraft} rows={6}></textarea>
+			<div class="edit-actions">
+				<button class="edit-btn" onclick={cancelEdit}>취소</button>
+				<button class="edit-btn primary" onclick={saveEdit}>저장</button>
+			</div>
+		{:else if isStreaming}
+			<div class="markdown-content streaming">{@html cleanHtml}</div>
 		{:else}
-			{#if isStreaming}
-				<div class="markdown-content streaming">{@html marked.parse(cleanHtml)}</div>
-			{:else}
-				<div class="markdown-content">{@html marked.parse(cleanHtml)}</div>
-			{/if}
-			{#if sender === 'assistant' && isRespondingProp && !isStreaming}
-				<div class="loading-indicator">
-					<div class="loading-spinner"></div>
-					<span class="loading-text">{loadingTexts[currentTextIndex]}</span>
-				</div>
-			{/if}
+			<div class="markdown-content">{@html cleanHtml}</div>
+		{/if}
+		{#if sender === 'assistant' && isResponding && !isStreaming}
+			<div class="loading-indicator">
+				<div class="loading-spinner"></div>
+				<span class="loading-text">{loadingTexts[currentTextIndex]}</span>
+			</div>
 		{/if}
 
-		{#if hasActions && !isRespondingProp && !isEditing}
+		{#if hasActions && !isResponding}
 			{#if live_token && live_token > 0}
 				<span class="token-info">
 					<span class="token-dot"></span>
@@ -106,33 +111,18 @@
 			<div class="bubble-actions">
 				{#if onReload}
 					<button class="action-btn" onclick={onReload} title="재생성" aria-label="재생성">
-						<svg
-							viewBox="0 0 24 24"
-							width="16"
-							height="16"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							><path d="M21 12a9 9 0 1 1-3.1-6.8" /><polyline points="21 3 21 9 15 9" /></svg
-						>
+						<Icon name="reload" size={16} />
 					</button>
 				{/if}
-				{#if copy || (remove && isLast)}
+				{#if copy || (remove && isLast) || edit || bookmark}
 					<button
 						class="action-btn"
+						class:bookmarked={isBookmarked}
 						onclick={() => (menuOpen = !menuOpen)}
 						title="메뉴"
 						aria-label="메뉴"
 					>
-						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"
-							><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle
-								cx="19"
-								cy="12"
-								r="1.6"
-							/></svg
-						>
+						<Icon name="more" size={16} />
 					</button>
 				{/if}
 			</div>
@@ -143,7 +133,8 @@
 			<div class="menu-overlay" role="presentation" onclick={closeMenu}></div>
 			<div
 				class="menu-sheet"
-				role="menu"
+				role="group"
+				aria-label="메시지 작업"
 				in:fly={{ y: 100, duration: 250, easing: cubicOut }}
 				out:fly={{ y: 100, duration: 250, easing: cubicOut }}
 			>
@@ -151,6 +142,7 @@
 					{#if copy}
 						<button
 							class="menu-item"
+							role="menuitem"
 							onclick={() => {
 								copy();
 								closeMenu();
@@ -158,17 +150,25 @@
 						>
 					{/if}
 					{#if edit}
+						<button class="menu-item" role="menuitem" onclick={startEdit}>수정</button>
+					{/if}
+					{#if bookmark}
 						<button
 							class="menu-item"
+							role="menuitemcheckbox"
+							aria-checked={isBookmarked}
 							onclick={() => {
-								startEdit();
+								bookmark();
 								closeMenu();
-							}}>수정</button
+							}}
 						>
+							{isBookmarked ? '책갈피 해제' : '책갈피'}
+						</button>
 					{/if}
 					{#if remove && isLast}
 						<button
 							class="menu-item danger"
+							role="menuitem"
 							onclick={(e) => {
 								e.stopPropagation(); //선택 모드 진입 후 같은 클릭이 row 토글로 번지지 않게
 								remove();
@@ -217,36 +217,39 @@
 			color var(--transition-fast);
 	}
 
-	.action-btn:hover {
-		background: var(--color-bg-elevated);
-		color: var(--color-text-primary);
+	@media (hover: hover) {
+		.action-btn:hover {
+			background: var(--color-bg-elevated);
+			color: var(--color-text-primary);
+		}
 	}
 
 	.menu-overlay {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.5);
+		background: var(--color-scrim);
 		z-index: 998;
-		backdrop-filter: blur(2px);
 	}
 
+	/* model-menu(ModelListMenu)와 같은 시트 언어: 조용한 테두리, 플랫 */
 	.menu-sheet {
 		position: fixed;
 		bottom: 0;
 		left: 0;
 		right: 0;
 		z-index: 999;
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--color-border-strong);
+		border-bottom: none;
+		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 	}
 
 	.menu-sheet .menu-list {
-		padding: var(--space-xs); /*0.5rem→0.25rem, 간격 절반*/
+		padding: var(--space-2xs) var(--space-2xs) var(--space-2xs);
 		display: flex;
 		flex-direction: column;
-		border: 0.15rem solid var(--color-accent-primary);
-		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-		border-bottom: none;
-		overflow: hidden;
-		background: var(--color-bg-tertiary);
+		max-height: 60dvh;
+		overflow-y: auto;
 	}
 
 	/*높이: model-item과 동일(터치 타겟 확보)*/
@@ -266,16 +269,65 @@
 		transition: background var(--transition-fast);
 	}
 
-	.menu-item:hover {
-		background: var(--color-bg-elevated);
+	@media (hover: hover) {
+		.menu-item:hover {
+			background: var(--color-bg-elevated);
+		}
 	}
 
 	.menu-item.danger {
 		color: var(--color-error);
 	}
 
-	.menu-item.danger:hover {
-		background: color-mix(in srgb, var(--color-error) 10%, transparent);
+	/* ---------- 인라인 편집 ---------- */
+	.edit-area {
+		width: 100%;
+		box-sizing: border-box;
+		padding: var(--space-sm);
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--color-border-strong);
+		border-radius: var(--radius-md);
+		color: var(--color-text-primary);
+		font-size: var(--font-size-sm);
+		line-height: 1.6;
+		resize: vertical;
 	}
 
+	.edit-area:focus {
+		border-color: var(--color-accent-primary);
+	}
+
+	.edit-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: var(--space-sm);
+		margin-top: var(--space-2xs);
+	}
+
+	.edit-btn {
+		min-height: 2.25rem;
+		padding: 0 var(--space-md);
+		background: transparent;
+		border: 1px solid var(--color-border-strong);
+		border-radius: var(--radius-md);
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+	}
+
+	.edit-btn.primary {
+		background: var(--color-bg-hover);
+		color: var(--color-text-primary);
+	}
+
+	/* 책갈피된 버블의 메뉴 트리거만 표시 */
+	.action-btn.bookmarked {
+		color: var(--color-text-primary);
+	}
+
+	@media (hover: hover) {
+		.menu-item.danger:hover {
+			background: color-mix(in srgb, var(--color-error) 10%, transparent);
+		}
+	}
 </style>

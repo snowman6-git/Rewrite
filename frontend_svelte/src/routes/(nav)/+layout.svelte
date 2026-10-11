@@ -1,6 +1,5 @@
 <script lang="ts">
 	import '$lib/assets/app.css';
-	import { applyTheme, isThemeKey } from '$lib/assets/theme';
 	import { page } from '$app/stores';
 	import Icon from '$components/Common/Icon.svelte';
 	let { children } = $props();
@@ -13,24 +12,6 @@
 	];
 
 	let activeTab = $derived(tabs.find((t) => $page.url.pathname.startsWith(t.href))?.id ?? 'book');
-
-	$effect(() => {
-		const saved = localStorage.getItem('rewrite_theme');
-		applyTheme(isThemeKey(saved) ? saved : 'mono');
-	});
-
-	$effect(() => {
-		applyTheme(localStorage.getItem('rewrite_theme') === 'indigo' ? 'indigo' : 'mono');
-	});
-
-	$effect(() => {
-		const saved = localStorage.getItem('rewrite_theme');
-		applyTheme(isThemeKey(saved) ? saved : 'mono');
-	});
-
-	$effect(() => {
-		applyTheme(localStorage.getItem('rewrite_theme') === 'indigo' ? 'indigo' : 'mono');
-	});
 </script>
 
 <div class="app-layout">
@@ -64,11 +45,15 @@
 
 <style>
 	.app-layout {
+		width: 100dvw; /* body가 display:flex(열) + 마운트 div가 display:contents라 flex 항목으로 수축한다 → 폭을 명시 */
+		flex: 1;
+		min-width: 0;
 		height: 100dvh;
 		background: var(--color-bg-primary);
 		display: flex;
 		flex-direction: column;
-		/* overflow: hidden; */
+		/* 스크롤은 .app-main 하나가 소유 — 여기서 넘치면 하단 내비 아래 콘텐츠에 도달 못 한다 */
+		overflow: hidden;
 	}
 
 	.app-header {
@@ -129,8 +114,13 @@
 		display: flex;
 		height: 100%;
 		max-height: 100%;
+		/* flex 자식의 min-width:auto가 긴 텍스트 때문에 폭을 늘려 수평 스크롤을 만든다 */
+		min-width: 0;
+		overflow-y: auto;
 		padding-top: 3.5rem;
-		padding-bottom: 4rem;
+		/* Chrome: flex 스크롤 컨테이너의 padding-bottom은 scrollable overflow에 안 들어온다
+		   → 여기서 주면 마지막 행이 fixed nav(4rem) 뒤에 숨는다. 하단 여백은 app.css의 `.app-main > *`가 준다 */
+		padding-bottom: 0;
 	}
 	.app-nav {
 		background: var(--color-bg-primary);
@@ -170,9 +160,11 @@
 		min-width: 60px;
 	}
 
-	.nav-item:hover {
-		color: var(--color-text-primary);
-		background: var(--color-bg-secondary);
+	@media (hover: hover) {
+		.nav-item:hover {
+			color: var(--color-text-primary);
+			background: var(--color-bg-secondary);
+		}
 	}
 
 	.nav-item.active {

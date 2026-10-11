@@ -11,6 +11,7 @@ export interface ModelInfo {
 	name: string;
 	desc: string;
 	status: string;
+	provider?: string;
 	context_size: number;
 }
 export interface Book {

@@ -21,7 +21,9 @@
 		transition: background var(--transition-fast);
 	}
 
-	.back-btn:hover {
-		background: var(--color-bg-hover);
+	@media (hover: hover) {
+		.back-btn:hover {
+			background: var(--color-bg-hover);
+		}
 	}
 </style>

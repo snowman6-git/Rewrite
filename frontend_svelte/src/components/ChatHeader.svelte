@@ -95,14 +95,11 @@
 		max-width: 14rem;
 	}
 
-	.model-btn:hover:not(:disabled) {
-		background: var(--color-bg-hover);
-		border-color: var(--color-accent-primary);
-	}
-
-	.model-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
+	@media (hover: hover) {
+		.model-btn:hover:not(:disabled) {
+			background: var(--color-bg-hover);
+			border-color: var(--color-accent-primary);
+		}
 	}
 
 	.model-icon {

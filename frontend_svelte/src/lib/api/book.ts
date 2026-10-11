@@ -7,16 +7,6 @@ export interface BookListResponse {
 	total: number;
 }
 
-export interface BookCreateRequest {
-	title: string;
-	author?: string;
-	category?: string;
-}
-
-export interface BookUpdateRequest extends BookCreateRequest {
-	id: number;
-}
-
 export async function loadBooks(): Promise<Book[]> {
 	const response = await axios.get(`${apiBase()}/book_listup`, {
 		withCredentials: true
@@ -45,36 +35,11 @@ export async function library_listup(): Promise<LibraryItem[]> {
 	return response.data;
 }
 
-export async function createBook(data: BookCreateRequest): Promise<Book> {
-	const response = await axios.post<Book>(`${apiBase()}/book_create`, data, {
-		withCredentials: true
-	});
-	return response.data;
-}
-
-export async function updateBook(data: BookUpdateRequest): Promise<Book> {
-	const response = await axios.put<Book>(`${apiBase()}/book_update`, data, {
-		withCredentials: true
-	});
-	return response.data;
-}
-
 export async function deleteBook(id: string): Promise<void> {
 	await axios.delete(`${apiBase()}/book_delete`, {
 		params: { id },
 		withCredentials: true
 	});
-}
-
-export async function deleteBookshelf(id: string): Promise<void> {
-	await axios.delete(`${apiBase()}/bookshelf_delete`, {
-		params: { id },
-		withCredentials: true
-	});
-}
-
-export async function renameBook(id: string, title: string): Promise<void> {
-	await axios.post(`${apiBase()}/book_rename`, { id, title }, { withCredentials: true });
 }
 
 export interface UploadBookResult {

@@ -4,8 +4,9 @@ import { apiBase } from '$api/client';
 import { modelsState } from './models.svelte';
 import { v4 as uuidv4 } from 'uuid';
 import { memoryTools } from './memory.svelte';
+import { charactersMenu } from './characters.svelte';
 import { toast } from '$lib/stores/toast.svelte';
-import { updateMessage } from '$api/message';
+import { deleteMessage, updateMessage } from '$api/message';
 
 // sendMessage가 await할 히스토리 로드 promise. class 바깥 모듈 스코프에 두어
 // Svelte LSP의 $state 클래스 필드 제한 문제를 회피한다.
@@ -17,9 +18,14 @@ class ChatState {
 	logic_plus = $state<boolean>(false);
 	book_id = $state<string>('');
 	isModelResponding = $state<boolean>(false);
+	// 채팅 히스토리 로드 중 플래그. true면 인풋을 닫는다 (book 진입의 loadHistory가 해제)
+	historyPending = $state<boolean>(true);
+	// 책갈피 점프 요청 pid. MessageList가 $effect로 스크롤하고 정리한다 (스크롤 컨테이너는 거기가 소유)
+	jumpPid = $state<string | null>(null);
 
 	// 여기서 관리하면서, 전역에 모델이 응답중인지 전파
 	async loadHistory() {
+		this.historyPending = true;
 		// 히스토리 promise를 모듈 스코프에 보관. sendMessage가 await하도록
 		historyPromise = (async () => {
 			try {
@@ -27,7 +33,9 @@ class ChatState {
 			} catch {
 				this.list = [];
 			}
-		})();
+		})().finally(() => {
+			this.historyPending = false;
+		});
 	}
 
 	async addMessage(newMsg: Msg) {
@@ -53,36 +61,50 @@ class ChatState {
 
 		//재추진( text 있음)은 호출쪽에서 이미 슬라이스 처리, here에선 새로 추가하지 않음
 		const isReload = text !== undefined;
+		// 스트림이 채우는 자리 — finally가 이 객체만 소비한다 (마지막 항목 스캔은 롤백 후 남의 토큰을 더한다)
+		const placeholder: Msg = { pid: uuidv4(), role: 'assistant', content: '', live_token: 0 };
 		if (!isReload) {
-			this.list = [...this.list, { pid: uuidv4(), role: 'user', content: input }];
-			this.list = [...this.list, { pid: uuidv4(), role: 'assistant', content: '', live_token: 0 }];
+			this.list = [...this.list, { pid: uuidv4(), role: 'user', content: input }, placeholder];
 			this.user_input = ''; // 전송 성공 = 인풋 공백. 실패 시 아래에서 복원
 		} else {
-			this.list = [...this.list, { pid: uuidv4(), role: 'assistant', content: '', live_token: 0 }];
+			this.list = [...this.list, placeholder];
 		}
 
-		this.isModelResponding = true;
-		//모델로드중으로 변경
-		const response = await fetch(`${apiBase()}/chat`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				book_id: this.book_id,
-				chat: input,
-				// 프론트에서 ID만 보내고 백에서 조회할지, provider를 같이 보낼지 고민하기
-				model: modelsState.selectedModel,
-				custom_note: '',
-				logic_plus: this.logic_plus
-			})
-		});
+		// 실패 시 낙관적으로 넣은 항목을 전부 되돌린다 — 재추진은 assistant 1개, 일반 전송은 user+assistant 2개
+		const rollback = () => {
+			this.isModelResponding = false;
+			if (!isReload) this.user_input = input;
+			this.list = this.list.slice(0, isReload ? -1 : -2);
+		};
 
+		this.isModelResponding = true;
+		let sent = false;
+		//모델로드중으로 변경
 		try {
+			if (!modelsState.selectedModel) {
+				toast.error('사용할 모델을 먼저 선택하세요.');
+				rollback();
+				return;
+			}
+			const response = await fetch(`${apiBase()}/chat`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					book_id: this.book_id,
+					chat: input,
+					// 프론트에서 ID만 보내고 백에서 조회할지, provider를 같이 보낼지 고민하기
+					model: modelsState.selectedModel,
+					character_id: charactersMenu.activeId,
+					custom_note: '',
+					logic_plus: this.logic_plus
+				})
+			});
+
 			if (response.status !== 200) {
 				console.error('[sendMessage] Error response:', response.status, response.statusText);
-				toast.error('메시지 전송에 실패했습니다.');
-				this.isModelResponding = false;
-				if (!isReload) this.user_input = input;
-				this.list = this.list.slice(0, -1); // assistant 메시지 제거
+				// 코드는 그대로 드린다 — 문구 해석(402/429 등)은 프론트가 결정하지 않고 doc/chat_send-atomicity-doc.md §7 의 요구로 남긴다
+				toast.error(`메시지 전송에 실패했습니다. (${response.status})`);
+				rollback();
 				return;
 			}
 
@@ -90,18 +112,20 @@ class ChatState {
 			const decoder = new TextDecoder();
 			if (!reader) {
 				toast.error('메시지 전송에 실패했습니다.');
-				this.isModelResponding = false;
-				if (!isReload) this.user_input = input;
-				this.list = this.list.slice(0, -1);
+				rollback();
 				return;
 			}
 
+			let lineBuf = '';
 			while (true) {
 				const { done, value } = await reader.read();
 				if (done) break;
 
 				try {
-					for (const streamData of decoder.decode(value, { stream: true }).split('\n')) {
+					lineBuf += decoder.decode(value, { stream: true });
+					const lines = lineBuf.split('\n');
+					lineBuf = lines.pop() ?? '';
+					for (const streamData of lines) {
 						if (streamData !== '') {
 							const parsed = JSON.parse(streamData.trim());
 							const output_token = parsed['output'];
@@ -116,15 +140,34 @@ class ChatState {
 				}
 			}
 
+			if (lineBuf !== '') {
+				try {
+					const parsed = JSON.parse(lineBuf.trim());
+					if (parsed['content'] !== undefined) {
+						this.list[this.list.length - 1].content += parsed['content'];
+					}
+				} catch (e) {
+					console.warn('[sendMessage] 종료 후 잔여 라인 파싱 실패:', e);
+				}
+			}
+
 			this.isModelResponding = false;
+			sent = true;
 		} catch {
-			this.isModelResponding = false;
+			rollback();
 		} finally {
 			// 나중에 사이드메뉴에서 커스텀노트, 이미지 URL같이 다른 옵션 추가하기
-			const lastMsg = this.list[this.list.length - 1];
-			if (lastMsg?.live_token) {
-				memoryTools.memory_usage += lastMsg.live_token;
+			if (placeholder.live_token) {
+				memoryTools.memory_usage += placeholder.live_token;
 			}
+		}
+
+		// 전송이 끝난 뒤에만 DB 기준으로 재동기화: 세션 중 만든 pid는 클라이언트 uuid라
+		// DELETE /message/delete가 0행을 지운다. 이 재동기화가 있어야 화면에서 즉시 삭제가 된다.
+		// 완전 해결은 백엔드가 생성 pid를 스트림으로 돌려주는 것 (doc/chat-usage-doc.md)
+		if (sent) {
+			await this.loadHistory();
+			await historyPromise;
 		}
 	}
 
@@ -155,41 +198,58 @@ class ChatState {
 			.catch(() => toast.error('복사에 실패했습니다.'));
 	}
 
-	deleteAt(index: number) {
-		//백엔드에 메시지 삭제 endpoint가 없어 프론트에서만 제거(연동 대기)
-		this.list = this.list.slice(0, index).concat(this.list.slice(index + 1));
-		toast.warning('삭제: 백엔드 연동 대기');
-	}
-
-	deleteMany(pids: string[]) {
-		//백엔드에 메시지 삭제 endpoint가 없어 프론트에서만 제거(연동 대기)
-		const set = new Set(pids);
-		const n = pids.length;
-		this.list = this.list.filter((m) => !set.has(m.pid));
-		toast.warning(`삭제 ${n}건: 백엔드 연동 대기`);
-	}
-
-
-
-
-	//메시지 내용 직접 수정 + 백엔드 DB 저장(수정 버튼용)
-	async editMessage(index: number, newContent: string) {
-		const msg = this.list[index];
-		if (!msg || !newContent.trim()) return;
-		//가장 먼저 메모리 반영(즉시 화면에 반영)
-		this.list = this.list.map((m, i) => (i === index ? { ...m, content: newContent } : m));
-		try {
-			const res = await updateMessage({ book_id: this.book_id, pid: msg.pid, content: newContent });
-			if (res.success) toast.success('메시지 저장 완료');
-			else {
-				toast.error('저장에 실패했습니다.');
-				//실패시 원래 내용으로 복원
-				this.list = this.list.map((m, i) => (i === index ? { ...m, content: msg.content } : m));
-			}
-		} catch {
-			toast.error('저장에 실패했습니다.');
-			this.list = this.list.map((m, i) => (i === index ? { ...m, content: msg.content } : m));
+	/**
+	 * 메시지 수정: 낙관 갱신 후 PATCH /message/update, 실패하면 원문으로 되돌린다.
+	 * 백엔드에는 update_page(book_id, pid, content) 가 존재하지만 라우트가 미등록이다
+	 * (backend_hono/src/lib/page.ts:8) → 현재는 404로 떨어지고 롤백만 일어난다. 요구는 doc/message-update-doc.md.
+	 */
+	async editAt(index: number, content: string) {
+		const target = this.list[index];
+		if (!target) return;
+		const original = target.content;
+		if (content.trim() === '') {
+			toast.error('빈 내용으로 바꿀 수 없습니다.');
+			return;
 		}
+		if (content === original) return;
+
+		this.list[index] = { ...target, content };
+		try {
+			const res = await updateMessage({ book_id: this.book_id, pid: target.pid, content });
+			if (!res.success) throw new Error(res.error ?? '수정 실패');
+			toast.success('수정되었습니다.');
+		} catch (e) {
+			// 화면을 DB 실체에 맞춘다 — 새로고침 시 원문이 살아있으므로 낙관 갱신을 되돌린다
+			const i = this.list.findIndex((m) => m.pid === target.pid);
+			if (i >= 0) this.list[i] = { ...this.list[i], content: original };
+			toast.error(`수정에 실패했습니다. (${e instanceof Error ? e.message : '알 수 없음'})`);
+		}
+	}
+
+	/**
+	 * 멀티삭제: pid별로 DELETE /message/delete 후, DB 기준(`chat_listup`)으로 재동기화.
+	 * 세션 중 만든 메시지의 pid는 클라이언트 uuid라 DB pid와 다르고, 백엔드는 0행을 지워도 ok를 준다
+	 * → DELETE가 조용히 실패하고 새로고침 시 부활한다. 생성 pid를 돌려주는 계약은 doc/chat-usage-doc.md.
+	 * @returns 요청한 pid가 전부 DB에서 사라졌으면 true
+	 */
+	async deleteMany(pids: string[]): Promise<boolean> {
+		if (pids.length === 0) return true;
+		const before = await loadChatHistory(this.book_id).catch(() => null);
+		await Promise.allSettled(pids.map((pid) => deleteMessage({ book_id: this.book_id, pid })));
+		const after = await loadChatHistory(this.book_id).catch(() => null);
+		if (before === null || after === null) {
+			this.list = this.list.filter((m) => !pids.includes(m.pid));
+			toast.error('삭제 결과를 DB에서 확인하지 못했습니다.');
+			return false;
+		}
+		// 화면을 DB 실체에 맞추는 게 핵심 — 백엔드가 ok를 줬다고 리스트만 지우면 새로고침 때 부활한다
+		this.list = after;
+		const removed = Math.max(0, before.length - after.length);
+		if (removed >= pids.length) toast.success(`${removed}건 삭제됨`);
+		else if (removed === 0)
+			toast.error('삭제되지 않았습니다. (백엔드가 생성 pid를 돌려줘야 완전 삭제됨)');
+		else toast.error(`${removed} / ${pids.length}건만 삭제됨`);
+		return removed >= pids.length;
 	}
 }
 export const chatState = new ChatState();

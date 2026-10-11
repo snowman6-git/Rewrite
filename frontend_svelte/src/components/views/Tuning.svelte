@@ -14,7 +14,7 @@
 				<h3 class="block-title">추론 깊이</h3>
 				<span class="block-value">{depthLabels[tuningState.reasoningDepth]}</span>
 			</div>
-			<p class="block-desc">모델의 논리적 판단이 강해지지만, 더 많은 잉크와 시간을 사용해요, </p>
+			<p class="block-desc">모델의 논리적 판단이 강해지지만, 더 많은 잉크와 시간을 사용해요,</p>
 			<input
 				type="range"
 				class="tuning-range"
@@ -111,9 +111,46 @@
 	}
 
 	.tuning-range {
+		-webkit-appearance: none;
+		appearance: none;
 		width: 100%;
+		height: 28px; /* 터치 히트영역 */
 		margin: var(--space-xs) 0;
-		accent-color: var(--color-text-secondary);
+		background: transparent;
+	}
+
+	.tuning-range::-webkit-slider-runnable-track {
+		height: 4px;
+		border-radius: 999px;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+	}
+
+	.tuning-range::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: var(--color-text-secondary);
+		border: 1px solid var(--color-border);
+		margin-top: -9px; /* (20+2 - 4-2)/2 = 트랙 중앙 정렬 */
+		cursor: pointer;
+	}
+
+	.tuning-range::-moz-range-track {
+		height: 4px;
+		border-radius: 999px;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+	}
+
+	.tuning-range::-moz-range-thumb {
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: var(--color-text-secondary);
+		border: 1px solid var(--color-border);
+		cursor: pointer;
 	}
 
 	.ticks {

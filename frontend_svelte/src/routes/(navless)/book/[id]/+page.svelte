@@ -9,7 +9,6 @@
 	import ChatHeader from '$components/ChatHeader.svelte';
 	import MessageList from '$components/MessageList.svelte';
 	import ChatComposer from '$components/ChatComposer.svelte';
-	import ToastContainer from '$components/Common/ToastContainer.svelte';
 
 	const sessionId = $derived($page.url.pathname.split('/').filter(Boolean).pop());
 
@@ -40,12 +39,18 @@
 	let isDesktopMode = $derived(window.matchMedia('(pointer: fine)').matches);
 
 	function handleGlobalKeyDown(event: KeyboardEvent) {
-		if (isDesktopMode) {
-			if (event.key === 'Enter' && !event.shiftKey) {
-				chatState.sendMessage();
-				event.preventDefault();
-			}
-		}
+		if (!isDesktopMode) return;
+		if (event.key !== 'Enter' || event.shiftKey) return;
+		const t = event.target instanceof Element ? event.target : null;
+		// 채팅 입력창의 Enter는 전송, 다른 입력기(모달/검색/에딧)의 Enter는 그대로 두기
+		if (
+			t &&
+			!t.closest('.user-input') &&
+			t.matches('input,textarea,select,[contenteditable="true"]')
+		)
+			return;
+		chatState.sendMessage();
+		event.preventDefault();
 	}
 
 	function toggle_model_menu() {
@@ -57,8 +62,6 @@
 	<title>{book_title}</title>
 </svelte:head>
 <svelte:window onkeydown={handleGlobalKeyDown} />
-
-<ToastContainer />
 
 <div class="app-layout">
 	<ChatHeader title={book_title} onToggleModel={toggle_model_menu} />
@@ -74,5 +77,6 @@
 		flex-direction: column;
 		background: var(--color-bg-primary);
 		overflow: hidden;
+		position: relative; /* ChatComposer 고정 레이어의 앵커 */
 	}
 </style>

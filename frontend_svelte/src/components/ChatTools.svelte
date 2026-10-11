@@ -1,6 +1,10 @@
 <script lang="ts">
 	import Icon from '$components/Common/Icon.svelte';
 	import { chatState } from '$lib/states/chat.svelte';
+	import { modelsState } from '$lib/states/models.svelte';
+
+	// ChatComposer와 동일한 개방 조건 (히스토리 완료 + 모델 선택)
+	const ready = $derived(chatState.historyPending === false && !!modelsState.selectedModel);
 </script>
 
 <div class="chat-tools">
@@ -8,6 +12,7 @@
 	<button
 		class="logic-plus-btn icon-btn"
 		class:active={chatState.logic_plus}
+		disabled={!ready}
 		onclick={() => (chatState.logic_plus = !chatState.logic_plus)}
 		aria-pressed={chatState.logic_plus}
 		aria-label="Logic+ 토글"
@@ -33,7 +38,7 @@
 	<button
 		class="send-btn icon-btn"
 		class:active={chatState.user_input.trim() !== '' && !chatState.isModelResponding}
-		disabled={chatState.isModelResponding}
+		disabled={chatState.isModelResponding || !ready}
 		aria-label="전송"
 		onclick={() => chatState.sendMessage()}
 	>
@@ -76,9 +81,11 @@
 		background: var(--color-accent-primary);
 	}
 
-	.send-btn.active:hover {
-		background: var(--color-accent-secondary);
-		border-color: var(--color-bg-primary);
+	@media (hover: hover) {
+		.send-btn.active:hover {
+			background: var(--color-accent-secondary);
+			border-color: var(--color-bg-primary);
+		}
 	}
 
 	.send-btn:disabled {

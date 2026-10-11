@@ -11,14 +11,14 @@
 
 <!--책 판매 사이트 패턴: 표지(이미지 슬롯) → 제목 → 작가-->
 <div
-		class="book-card"
-		role="button"
-		tabindex={0}
-		onclick={handleClick}
-		onkeydown={(e) => {
-			if (e.key === 'Enter' || e.key === ' ') handleClick();
-		}}
-	>
+	class="book-card"
+	role="button"
+	tabindex={0}
+	onclick={handleClick}
+	onkeydown={(e) => {
+		if (e.key === 'Enter' || e.key === ' ') handleClick();
+	}}
+>
 	<div class="book-cover">
 		<span class="cover-stack"><Icon name="book-stack" size={48} /></span>
 	</div>
@@ -40,8 +40,10 @@
 		transition: border-color var(--transition-fast);
 	}
 
-	.book-card:hover {
-		border-color: var(--color-accent-primary);
+	@media (hover: hover) {
+		.book-card:hover {
+			border-color: var(--color-accent-primary);
+		}
 	}
 
 	/* 표지 = 향후 실제 사진 슬롯. 3:4(실제 책 비율) */
@@ -73,13 +75,14 @@
 	}
 
 	.book-title {
-		font-size: var(--font-size-xs);
+		font-size: var(--font-size-sm);
 		font-weight: 600;
 		color: var(--color-text-primary);
 		margin: 0;
 		line-height: 1.4;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
 	}

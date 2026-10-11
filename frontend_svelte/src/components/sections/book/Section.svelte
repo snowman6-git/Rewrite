@@ -1,10 +1,15 @@
 <script lang="ts">
 	import UploadModal from '$components/Common/UploadModal.svelte';
-	import ToastContainer from '$components/Common/ToastContainer.svelte';
+	import EmptyState from '$components/Common/EmptyState.svelte';
+	import ContextMenu from '$components/Common/ContextMenu.svelte';
+	import Btn from '$components/Common/Btn.svelte';
+	import Modal from '$components/Common/Modal.svelte';
 	import BookCard from '$components/sections/book/BookCard.svelte';
 	import BookPreview from '$components/sections/book/BookPreview.svelte';
-	import { uploadFiles, loadBooks } from '$lib/api/book';
+	import { uploadFiles, loadBooks, deleteBook } from '$lib/api/book';
+	import { useBookMenu } from '$lib/useBookMenu.svelte';
 	import { toast } from '$lib/stores/toast.svelte';
+	import { goto } from '$app/navigation';
 	import type { Book } from '$lib/types';
 
 	let { books = [] }: { books?: Book[] } = $props();
@@ -16,7 +21,52 @@
 	let tomlUploadInput = $state<HTMLInputElement>();
 	let showUploadModal = $state(false);
 	let loaded = $state(false);
+	// 첫 프레임부터 로딩: 빈 목록은 '데이터 0'이 아니라 '아직 안 옴'일 수 있다
+	let loading = $state(books.length === 0);
+	let loadErr = $state('');
 	let selectedBook = $state<Book | null>(null);
+
+	// 카드 컨텍스트 메뉴(우클릭/롱프레스) — 수정(생산 이동)·삭제
+	const { menu, hide: hideContextMenu, show: showContextMenu, lp: cardLp } = useBookMenu<Book>();
+	let deleting = $state(false);
+
+	const menuItems = $derived.by(() => {
+		const b = menu.book;
+		if (!b) return [];
+		return [
+			{
+				label: '수정 (생산으로)',
+				icon: 'edit',
+				onClick: () => {
+					void goto(`/production?book=${encodeURIComponent(b.id)}`);
+				}
+			},
+			{ separator: true },
+			{
+				label: '삭제',
+				icon: 'trash',
+				danger: true,
+				onClick: () => (menu.confirm = b)
+			}
+		];
+	});
+
+	async function handleConfirmDelete() {
+		if (!menu.confirm || deleting) return;
+		deleting = true;
+		try {
+			await deleteBook(menu.confirm.id);
+			toast.success('삭제되었습니다.');
+			menu.confirm = null;
+			// 목록 재로드 트리거: effect 조건(books 비어 + !loaded) 재만족
+			loaded = false;
+			books = [];
+		} catch {
+			toast.error('삭제에 실패했습니다.');
+		} finally {
+			deleting = false;
+		}
+	}
 
 	function handleSearch(event: Event) {
 		searchQuery = (event.target as HTMLInputElement).value;
@@ -45,23 +95,35 @@
 
 		try {
 			const result = await uploadFiles(Array.from(input.files), 'toml');
-			toast.success(`${result.books} 가 추가되었습니다.`);
+			toast.success(`${result.books} 권 추가되었습니다.`);
 		} catch (error) {
 			console.error('TOML 업로드 오류:', error);
 			toast.error('업로드 실패: ' + (error as Error).message);
 		}
 	}
 
+	function reload() {
+		loading = true;
+		loadErr = '';
+		loadBooks()
+			.then((loadedBooks) => {
+				books = loadedBooks;
+			})
+			.catch((error) => {
+				// 실패를 빈 상태로 위장하면 사용자가 업로드를 다시 하게 된다 — 화면에 남긴다
+				console.error('[Section] 책 로드 실패:', error);
+				loadErr = '백엔드에 연결하지 못했어. 설정의 백엔드 주소를 확인해.';
+				toast.error(loadErr);
+			})
+			.finally(() => {
+				loading = false;
+			});
+	}
+
 	$effect(() => {
 		if (books.length === 0 && !loaded) {
 			loaded = true;
-			loadBooks()
-				.then((loadedBooks) => {
-					books = loadedBooks;
-				})
-				.catch((error) => {
-					console.error('[Section] 책 로드 실패:', error);
-				});
+			reload();
 		}
 	});
 
@@ -97,12 +159,12 @@
 </script>
 
 <div class="book-section">
-	<ToastContainer />
-
 	<!-- 컨트롤: 검색 + 정렬 + 업로드 -->
 	<div class="controls">
 		<input
 			type="text"
+			id="book-search"
+			name="book-search"
 			class="search-input"
 			placeholder="이어서 쓰기"
 			oninput={handleSearch}
@@ -111,13 +173,22 @@
 
 		<div class="tools">
 			<div class="sort-buttons">
-				<button class="sort-btn" class:active={sortBy === 'popular'} data-sort="popular"
+				<button
+					class="sort-btn"
+					class:active={sortBy === 'popular'}
+					data-sort="popular"
 					onclick={handleSort}>인기</button
 				>
-				<button class="sort-btn" class:active={sortBy === 'usage'} data-sort="usage"
+				<button
+					class="sort-btn"
+					class:active={sortBy === 'usage'}
+					data-sort="usage"
 					onclick={handleSort}>활성화</button
 				>
-				<button class="sort-btn" class:active={sortBy === 'created'} data-sort="created"
+				<button
+					class="sort-btn"
+					class:active={sortBy === 'created'}
+					data-sort="created"
 					onclick={handleSort}>추가일자</button
 				>
 			</div>
@@ -134,18 +205,38 @@
 	<!-- Grid -->
 	<div class="book-grid">
 		{#each filteredBooks as book (book.id)}
-			<BookCard {book} onClick={(b) => (selectedBook = b)} />
+			<div
+				class="card-hit"
+				role="presentation"
+				oncontextmenu={(e) => showContextMenu(e, book)}
+				ontouchstart={(e) => {
+					menu.lp = book;
+					cardLp.ontouchstart(e);
+				}}
+				ontouchmove={cardLp.ontouchmove}
+				ontouchend={cardLp.ontouchend}
+				ontouchcancel={cardLp.ontouchcancel}
+			>
+				<BookCard {book} onClick={(b) => (selectedBook = b)} />
+			</div>
 		{/each}
 	</div>
 
-	<!-- Empty State -->
-	{#if filteredBooks.length === 0}
-		<div class="empty-state">
-			<p class="empty-text">{searchQuery ? '검색 결과가 없습니다' : '아직 책이 없습니다'}</p>
-			<p class="empty-hint">
-				{searchQuery ? '다른 키워드로 검색해보세요' : '새로운 책을 추가해보세요'}
-			</p>
+	<!-- 상태: 로딩 > 에러 > 빈 목록 (빈 화면은 '데이터 0'일 때만) -->
+	{#if loading}
+		<div class="center-state">
+			<p class="state-text">책장을 불러오는 중...</p>
 		</div>
+	{:else if loadErr}
+		<div class="center-state">
+			<p class="state-text">{loadErr}</p>
+			<Btn variant="save" onclick={reload}>다시 시도</Btn>
+		</div>
+	{:else if filteredBooks.length === 0}
+		<EmptyState
+			text={searchQuery ? '검색 결과가 없습니다' : '아직 책이 없습니다'}
+			hint={searchQuery ? '다른 키워드로 검색해보세요' : '새로운 책을 추가해보세요'}
+		/>
 	{/if}
 
 	{#if showUploadModal}
@@ -164,6 +255,22 @@
 
 	{#if selectedBook}
 		<BookPreview book={selectedBook} onClose={() => (selectedBook = null)} />
+	{/if}
+
+	{#if menu.book}
+		<ContextMenu items={menuItems} x={menu.x} y={menu.y} onClose={hideContextMenu} />
+	{/if}
+
+	{#if menu.confirm}
+		<Modal
+			title="책 삭제"
+			message={`"${menu.confirm.title}" 책을 삭제하시겠습니까?`}
+			variant="danger"
+			confirmText="삭제"
+			cancelText="취소"
+			onConfirm={handleConfirmDelete}
+			onCancel={() => (menu.confirm = null)}
+		/>
 	{/if}
 
 	<!-- Hidden file inputs -->
@@ -221,10 +328,6 @@
 		border-color: var(--color-accent-primary);
 	}
 
-	.search-input::placeholder {
-		color: var(--color-text-tertiary);
-	}
-
 	.tools {
 		margin-left: auto;
 		display: flex;
@@ -242,6 +345,7 @@
 
 	.sort-btn {
 		padding: var(--space-xs) var(--space-sm);
+		min-height: 26px;
 		border: none;
 		background: transparent;
 		color: var(--color-text-tertiary);
@@ -262,9 +366,11 @@
 		color: var(--color-text-inverse);
 	}
 
-	.sort-btn.active:hover {
-		background: var(--color-accent-secondary);
-		color: var(--color-text-inverse);
+	@media (hover: hover) {
+		.sort-btn.active:hover {
+			background: var(--color-accent-secondary);
+			color: var(--color-text-inverse);
+		}
 	}
 
 	.upload-btn {
@@ -284,9 +390,16 @@
 			color var(--transition-fast);
 	}
 
-	.upload-btn:hover {
-		border-color: var(--color-accent-primary);
-		color: var(--color-text-primary);
+	@media (hover: hover) {
+		.upload-btn:hover {
+			border-color: var(--color-accent-primary);
+			color: var(--color-text-primary);
+		}
+	}
+
+	/* 카드 래퍼 — 레이아웃에서 투명 (자식 BookCard가 grid item 역할), 이벤트만 캐치 */
+	.card-hit {
+		display: contents;
 	}
 
 	.book-grid {
@@ -294,8 +407,24 @@
 		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 		gap: var(--space-md);
 		align-content: start;
-		overflow-y: auto;
-		-webkit-overflow-scrolling: touch;
+		/* 스크롤은 .app-main이 소유 (min-height:auto라 여기서 넘치면 section가 자람) */
+	}
+
+	/* 상태 블록 (library/LibrarySection과 동일 언어) */
+	.center-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-2xl) var(--space-md);
+		text-align: center;
+		gap: var(--space-sm);
+	}
+
+	.state-text {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+		margin: 0;
 	}
 
 	@media (max-width: 768px) {
@@ -308,14 +437,10 @@
 			justify-content: space-between;
 		}
 		.book-grid {
-			grid-template-columns: repeat(3, 1fr);
+			/* 고정한 3열은 뷰포트와 함께 카드 폭을 깎는다 (320px → 카드 91px, 표지 43px).
+			   최소 폭을 박고 열 개수를 흘려서 카드 크기를 보존한다. */
+			grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 			gap: var(--space-sm);
-		}
-	}
-
-	@media (max-width: 480px) {
-		.book-grid {
-			grid-template-columns: repeat(3, 1fr);
 		}
 	}
 </style>

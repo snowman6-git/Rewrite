@@ -6,7 +6,14 @@ import { sql } from './sql';
 const db = new Database('main.db');
 
 export async function update_page(book_id: string, pid: string, content: string) {
-  await db.prepare(sql`
-    UPDATE G_Pages SET content = ? WHERE session_id = ? AND pid = ?
-  `).run([content, book_id, pid]);
+	await db
+		.prepare(sql`
+			UPDATE G_Pages
+			SET
+				content = ?
+			WHERE
+				session_id = ?
+				AND pid = ?
+		`)
+		.run([content, book_id, pid]);
 }

@@ -2,7 +2,6 @@
 	import axios from 'axios';
 	import { apiBase } from '$api/client';
 	import { toast } from '$lib/stores/toast.svelte';
-	import ToastContainer from '$components/Common/ToastContainer.svelte';
 	import Icon from '$components/Common/Icon.svelte';
 	import BookMeta from './BookMeta.svelte';
 	import { onMount } from 'svelte';
@@ -57,7 +56,6 @@
 	}
 </script>
 
-<ToastContainer />
 <div class="modal-overlay" role="presentation" onclick={onClose}>
 	<div class="modal" role="presentation" onclick={(e) => e.stopPropagation()}>
 		<div class="modal-header">
@@ -69,9 +67,9 @@
 			<div class="starting-point-selector">
 				<label class="selector-label" for="starting-point">시작 지점</label>
 				<select class="selector-dropdown" id="starting-point" bind:value={selectedPoint}>
-				{#each book_detail?.starting ?? [] as starting (starting.point_id)}
-					<option value={starting.point_id}>{starting.name}</option>
-				{/each}
+					{#each book_detail?.starting ?? [] as starting (starting.point_id)}
+						<option value={starting.point_id}>{starting.name}</option>
+					{/each}
 				</select>
 			</div>
 
@@ -109,7 +107,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(0, 0, 0, 0.7);
+		background: var(--color-scrim);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -158,9 +156,11 @@
 		transition: all var(--transition-fast);
 	}
 
-	.close-btn:hover {
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
+	@media (hover: hover) {
+		.close-btn:hover {
+			background: var(--color-bg-tertiary);
+			color: var(--color-text-primary);
+		}
 	}
 
 	.modal-content {
@@ -194,14 +194,16 @@
 		transition: all var(--transition-fast);
 	}
 
-	.selector-dropdown:hover {
-		border-color: var(--color-accent-primary);
+	@media (hover: hover) {
+		.selector-dropdown:hover {
+			border-color: var(--color-accent-primary);
+		}
 	}
 
 	.selector-dropdown:focus {
 		outline: none;
 		border-color: var(--color-accent-primary);
-		box-shadow: 0 0 0 3px var(--color-accent-glow);
+		box-shadow: 0 0 0 2px var(--color-accent-glow);
 	}
 
 	.book-preview {
@@ -247,7 +249,7 @@
 		flex: 1;
 		overflow-y: auto;
 		padding: var(--space-lg);
-		font-family: var(--font-family-monospace);
+		font-family: var(--font-mono);
 		font-size: var(--font-size-sm);
 		line-height: 1.8;
 		color: var(--color-text-primary);
@@ -275,9 +277,11 @@
 		transition: all var(--transition-fast);
 	}
 
-	.start-btn:hover {
-		background: var(--color-accent-secondary);
-		transform: translateY(-1px);
+	@media (hover: hover) {
+		.start-btn:hover {
+			background: var(--color-accent-secondary);
+			transform: translateY(-1px);
+		}
 	}
 
 	.start-btn:active {

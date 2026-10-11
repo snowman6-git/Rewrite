@@ -1,4 +1,5 @@
 <script lang="ts">
+	// 입력기 공통 필드. autocomplete은 브라우저 자동완성/접근성 요구로 전달이 필수
 	let {
 		type = 'text',
 		value = $bindable(''),
@@ -6,23 +7,34 @@
 		class: cls,
 		id,
 		rows,
-		disabled = false
+		autocomplete,
+		disabled = false,
+		onkeydown
 	} = $props<{
-		type?: 'text' | 'textarea';
+		type?: 'text' | 'textarea' | 'password';
 		value?: string;
 		placeholder?: string;
 		class?: string;
 		id?: string;
 		rows?: string | number;
+		autocomplete?: string;
 		disabled?: boolean;
+		onkeydown?: (e: KeyboardEvent) => void;
 	}>();
 </script>
 
 {#if type === 'textarea'}
-	<textarea bind:value class="input-field textarea {cls}" {placeholder} {id} {rows} {disabled}
+	<textarea
+		bind:value
+		class="input-field textarea {cls}"
+		{placeholder}
+		{id}
+		{rows}
+		{disabled}
+		{onkeydown}
 	></textarea>
 {:else}
-	<input bind:value {type} class="input-field {cls}" {placeholder} {id} {disabled} />
+	<input bind:value {type} class="input-field {cls}" {placeholder} {id} {autocomplete} {disabled} />
 {/if}
 
 <style>
@@ -33,7 +45,6 @@
 		border-radius: var(--radius-md);
 		background: var(--color-bg-tertiary);
 		color: var(--color-text-primary);
-		font-family: var(--font-family);
 		font-size: var(--font-size-sm);
 		outline: none;
 		transition: border-color var(--transition-fast);
@@ -43,10 +54,6 @@
 	.input-field:focus {
 		border-color: var(--color-accent-primary);
 		box-shadow: 0 0 0 2px var(--color-accent-glow);
-	}
-
-	.input-field::placeholder {
-		color: var(--color-text-tertiary);
 	}
 
 	.input-field.textarea {

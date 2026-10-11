@@ -62,7 +62,6 @@
 			toast.error(errMsg(error, '삭제에 실패했습니다.'));
 		}
 	}
-
 </script>
 
 <LibrarySection

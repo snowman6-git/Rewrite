@@ -9,7 +9,9 @@
 <script lang="ts">
 	import '$lib/assets/app.css';
 	import { applyTheme, isThemeKey } from '$lib/assets/theme';
+	import { applyScale, readScale } from '$lib/assets/scale';
 	import HotpatchSplash from '$components/HotpatchSplash.svelte';
+	import ToastContainer from '$components/Common/ToastContainer.svelte';
 	let { children } = $props();
 
 	// 테마 영속: 모든 루트(navless 포함) 커버
@@ -17,7 +19,14 @@
 		const saved = localStorage.getItem('rewrite_theme');
 		applyTheme(isThemeKey(saved) ? saved : 'mono');
 	});
+
+	// 배율 영속: 테마와 같은 지점 — 설정 화면에 들어오기 전 앱 첫 프레임부터 적용
+	$effect(() => {
+		applyScale(readScale());
+	});
 </script>
 
 {@render children?.()}
 <HotpatchSplash />
+<!-- 토스트는 루트 1곳에서만 마운트: 페이지마다 마운트하면 /settings·/library처럼 빠진 화면에서 피드백이 사라진다 -->
+<ToastContainer />

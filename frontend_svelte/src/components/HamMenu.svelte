@@ -1,104 +1,109 @@
 <script lang="ts">
-import { fly } from 'svelte/transition';
-import { cubicOut } from 'svelte/easing';
+	import { fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 
-import Icon from '$components/Common/Icon.svelte';
-import Desc from '$components/Common/Desc.svelte';
-import { inkState } from '$lib/states/ink.svelte';
-import { chatState } from '$lib/states/chat.svelte';
-import { modelsState } from '$lib/states/models.svelte';
-import WorldEdit from './views/WorldEdit.svelte';
-import Persona from './views/Persona.svelte';
-import Memory from './views/Memory.svelte';
-import Tuning from './views/Tuning.svelte';
-import CustomPrompt from './views/CustomPrompt.svelte';
+	import Icon from '$components/Common/Icon.svelte';
+	import Desc from '$components/Common/Desc.svelte';
+	import { inkState } from '$lib/states/ink.svelte';
+	import { chatState } from '$lib/states/chat.svelte';
+	import { modelsState } from '$lib/states/models.svelte';
+	import WorldEdit from './views/WorldEdit.svelte';
+	import Memory from './views/Memory.svelte';
+	import Tuning from './views/Tuning.svelte';
+	import Character from './views/Character.svelte';
+	import Bookmark from './views/Bookmark.svelte';
+	import { pageState } from '$lib/states/menus.svelte';
 
-let isHammenu_open = $state(false);
-let menu_now = $state(0);
-let menus = ['메뉴', '월드에딧', '페르소나', '메모리', '커스텀 프롬프트'];
-let showInkUsage = $state(false);
+	let menu_now = $state(0);
+	let menus = ['메뉴', '월드에딧', '메모리', '등장인물', '책갈피'];
+	let showInkUsage = $state(false);
 
-// 모델별 가격 — USD / 1M 토큰, 공식 docs(ai.google.dev) 기준 2026-11
-// gemini-3.8-flash: introductory $0.75/$3.75 (2026-12-31까지, 2027-01-01부터 $1.50/$7.50로 2배)
-// output 가격은 thinking 토큰 포함. 미등재 모델 = 가격 미표시('—'), 토큰 추정만
-const MODEL_PRICE: Record<string, { label: string; input: number; output: number }> = {
-'gemini-3.8-flash': { label: 'Gemini 3.8 Flash', input: 0.75, output: 3.75 }
-};
+	// 모델별 가격 — USD / 1M 토큰, 공식 docs(ai.google.dev) 기준 2026-11
+	// gemini-3.8-flash: introductory $0.75/$3.75 (2026-12-31까지, 2027-01-01부터 $1.50/$7.50로 2배)
+	// output 가격은 thinking 토큰 포함. 미등재 모델 = 가격 미표시('—'), 토큰 추정만
+	const MODEL_PRICE: Record<string, { label: string; input: number; output: number }> = {
+		'gemini-3.8-flash': { label: 'Gemini 3.8 Flash', input: 0.75, output: 3.75 }
+	};
 
-// 백엔드 thinkingBudget 상시 1024 — 턴당 thinking 상한을 output에 반영(실측 아님, 상한 추정)
-const THINKING_EST = 1024;
+	// 백엔드 thinkingBudget 상시 1024 — 턴당 thinking 상한을 output에 반영(실측 아님, 상한 추정)
+	const THINKING_EST = 1024;
 
-// 환율 상수 (2026-11 시세 1,344–1,358 기준, 반올림) — 환율 변동 시 갱신
-const USD_KRW = 1350;
+	// 환율 상수 (2026-11 시세 1,344–1,358 기준, 반올림) — 환율 변동 시 갱신
+	const USD_KRW = 1350;
 
-// 클라이언트 토큰 추정: 한글/CJK 약 2자/토큰, 그 외 약 4자/토큰 (정확한 요금은 아님, 참고용)
-function estTokens(text: string): number {
-let cjk = 0;
-let other = 0;
-for (const ch of text) {
-const c = ch.codePointAt(0) ?? 0;
-const isCjk =
-(c >= 0x1100 && c <= 0x11ff) || // 한글 자모
-(c >= 0x3040 && c <= 0x30ff) || // CJK 음절
-(c >= 0x3400 && c <= 0x9fff) || // CJK 통합
-(c >= 0xac00 && c <= 0xd7a3) || // 한글 음절
-(c >= 0xa960 && c <= 0xa97f); // 한글 호환
-if (isCjk) cjk++;
-else other++;
-}
-return Math.ceil(cjk / 2) + Math.ceil(other / 4);
-}
+	// 클라이언트 토큰 추정: 한글/CJK 약 2자/토큰, 그 외 약 4자/토큰 (정확한 요금은 아님, 참고용)
+	function estTokens(text: string): number {
+		let cjk = 0;
+		let other = 0;
+		for (const ch of text) {
+			const c = ch.codePointAt(0) ?? 0;
+			const isCjk =
+				(c >= 0x1100 && c <= 0x11ff) || // 한글 자모
+				(c >= 0x3040 && c <= 0x30ff) || // CJK 음절
+				(c >= 0x3400 && c <= 0x9fff) || // CJK 통합
+				(c >= 0xac00 && c <= 0xd7a3) || // 한글 음절
+				(c >= 0xa960 && c <= 0xa97f); // 한글 호환
+			if (isCjk) cjk++;
+			else other++;
+		}
+		return Math.ceil(cjk / 2) + Math.ceil(other / 4);
+	}
 
-// 책(현재 대화)의 내용 토큰 → 입력/출력 구분해서 모델 가격에 곱셈
-let cost = $derived.by(() => {
-let inTok = 0;
-let outTok = 0;
-for (const m of chatState.list) {
-const t = estTokens(m.content);
-if (m.role === 'user') inTok += t;
-else {
-outTok += t + THINKING_EST;
-}
-}
-const price = MODEL_PRICE[modelsState.selectedModel?.id ?? ''];
-const usd = price ? (inTok / 1e6) * price.input + (outTok / 1e6) * price.output : null; // 가격 미등재 모델
-return { inTok, outTok, usd, label: price?.label ?? modelsState.selectedModel?.name ?? '모델 미선택' };
-});
+	// 책(현재 대화)의 내용 토큰 → 입력/출력 구분해서 모델 가격에 곱셈
+	let cost = $derived.by(() => {
+		let inTok = 0;
+		let outTok = 0;
+		for (const m of chatState.list) {
+			const t = estTokens(m.content);
+			if (m.role === 'user') inTok += t;
+			else {
+				outTok += t + THINKING_EST;
+			}
+		}
+		const price = MODEL_PRICE[modelsState.selectedModel?.id ?? ''];
+		const usd = price ? (inTok / 1e6) * price.input + (outTok / 1e6) * price.output : null; // 가격 미등재 모델
+		return {
+			inTok,
+			outTok,
+			usd,
+			label: price?.label ?? modelsState.selectedModel?.name ?? '모델 미선택'
+		};
+	});
 
-function fmtKrw(v: number | null): string {
-if (v === null) return '—';
-if (v <= 0) return '₩0';
-return `₩${Math.round(v * USD_KRW).toLocaleString()}`;
-}
+	function fmtKrw(v: number | null): string {
+		if (v === null) return '—';
+		if (v <= 0) return '₩0';
+		return `₩${Math.round(v * USD_KRW).toLocaleString()}`;
+	}
 
-function handleXClick() {
-if (showInkUsage) {
-showInkUsage = false;
-} else if (menu_now === 0) {
-isHammenu_open = false;
-} else {
-menu_now = 0;
-}
-}
+	function handleXClick() {
+		if (showInkUsage) {
+			showInkUsage = false;
+		} else if (menu_now === 0) {
+			pageState.isHammenu_open = false;
+		} else {
+			menu_now = 0;
+		}
+	}
 </script>
 
 <button
 	class="h_button"
-	class:active={isHammenu_open}
-	onclick={() => (isHammenu_open = !isHammenu_open)}
+	class:active={pageState.isHammenu_open}
+	onclick={() => (pageState.isHammenu_open = !pageState.isHammenu_open)}
 	aria-label="메뉴"
 >
 	<Icon name="menu" size={20} />
 </button>
 
-{#if isHammenu_open}
+{#if pageState.isHammenu_open}
 	<div
 		class="overlay"
 		role="dialog"
 		aria-label="메뉴 닫기"
 		tabindex="-1"
-		onclick={() => (isHammenu_open = false)}
-		onkeydown={(e) => e.key === 'Escape' && (isHammenu_open = false)}
+		onclick={() => (pageState.isHammenu_open = false)}
+		onkeydown={(e) => e.key === 'Escape' && (pageState.isHammenu_open = false)}
 	></div>
 	<div class="side_menu" transition:fly={{ x: 100, duration: 250, easing: cubicOut }}>
 		<div class="menu_header">
@@ -127,33 +132,39 @@ menu_now = 0;
 			{:else if menu_now === 1}
 				<WorldEdit />
 			{:else if menu_now === 2}
-				<Persona />
-			{:else if menu_now === 3}
 				<Memory />
+			{:else if menu_now === 3}
+				<Character />
 			{:else if menu_now === 4}
-				<CustomPrompt />
-					{:else}
-						<div class="cost-row" aria-label="책 토큰 비용">
-							<span class="cost-left">
-								<span class="cost-model">{cost.label}</span>
-								<span class="cost-tokens">in {cost.inTok.toLocaleString()} · out {cost.outTok.toLocaleString()} (추정)</span>
-							</span>
-							<span class="cost-amount">{fmtKrw(cost.usd)}</span>
-						</div>
-						<button
-							class="ink-row"
-						onclick={() => (showInkUsage = true)}
-						aria-label="잉크 사용 내역 보기"
-					>
-						<span class="ink-left">
-							<Icon name="ink" size={18} />
-							<span class="ink-amount">{inkState.balance.toLocaleString()} / {inkState.costPerUse.toLocaleString()}</span>
-						</span>
-						<span class="ink-est">
-							{inkState.estimatedUses === null ? '∞' : `~${inkState.estimatedUses.toLocaleString()}회`}
-						</span>
-					</button>
-					<div class="menu_list">
+				<Bookmark />
+			{:else}
+				<div class="cost-row" aria-label="책 토큰 비용">
+					<span class="cost-left">
+						<span class="cost-model">{cost.label}</span>
+						<span class="cost-tokens"
+							>in {cost.inTok.toLocaleString()} · out {cost.outTok.toLocaleString()} (추정)</span
+						>
+					</span>
+					<span class="cost-amount">{fmtKrw(cost.usd)}</span>
+				</div>
+				<button
+					class="ink-row"
+					onclick={() => (showInkUsage = true)}
+					aria-label="잉크 사용 내역 보기"
+				>
+					<span class="ink-left">
+						<Icon name="ink" size={18} />
+						<span class="ink-amount"
+							>{inkState.balance.toLocaleString()} / {inkState.costPerUse.toLocaleString()}</span
+						>
+					</span>
+					<span class="ink-est">
+						{inkState.estimatedUses === null
+							? '∞'
+							: `~${inkState.estimatedUses.toLocaleString()}회`}
+					</span>
+				</button>
+				<div class="menu_list">
 					{#each menus as menu, number (menu)}
 						{#if number > 0}
 							<button
@@ -191,8 +202,10 @@ menu_now = 0;
 			color var(--transition-fast);
 	}
 
-	.h_button:hover {
-		background: var(--color-bg-hover);
+	@media (hover: hover) {
+		.h_button:hover {
+			background: var(--color-bg-hover);
+		}
 	}
 
 	.h_button.active {
@@ -206,7 +219,7 @@ menu_now = 0;
 		left: 0;
 		width: 100vw;
 		height: 100vh;
-		background: rgba(0, 0, 0, 0.5);
+		background: var(--color-scrim);
 		z-index: 998;
 	}
 
@@ -256,8 +269,10 @@ menu_now = 0;
 		transition: background var(--transition-fast);
 	}
 
-	.x_button:hover {
-		background: var(--color-bg-hover);
+	@media (hover: hover) {
+		.x_button:hover {
+			background: var(--color-bg-hover);
+		}
 	}
 
 	/* ---------- Menu Content ---------- */
@@ -336,8 +351,10 @@ menu_now = 0;
 		box-sizing: border-box;
 	}
 
-	.ink-row:hover {
-		background: var(--color-bg-hover);
+	@media (hover: hover) {
+		.ink-row:hover {
+			background: var(--color-bg-hover);
+		}
 	}
 
 	.ink-left {
@@ -422,8 +439,10 @@ menu_now = 0;
 		font-family: inherit;
 	}
 
-	.menu_option:hover {
-		background: var(--color-bg-hover);
+	@media (hover: hover) {
+		.menu_option:hover {
+			background: var(--color-bg-hover);
+		}
 	}
 
 	.menu_option.selected {

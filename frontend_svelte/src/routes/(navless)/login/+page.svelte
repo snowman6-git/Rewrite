@@ -1,7 +1,6 @@
 <script lang="ts">
 	import axios from 'axios';
 	import { toast } from '$lib/stores/toast.svelte';
-	import ToastContainer from '$components/Common/ToastContainer.svelte';
 	import InputField from '$components/Common/InputField.svelte';
 	import Btn from '$components/Common/Btn.svelte';
 	import { apiBase } from '$api/client';
@@ -46,7 +45,6 @@
 </script>
 
 <main class="login-page" aria-label="로그인 페이지">
-	<ToastContainer />
 	<div class="login-container">
 		<!-- Logo Section -->
 		<div class="logo-section">
@@ -62,18 +60,23 @@
 		<form class="login-form" onsubmit={handleLogin} aria-label="로그인 폼">
 			<div class="input-group">
 				<label for="login-id" class="sr-only">아이디</label>
-				<InputField id="login-id" type="text" bind:value={id} placeholder="아이디를 입력하세요" />
+				<InputField
+					id="login-id"
+					type="text"
+					autocomplete="username"
+					bind:value={id}
+					placeholder="아이디를 입력하세요"
+				/>
 			</div>
 
 			<div class="input-group">
 				<label for="login-password" class="sr-only">비밀번호</label>
-				<input
+				<InputField
 					id="login-password"
 					type="password"
+					autocomplete="current-password"
 					bind:value={password}
 					placeholder="비밀번호를 입력하세요"
-					class="input-field password-input"
-					aria-label="로그인 비밀번호"
 				/>
 			</div>
 
@@ -155,31 +158,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-xs);
-	}
-
-	.password-input {
-		width: 100%;
-		padding: var(--space-sm) var(--space-md);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
-		font-family: var(--font-family);
-		font-size: var(--font-size-sm);
-		outline: none;
-		transition:
-			border-color var(--transition-fast),
-			box-shadow var(--transition-fast);
-		box-sizing: border-box;
-	}
-
-	.password-input:focus {
-		border-color: var(--color-accent-primary);
-		box-shadow: 0 0 0 2px var(--color-accent-glow);
-	}
-
-	.password-input::placeholder {
-		color: var(--color-text-tertiary);
 	}
 
 	.login-btn-group {

@@ -74,9 +74,11 @@
 		transition: all var(--transition-fast);
 	}
 
-	.toast-close:hover {
-		background: var(--color-bg-hover);
-		color: var(--color-text-primary);
+	@media (hover: hover) {
+		.toast-close:hover {
+			background: var(--color-bg-hover);
+			color: var(--color-text-primary);
+		}
 	}
 
 	@media (max-width: 640px) {

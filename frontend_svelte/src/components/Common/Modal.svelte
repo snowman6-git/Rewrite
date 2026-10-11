@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	export interface Props {
+	interface Props {
 		title: string;
 		message: string;
-		onConfirm: (value?: string) => void;
+		/** 생략하면 확인 버튼 없이 취소만 (children이 확인 역할을 하는 모달용) */
+		onConfirm?: (value?: string) => void;
 		onCancel: () => void;
 		variant?: 'danger' | 'default';
 		confirmText?: string;
@@ -11,6 +12,8 @@
 		/** 지정하면 input 렌더, onConfirm에 값 전달 */
 		inputValue?: string;
 		inputPlaceholder?: string;
+		/** 확인 버튼 대신 쓰는 본문 (업로드 형식 선택 등) */
+		children?: import('svelte').Snippet;
 	}
 
 	let {
@@ -22,7 +25,8 @@
 		confirmText = '확인',
 		cancelText = '취소',
 		inputValue,
-		inputPlaceholder = ''
+		inputPlaceholder = '',
+		children
 	}: Props = $props();
 
 	let value = $state(inputValue ?? '');
@@ -38,7 +42,7 @@
 
 	function handleConfirm() {
 		if (inputValue !== undefined && value.trim() === '') return;
-		onConfirm(inputValue !== undefined ? value.trim() : undefined);
+		onConfirm?.(inputValue !== undefined ? value.trim() : undefined);
 	}
 
 	function handleModalClick(e: MouseEvent) {
@@ -60,7 +64,12 @@
 </script>
 
 <div class="modal-overlay" role="presentation" onclick={handleOverlayClick}>
-	<div class="modal" role="presentation" class:danger={variant === 'danger'} onclick={handleModalClick}>
+	<div
+		class="modal"
+		role="presentation"
+		class:danger={variant === 'danger'}
+		onclick={handleModalClick}
+	>
 		<h3 class="modal-title">{title}</h3>
 		{#if message}<p class="modal-text">{message}</p>{/if}
 		{#if inputValue !== undefined}
@@ -75,11 +84,16 @@
 				}}
 			/>
 		{/if}
+		{#if children}
+			{@render children()}
+		{/if}
 		<div class="modal-actions">
 			<button class="btn btn-cancel" onclick={onCancel}>{cancelText}</button>
-			<button class="btn btn-confirm" class:danger={variant === 'danger'} onclick={handleConfirm}
-				>{confirmText}</button
-			>
+			{#if onConfirm}
+				<button class="btn btn-confirm" class:danger={variant === 'danger'} onclick={handleConfirm}
+					>{confirmText}</button
+				>
+			{/if}
 		</div>
 	</div>
 </div>
@@ -88,7 +102,7 @@
 	.modal-overlay {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.6);
+		background: var(--color-scrim);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -163,10 +177,6 @@
 		border-color: var(--color-accent-primary);
 	}
 
-	.modal-input::placeholder {
-		color: var(--color-text-tertiary);
-	}
-
 	.modal-actions {
 		display: flex;
 		gap: var(--space-sm);
@@ -190,9 +200,11 @@
 		border: 1px solid var(--color-border);
 	}
 
-	.btn-cancel:hover {
-		background: var(--color-bg-elevated);
-		color: var(--color-text-primary);
+	@media (hover: hover) {
+		.btn-cancel:hover {
+			background: var(--color-bg-elevated);
+			color: var(--color-text-primary);
+		}
 	}
 
 	.btn-confirm {
@@ -200,16 +212,20 @@
 		color: var(--color-text-inverse);
 	}
 
-	.btn-confirm:hover {
-		background: var(--color-accent-secondary);
+	@media (hover: hover) {
+		.btn-confirm:hover {
+			background: var(--color-accent-secondary);
+		}
 	}
 
 	.btn-confirm.danger {
 		background: var(--color-error);
 	}
 
-	.btn-confirm.danger:hover {
-		background: var(--color-error);
+	@media (hover: hover) {
+		.btn-confirm.danger:hover {
+			background: var(--color-error);
+		}
 	}
 
 	@media (max-width: 480px) {
