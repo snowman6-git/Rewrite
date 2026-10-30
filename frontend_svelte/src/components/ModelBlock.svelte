@@ -44,10 +44,24 @@
 		gap: var(--space-sm);
 	}
 
-	/* 선택은 배경으로 알린다 — 테마는 모노크롬, 초록(--color-success) 쓰지 않는다 */
+	/* 선택 = 테마 액센트 필 (네비 활성·정렬 chip과 동일 언어) */
 	.model-item.selected {
-		background: var(--color-bg-hover);
-		border-color: var(--color-border-strong);
+		background: var(--color-accent-primary);
+		border-color: var(--color-accent-primary);
+		color: var(--color-text-inverse);
+	}
+
+	.model-item.selected .model-name {
+		color: var(--color-text-inverse);
+	}
+
+	.model-item.selected .model-desc {
+		color: var(--color-text-inverse);
+		opacity: 0.75;
+	}
+
+	.model-item.selected .check-icon {
+		color: var(--color-text-inverse);
 	}
 
 	@media (hover: hover) {
@@ -63,7 +77,6 @@
 		text-align: center;
 		color: var(--color-text-primary);
 		font-size: var(--font-size-sm);
-		font-weight: 700;
 		visibility: hidden;
 	}
 
@@ -78,7 +91,6 @@
 
 	.model-name {
 		font-size: var(--font-size-base);
-		font-weight: 500;
 		color: var(--color-text-primary);
 		white-space: nowrap;
 		overflow: hidden;

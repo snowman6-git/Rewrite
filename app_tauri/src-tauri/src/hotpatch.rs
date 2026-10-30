@@ -1,24 +1,27 @@
 // 인앱 핫패치 — doc/hotpatch-doc.md §5 구현
-// 구조: {data_local}/com.snowman6.rewrite/hotpatch/
+// 구조: {app_local_data_dir}/hotpatch/ (Tauri PathResolver — Android 앱 스코프)
 //   ui-v{ver}.zip — 저장된 패치
 //   staging/      — 추출 임시
 //   active/       — 적용된 패치 (rewrite:// 스킴 핸들러가 여기서 우선 서빙)
 // active에 파일이 없으면 → None → lib.rs가 임베드 에셋으로 폴백
+// 2026-10-29: dirs::data_local_dir()는 Android에서 None($HOME 없음) → Tauri app.path()로 전환
 use base64::Engine;
 use std::fs;
 use std::path::PathBuf;
+use tauri::Manager;
+use tauri::{AppHandle, Manager as _};
 
-fn hotpatch_root() -> Result<PathBuf, String> {
-    let data_local = dirs::data_local_dir().ok_or("data_local_dir 없음")?;
-    Ok(data_local.join("com.snowman6.rewrite").join("hotpatch"))
+fn hotpatch_root(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
+    Ok(dir.join("hotpatch"))
 }
 
-fn active_dir() -> Result<PathBuf, String> {
-    Ok(hotpatch_root()?.join("active"))
+fn active_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    Ok(hotpatch_root(app)?.join("active"))
 }
 
 /// 패치 에셋 리졸브: active/{path} 존재 시 Some(byte) — 없으면 None (임베드 폴백)
-pub fn resolve_asset(path: &str) -> Option<Vec<u8>> {
+pub fn resolve_asset(app: &AppHandle, path: &str) -> Option<Vec<u8>> {
     if path.is_empty() {
         return None;
     }
@@ -27,13 +30,13 @@ pub fn resolve_asset(path: &str) -> Option<Vec<u8>> {
         return None;
     }
     let clean = path.strip_prefix("./").unwrap_or(path);
-    let p = active_dir().ok()?.join(clean);
+    let p = active_dir(app).ok()?.join(clean);
     fs::read(&p).ok()
 }
 
 #[tauri::command]
-pub fn hotpatch_save(ver: String, data_base64: String) -> Result<(), String> {
-    let root = hotpatch_root()?;
+pub fn hotpatch_save(app: AppHandle, ver: String, data_base64: String) -> Result<(), String> {
+    let root = hotpatch_root(&app)?;
     fs::create_dir_all(&root).map_err(|e| e.to_string())?;
     let zip_path = root.join(format!("ui-v{}.zip", ver));
     let bytes = base64::engine::general_purpose::STANDARD
@@ -45,8 +48,8 @@ pub fn hotpatch_save(ver: String, data_base64: String) -> Result<(), String> {
 
 /// zip-slip 방어: enclosed_name()이 None인(절대경로/..) entry는 reject
 #[tauri::command]
-pub fn hotpatch_extract(ver: String) -> Result<(), String> {
-    let root = hotpatch_root()?;
+pub fn hotpatch_extract(app: AppHandle, ver: String) -> Result<(), String> {
+    let root = hotpatch_root(&app)?;
     let zip_path = root.join(format!("ui-v{}.zip", ver));
     fs::create_dir_all(&root).map_err(|e| e.to_string())?;
 

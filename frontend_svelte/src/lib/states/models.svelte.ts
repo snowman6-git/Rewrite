@@ -1,5 +1,18 @@
 import { model_listup } from '$api/model';
+import { toast } from '$lib/stores/toast.svelte';
 import type { ModelInfo } from '$lib/types';
+
+// 모델 로드 실패 폴백 — 응답 null과 예외(백엔드 down) 경로가 같은 결과를 내려야 인풋이 영구 잠기지 않는다 (2026-10-27 P0-4)
+const FALLBACK_MODELS: ModelInfo[] = [
+	{
+		id: 'none',
+		provider: 'none',
+		status: 'none',
+		name: '로드실패',
+		desc: '사소하건 말건, 모델로드가 실패했네요, 그래도 외롭지않게 마중나온 녀석이 있어 다행이죠?',
+		context_size: 1
+	}
+];
 
 // 파이썬 객체지향이랑 비슷함
 class ModelsState {
@@ -16,22 +29,17 @@ class ModelsState {
 		if (!force && this.list.length > 0) return;
 		this.isLoading = true;
 		try {
-			this.list = (await model_listup()) || [
-				{
-					id: 'none',
-					provider: 'none',
-					status: 'none',
-					name: '로드실패',
-					desc: '사소하건 말건, 모델로드가 실패했네요, 그래도 외롭지않게 마중나온 녀석이 있어 다행이죠?',
-					context_size: 1
-				}
-			];
+			this.list = (await model_listup()) || FALLBACK_MODELS;
 			if (this.list.length > 0 && !this.selectedId) {
 				this.selectedId =
 					this.list.find((model) => model.status === 'loaded')?.id || this.list[0].id;
 			}
 			// 모델이 로드되고 컨텍사이즈를 찾아 할당으로 변경
 			this.context_size = this.selectedModel?.context_size ?? 0;
+		} catch {
+			this.list = FALLBACK_MODELS;
+			this.selectedId = 'none';
+			toast.error('모델 목록 로딩 실패 — 백엔드 주소를 설정에서 확인해');
 		} finally {
 			this.isLoading = false;
 		}

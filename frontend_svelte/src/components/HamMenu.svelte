@@ -3,6 +3,7 @@
 	import { cubicOut } from 'svelte/easing';
 
 	import Icon from '$components/Common/Icon.svelte';
+	import Overlay from '$components/Common/Overlay.svelte';
 	import Desc from '$components/Common/Desc.svelte';
 	import { inkState } from '$lib/states/ink.svelte';
 	import { chatState } from '$lib/states/chat.svelte';
@@ -13,6 +14,7 @@
 	import Character from './views/Character.svelte';
 	import Bookmark from './views/Bookmark.svelte';
 	import { pageState } from '$lib/states/menus.svelte';
+	import { backEntry } from '$lib/utils/back-entry';
 
 	let menu_now = $state(0);
 	let menus = ['메뉴', '월드에딧', '메모리', '등장인물', '책갈피'];
@@ -20,9 +22,12 @@
 
 	// 모델별 가격 — USD / 1M 토큰, 공식 docs(ai.google.dev) 기준 2026-11
 	// gemini-3.8-flash: introductory $0.75/$3.75 (2026-12-31까지, 2027-01-01부터 $1.50/$7.50로 2배)
+	// gemini-4-argon: introductory $2/$10 (2026-11-30까지, 2026-12-01부터 $4/$20로 2배)
 	// output 가격은 thinking 토큰 포함. 미등재 모델 = 가격 미표시('—'), 토큰 추정만
 	const MODEL_PRICE: Record<string, { label: string; input: number; output: number }> = {
-		'gemini-3.8-flash': { label: 'Gemini 3.8 Flash', input: 0.75, output: 3.75 }
+		'gemini-3.8-flash': { label: 'Gemini 3.8 Flash', input: 0.75, output: 3.75 },
+		// argon은 thinking 상시(백엔드 thinkingBudget:0 무시) → THINKING_EST 1024로는 과소추정, 하한으로만 봐라
+		'gemini-4-argon': { label: 'Gemini 4 Argon', input: 2, output: 10 }
 	};
 
 	// 백엔드 thinkingBudget 상시 1024 — 턴당 thinking 상한을 output에 반영(실측 아님, 상한 추정)
@@ -85,6 +90,13 @@
 			menu_now = 0;
 		}
 	}
+
+	// 뒤로가기 = 햄메뉴 닫기 — 열림 상태에만 히스토리 entry (컴포넌트는 상시 마운트라 $effect) (2026-10-27)
+	$effect(() => {
+		const open = pageState.isHammenu_open;
+		if (!open) return;
+		return backEntry(() => (pageState.isHammenu_open = false));
+	});
 </script>
 
 <button
@@ -97,14 +109,14 @@
 </button>
 
 {#if pageState.isHammenu_open}
-	<div
-		class="overlay"
+	<Overlay
+		zIndex={998}
 		role="dialog"
-		aria-label="메뉴 닫기"
-		tabindex="-1"
+		ariaLabel="메뉴 닫기"
+		tabindex={-1}
 		onclick={() => (pageState.isHammenu_open = false)}
 		onkeydown={(e) => e.key === 'Escape' && (pageState.isHammenu_open = false)}
-	></div>
+	/>
 	<div class="side_menu" transition:fly={{ x: 100, duration: 250, easing: cubicOut }}>
 		<div class="menu_header">
 			<span class="menu_title">{showInkUsage ? '잉크 사용 내역' : menus[menu_now]}</span>
@@ -212,17 +224,6 @@
 		color: var(--color-accent-primary);
 	}
 
-	/* ---------- Overlay ---------- */
-	.overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100vw;
-		height: 100vh;
-		background: var(--color-scrim);
-		z-index: 998;
-	}
-
 	/* ---------- Side Menu ---------- */
 	.side_menu {
 		position: fixed;
@@ -234,7 +235,7 @@
 		height: 100dvh;
 		background: var(--color-bg-secondary);
 		border-left: 1px solid var(--color-border);
-		z-index: 999;
+		z-index: var(--z-sheet);
 		display: flex;
 		flex-direction: column;
 	}
@@ -251,7 +252,6 @@
 
 	.menu_title {
 		font-size: var(--font-size-lg);
-		font-weight: 600;
 		color: var(--color-text-primary);
 	}
 
@@ -312,7 +312,6 @@
 
 	.cost-model {
 		font-size: var(--font-size-sm);
-		font-weight: 500;
 		color: var(--color-text-primary);
 		white-space: nowrap;
 		overflow: hidden;
@@ -326,7 +325,6 @@
 
 	.cost-amount {
 		font-size: var(--font-size-sm);
-		font-weight: 600;
 		color: var(--color-text-primary);
 		white-space: nowrap;
 	}
@@ -366,7 +364,6 @@
 
 	.ink-amount {
 		font-size: var(--font-size-sm);
-		font-weight: 500;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -448,7 +445,6 @@
 	.menu_option.selected {
 		background: var(--color-accent-glow);
 		color: var(--color-accent-primary);
-		font-weight: 500;
 	}
 
 	/* ---------- Mobile ---------- */

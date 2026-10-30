@@ -246,7 +246,10 @@ export async function checkHotpatch(manual = false): Promise<void> {
 
 		localStorage.setItem(LS_KEY, String(manifest.ver));
 		st.phase = 'done';
-		window.location.replace(`${window.location.pathname}?hotpatch=1`);
+		// 버전별 새 경로로 리로드: WebView가 rewrite://에서 캐시를 쿼리 무시로 유지해
+		// (opaque origin, Cache-Control 무효) → hp{ver}/ 접두가 매 버전마다 캐시 미스를 강제
+		const base = window.location.pathname.replace(/index\.html$/, '');
+		window.location.replace(`${base}hp${manifest.ver}/index.html?hotpatch=1`);
 	} catch (err) {
 		console.error('[hotpatch] 폴백: 임베드 프론트 사용', err);
 		st.phase = 'error';

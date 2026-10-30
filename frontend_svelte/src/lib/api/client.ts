@@ -18,9 +18,25 @@ function derive(): string {
 	return `${window.location.protocol}//${window.location.hostname}:3000`;
 }
 
-export function setApiBase(url: string | null) {
-	if (url) localStorage.setItem(STORAGE_KEY, url);
-	else localStorage.removeItem(STORAGE_KEY);
+export function setApiBase(url: string | null): boolean {
+	if (!url) {
+		localStorage.removeItem(STORAGE_KEY);
+		return true;
+	}
+	// safeHub와 동일 규칙: 원거리는 https, 로컬(localhost·10.x·192.168.x)만 http (2026-10-27 P1-7, 2026-10-29)
+	try {
+		const u = new URL(url);
+		const local =
+			u.hostname === 'localhost' ||
+			u.hostname === '127.0.0.1' ||
+			/^10\.\d+\.\d+\.\d+$/.test(u.hostname) ||
+			/^192\.168\.\d+\.\d+$/.test(u.hostname);
+		if (u.protocol !== 'https:' && !(local && u.protocol === 'http:')) return false;
+	} catch {
+		return false;
+	}
+	localStorage.setItem(STORAGE_KEY, url);
+	return true;
 }
 
 export function apiBase(): string {

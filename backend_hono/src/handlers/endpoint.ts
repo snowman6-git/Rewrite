@@ -84,6 +84,10 @@ export async function chat(c: Context) {
 		const response = (await Gemini_chat(requestBody)) as AsyncGenerator<any>;
 		return streamText(c, async (stream) => {
 			for await (const chunk of response) {
+				// NOTE: `signal.aborted`로 소비 중단을 시도한 적 있지만 폐기 —
+				// 프론트 visibilitychange(화면 잠김)의 abort가 같은 신호라 "출력 잘림"으로 영구 부분 저장이 됐음.
+				// 의도적 정지는 프론트 abort로 UI만 멈추고, 백엔드는 끝까지 읽어 완결 저장 (원래 동작, 2026-11-01 원복).
+				// 비용 절감이 필요해지면 명시적 /chat/stop 엔드포인트로 구분하는 방식으로 갱신.
 				try {
 					// 이게 최선인지 알아보기
 					const content = chunk.text;

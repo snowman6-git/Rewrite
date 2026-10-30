@@ -79,7 +79,6 @@
 
 	.option-title {
 		font-size: var(--font-size-base);
-		font-weight: 600;
 		color: var(--color-text-primary);
 	}
 
@@ -91,7 +90,6 @@
 	.option-arrow {
 		font-size: var(--font-size-xl);
 		color: var(--color-text-tertiary);
-		font-weight: 300;
 		flex-shrink: 0;
 	}
 </style>

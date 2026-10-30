@@ -3,15 +3,9 @@
 
 	let {
 		desc = '',
-		author = '',
-		category = '',
-		usageCount = 0,
 		createdAt
 	}: {
 		desc?: string;
-		author?: string;
-		category?: string;
-		usageCount?: number;
 		createdAt?: string;
 	} = $props();
 </script>
@@ -23,11 +17,6 @@
 	</div>
 
 	<div class="book-meta-section">
-		<div class="book-meta-info">
-			<span class="meta-tag"><Icon name="user" size={14} /> {author}</span>
-			<span class="meta-tag"><Icon name="folder" size={14} /> {category}</span>
-			<span class="meta-tag"><Icon name="bar-chart" size={14} /> {usageCount} 회</span>
-		</div>
 		<p class="book-created">
 			<Icon name="calendar" size={14} />
 			{createdAt ? new Date(createdAt).toLocaleDateString('ko-KR') : ''}
@@ -50,7 +39,6 @@
 
 	.section-label {
 		font-size: var(--font-size-sm);
-		font-weight: 600;
 		color: var(--color-text-primary);
 		margin: 0;
 	}
@@ -60,9 +48,6 @@
 		color: var(--color-text-primary);
 		line-height: 1.8;
 		margin: 0;
-		padding: var(--space-sm);
-		background: var(--color-bg-elevated);
-		border-radius: var(--radius-md);
 	}
 
 	.book-meta-section {
@@ -71,20 +56,6 @@
 		gap: var(--space-sm);
 		padding-top: var(--space-sm);
 		border-top: 1px solid var(--color-border);
-	}
-
-	.book-meta-info {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-sm);
-	}
-
-	.meta-tag {
-		font-size: var(--font-size-xs);
-		padding: var(--space-2xs) var(--space-xs);
-		background: var(--color-bg-elevated);
-		border-radius: var(--radius-xs);
-		color: var(--color-text-secondary);
 	}
 
 	.book-created {

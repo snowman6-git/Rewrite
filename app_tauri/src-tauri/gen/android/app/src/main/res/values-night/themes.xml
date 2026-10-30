@@ -1,6 +1,15 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.app_tauri" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Customize your theme here. -->
+        <!-- 시스템바(스테이터스/내비게이션) = 앱 배경색 #14161c (심야 테마, 2026-10-27) -->
+        <item name="android:statusBarColor">#FF14161C</item>
+        <item name="android:navigationBarColor">#FF14161C</item>
+        <!-- 밝은 아이콘(다크 바 위) -->
+        <item name="android:windowLightStatusBar">false</item>
+        <!-- API 35+ edge-to-edge 강제: 시스템바 색 무시, 투명 바 뒤의 windowBackground가 보임 → 앱 배경색으로 -->
+        <item name="android:windowBackground">#FF14161C</item>
+        <!-- Android 15+ 시스템바 대비 스크림(회색 그림자) 제거 -->
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
     </style>
 </resources>

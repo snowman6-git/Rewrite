@@ -1,26 +1,84 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
 	import { tick } from 'svelte';
+	import { fly, fade } from 'svelte/transition';
 	import { chatState } from '$lib/states/chat.svelte';
+	import type { Msg } from '$lib/types';
 	import ChatBlock from '$components/ChatBlock.svelte';
 	import Modal from '$components/Common/Modal.svelte';
 	import Icon from '$components/Common/Icon.svelte';
 	import EmptyState from '$components/Common/EmptyState.svelte';
 	import { toast } from '$lib/stores/toast.svelte';
+	import { readStreamFx } from '$lib/assets/stream-fx';
 	import { bookmarkState } from '$lib/states/bookmarks.svelte';
 	import '$lib/assets/chat_body.css';
 
 	let chat_body: HTMLDivElement;
 
-	// 세션 진입 시 한 번만 최하단. 그 뒤 메시지 수신엔 안 밀림 (읽는 사람 존중)
-	let firstEntryDone = false;
+	// 스트림 효과(설정) — fade(기본)·none·pop. class 교체로 리마운트 없이 반영
+	let streamFx = $state(readStreamFx());
+
+	// 세션 진입 시 책당 한 번만 최하단. 그 뒤 메시지 수신엔 안 밀림 (읽는 사람 존중)
+	// list는 모듈 싱글톤이라 이전 책의 행이 먼저 렌더된다 → "히스토리가 list에 앉은 시점(loadedBook)"만 앵커 기준이 된다
+	let anchoredBook = $state('');
+	let lastLoaded = '';
+	let userTouched = false;
+	function pinBottom() {
+		// .chat-body scroll-behavior:smooth → 5만px급 앵커가 1.7초 걸리고 사용자 스크롤에 끊긴다. instant가 필수.
+		if (!chat_body || userTouched) return;
+		chat_body.scrollTo({ top: chat_body.scrollHeight, behavior: 'instant' });
+	}
 	$effect(() => {
-		chatState.list.map((m) => m.content);
-		if (!firstEntryDone && chatState.list.length > 0) {
-			firstEntryDone = true;
-			tick().then(() => {
-				if (chat_body) chat_body.scrollTo({ top: chat_body.scrollHeight });
-			});
+		const { book_id, loadedBook } = chatState;
+		if (!loadedBook || loadedBook !== book_id) return;
+		// 같은 책 재진입(A→B→A)은 loadedBook 값이 바뀌므로 발화, 전송 후 재동기화는 같은 값이라 발화 안 함
+		if (lastLoaded === loadedBook) return;
+		lastLoaded = loadedBook;
+		anchoredBook = book_id;
+		userTouched = false;
+		tick().then(pinBottom);
+	});
+
+	// 진입 앵커 뒤에 이미지가解码되면 높이가 아래로 늘어난다 → 사용자가 손 대기 전까지 재앵커
+	$effect(() => {
+		if (!anchoredBook) return;
+		const onLoad = (e: Event) => {
+			const t = e.target as HTMLElement;
+			if (t instanceof HTMLImageElement && chat_body?.contains(t)) tick().then(pinBottom);
+		};
+		const markTouched = () => {
+			userTouched = true;
+		};
+		document.addEventListener('load', onLoad, true);
+		chat_body.addEventListener('wheel', markTouched, { passive: true });
+		chat_body.addEventListener('touchstart', markTouched, { passive: true });
+		return () => {
+			document.removeEventListener('load', onLoad, true);
+			chat_body.removeEventListener('wheel', markTouched);
+			chat_body.removeEventListener('touchstart', markTouched);
+		};
+	});
+
+	// 스트리밍 follow: AI 응답 중, 최하단 32px 이내 + userTouched=false일 때만 새 토큰에 화면 고정.
+	// userTouched = 터치(wheel/touchstart)·점프 버튼이면 즉시 해제 — "조금만 조작해도 풀리게" (2026-11-01)
+	// 최하단 32px 내로 스스로 내려오면 onScroll에서 재장전 (2026-10-27 재개 정책)
+	// 토큰마다 smooth 재발동은 "끌어내림"手感 — pinning은 instant, 갭이 12px 넘는 줄바꿈만 smooth (2026-11-01)
+	// 새 placeholder(빈 assistant 행) 등장 = 전송 이벤트 — 그 자리에서 follow 재장전. 전송은 "응답 보겠다"의 명시적 의도 (2026-11-01)
+	let lastPlaceholderPid = '';
+	$effect(() => {
+		const responding = chatState.isModelResponding;
+		const list = chatState.list;
+		const contentLen = list.length ? list[list.length - 1].content.length : 0;
+		const last = list[list.length - 1];
+		if (last && last.role === 'assistant' && last.content === '' && last.pid !== lastPlaceholderPid) {
+			lastPlaceholderPid = last.pid;
+			userTouched = false;
+		}
+		if (!responding || !chat_body || userTouched) return;
+		void contentLen; // 토큰 배치마다 재실행 dep
+		const gap = chat_body.scrollHeight - chat_body.scrollTop - chat_body.clientHeight;
+		if (gap < 32) {
+			chat_body.scrollTo({ top: chat_body.scrollHeight, behavior: gap > 12 ? 'smooth' : 'instant' });
 		}
 	});
 
@@ -32,10 +90,13 @@
 		if (!chat_body) return;
 		showJump = chat_body.scrollHeight - chat_body.scrollTop - chat_body.clientHeight > 120;
 		showTop = chat_body.scrollTop > 120;
+		// touch/scroll로 풀린 follow를 최하단 32px 내로 스스로 내려오면 재장전
+		if (chat_body.scrollHeight - chat_body.scrollTop - chat_body.clientHeight < 32) userTouched = false;
 	}
 
 	function jumpToBottom() {
 		if (!chat_body) return;
+		userTouched = true; // 사용자가 이동 버튼을 누른 순간 = 진입 앵커 해제
 		// .chat-body에 scroll-behavior:smooth → 4만px급 거리는 스무스가 1초 넘게 걸린다. 점프는 즉시.
 		// behavior:'auto'는 CSS 값을 따르므로 'instant'로 명시해야 즉시 이동한다.
 		chat_body.scrollTo({ top: chat_body.scrollHeight, behavior: 'instant' });
@@ -43,7 +104,13 @@
 
 	function jumpToTop() {
 		if (!chat_body) return;
+		userTouched = true;
 		chat_body.scrollTo({ top: 0, behavior: 'instant' });
+	}
+
+	//리롤 노출 조건: 어시스턴트 행이면서 목록의 마지막
+	function isAssistant(msg: Msg, i: number) {
+		return (msg.sender ?? msg.role) === 'assistant' && i === chatState.list.length - 1;
 	}
 
 	// ---------- 책갈피 점프 ----------
@@ -59,6 +126,7 @@
 				toast.error('책갈피 대상이 화면에 없습니다. (윈도우 밖 — 백엔드 앵커 요구 미구현)');
 				return;
 			}
+			userTouched = true; // 점프한 자리를 늦은 이미지 로드 앵커가 도로 아래로 끌면 안 됨
 			row.scrollIntoView({ block: 'start', behavior: 'instant' });
 			flashPid = pid;
 			setTimeout(() => {
@@ -106,7 +174,12 @@
 		if (deleting) return;
 		showConfirm = false;
 		deleting = true;
-		await chatState.deleteMany([...selected]);
+		const pids = [...selected];
+		await chatState.deleteMany(pids);
+		// DB 재동기화된 목록에 없는 pid = 사라진 행 → 그 행의 책갈피는 점프 대상이 없다
+		// shortcut: 화면 윈도우(최근 50건) 밖 pid는 "사라짐"으로 판정된다 — 윈도우 밖은 애초에 점프 불가(doc/bookmark-jump-doc.md)
+		const alive = new Set(chatState.list.map((m) => m.pid));
+		pids.filter((pid) => !alive.has(pid)).forEach((pid) => bookmarkState.remove(pid));
 		deleting = false;
 		exitSelect();
 	}
@@ -125,6 +198,9 @@
 		{#each chatState.list as msg, i (msg.pid)}
 			<div
 				class="msg-row"
+				class:fx-fade={streamFx === 'fade'}
+				class:fx-pop={streamFx === 'pop'}
+				out:fade={{ duration: 100 }}
 				class:flash={flashPid === msg.pid}
 				data-pid={msg.pid}
 				class:select-mode={selectMode}
@@ -139,18 +215,17 @@
 					<ChatBlock
 						text={msg.content}
 						live_token={msg.live_token}
-						sender={msg.sender}
+						// 백엔드 행은 role만 주고 sender는 항상 undefined (A_note P0-1) → role로 판정한다
+						sender={msg.sender ?? msg.role}
 						isResponding={chatState.isModelResponding && msg === chatState.list[i]}
-						//재생성: 마지막 메시지이면서 AI(어시스턴트) 메시지만 전달
-						onReload={msg.sender === 'assistant' && i === chatState.list.length - 1
-							? () => chatState.reloadAt(i)
-							: undefined}
+						//리롤: 마지막 메시지이면서 AI(어시스턴트) 메시지만 전달
+						onReload={isAssistant(msg, i) ? () => chatState.rerollAt(i) : undefined}
 						//삭제 메뉴 노출 조건: 채팅 목록 마지막 버블만
 						isLast={i === chatState.list.length - 1}
 						copy={() => chatState.copyAt(i)}
 						//삭제 메뉴: 선택모드 진입(해 메시지预选)
 						remove={() => enterSelectWith(msg.pid)}
-						edit={(content) => chatState.editAt(i, content)}
+						edit={(content: string) => chatState.editAt(i, content)}
 						bookmark={() => bookmarkState.toggle(msg.pid, msg.content)}
 						isBookmarked={bookmarkState.has(msg.pid)}
 					/>
@@ -174,7 +249,14 @@
 
 	<!-- 선택 모드 하단 바: models 메뉴와 같은 하단 시트 언어 (오버레이 없음 — 채팅 탭=선택이어야 하므로) -->
 	{#if selectMode}
-		<div class="select-bar" class:busy={deleting} role="toolbar" aria-label="메시지 선택 도구">
+		<div
+			class="select-bar"
+			class:busy={deleting}
+			role="toolbar"
+			aria-label="메시지 선택 도구"
+			in:fly={{ y: 80, duration: 200 }}
+			out:fly={{ y: 80, duration: 150 }}
+		>
 			<span class="sel-count">{deleting ? '삭제중…' : `${selected.size}건 선택`}</span>
 			<div class="sel-actions">
 				<button
@@ -232,6 +314,40 @@
 </div>
 
 <style>
+	/* 메시지 등장 효과 — {#each} 키드 행은 삽입 시점에 새 요소라 animation이 발화 (설정: stream-fx.ts) */
+	.msg-row.fx-fade {
+		animation: msg-fade 220ms ease-out both;
+	}
+
+	.msg-row.fx-pop {
+		animation: msg-pop 380ms ease-in-out both;
+	}
+
+	@keyframes msg-fade {
+		from {
+			opacity: 0;
+		}
+	}
+
+	/* 파도: 밀물(crest) → 물러남 → 잔물결 정지 (fx-token-pop과 동일 언어) */
+	@keyframes msg-pop {
+		0% {
+			opacity: 0;
+			transform: translateY(14px) scale(0.96);
+		}
+		55% {
+			opacity: 1;
+			transform: translateY(-3px) scale(1.01);
+		}
+		80% {
+			transform: translateY(1px) scale(0.995);
+		}
+		100% {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
 	.chat-wrap {
 		position: relative;
 		flex: 1;
@@ -245,6 +361,8 @@
 	.msg-row {
 		position: relative;
 		width: 100%; /* flex shrink-to-fit 방지: .chat-body가 align-items:flex-start이라 명시적 폭 필요 */
+		max-width: 62ch; /* 가독 열: 스크롤러 100%화 이후 콘텐츠에 부여 (2026-10-27) */
+		margin-inline: auto;
 	}
 
 	/* 책갈피 점프 도착 표시 — 테마는 모노크롬이라 배경 한 번만 */
@@ -266,6 +384,8 @@
 	/* 같은 이유: 빈 상태 카드도 내용 폭으로 수축하지 않게 전폭 */
 	.chat-body :global(.empty-state) {
 		width: 100%;
+		max-width: 62ch;
+		margin-inline: auto;
 	}
 	.msg-row.select-mode {
 		cursor: pointer;
@@ -323,7 +443,7 @@
 		bottom: 0;
 		left: 0;
 		right: 0;
-		z-index: 999;
+		z-index: var(--z-sheet);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -426,7 +546,7 @@
 		color: var(--color-text-secondary);
 		cursor: pointer;
 		transition: all var(--transition-fast);
-		z-index: 5;
+		z-index: var(--z-fab);
 	}
 
 	@media (hover: hover) {

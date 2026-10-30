@@ -52,7 +52,7 @@
 			<h1 class="logo-text">Rewrite</h1>
 			<p class="subtitle">
 				마침표를 지우고,<br />
-				<span class="highlight">다시</span> 써내려갈 당신만의 이야기.
+				써내려갈 당신만의 이야기.
 			</p>
 		</div>
 
@@ -104,11 +104,7 @@
 		align-items: center;
 		justify-content: center;
 		min-height: 100vh;
-		background: var(--color-bg-primary);
-	}
-	.highlight {
-		color: var(--color-accent-primary);
-		font-weight: 600;
+		background: transparent; /* body의 원고지 격자를 드러낸다 */
 	}
 	/* Container */
 	.login-container {
@@ -134,7 +130,6 @@
 
 	.logo-text {
 		font-size: var(--font-size-3xl);
-		font-weight: 700;
 		color: var(--color-text-primary);
 		margin-bottom: var(--space-xs);
 		letter-spacing: -0.02em;

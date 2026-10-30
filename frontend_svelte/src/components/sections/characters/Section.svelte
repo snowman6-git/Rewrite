@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { fly } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
 	import { v4 as uuidv4 } from 'uuid';
 	import InputField from '$components/Common/InputField.svelte';
 	import InputGroup from '$components/Common/InputGroup.svelte';
 	import Icon from '$components/Common/Icon.svelte';
 	import EmptyState from '$components/Common/EmptyState.svelte';
 	import Modal from '$components/Common/Modal.svelte';
+	import Sheet from '$components/Common/Sheet.svelte';
 
 	type PersonaImage = { id: string; dataUrl: string; name: string };
 	type Persona = { id: string; name: string; setting: string; images: PersonaImage[] };
@@ -133,16 +132,7 @@
 </div>
 
 {#if open}
-	<div
-		class="sheet-overlay"
-		role="dialog"
-		aria-label="등장인물 추가"
-		aria-modal="true"
-		tabindex="-1"
-		onclick={close}
-		onkeydown={(e) => e.key === 'Escape' && close()}
-	></div>
-	<div class="sheet" transition:fly={{ y: 120, duration: 250, easing: cubicOut }}>
+	<Sheet onClose={close}>
 		<div class="sheet-head">
 			<span class="sheet-title">등장인물 추가</span>
 			<button class="sheet-close" onclick={close} aria-label="닫기">
@@ -202,7 +192,7 @@
 			<button class="btn-cancel" onclick={close}>취소</button>
 			<button class="btn-save" onclick={savePersona} disabled={!canSave}>저장</button>
 		</div>
-	</div>
+	</Sheet>
 {/if}
 
 {#if delTarget}
@@ -241,7 +231,6 @@
 
 	.section-title {
 		font-size: var(--font-size-lg);
-		font-weight: 600;
 		color: var(--color-text-primary);
 		margin: 0;
 	}
@@ -311,7 +300,6 @@
 	.char-name {
 		margin: 0;
 		font-size: var(--font-size-sm);
-		font-weight: 500;
 		color: var(--color-text-primary);
 		white-space: nowrap;
 		overflow: hidden;
@@ -347,30 +335,6 @@
 		}
 	}
 
-	.sheet-overlay {
-		position: fixed;
-		inset: 0;
-		background: var(--color-scrim);
-		z-index: 998;
-	}
-
-	.sheet {
-		position: fixed;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		z-index: 999;
-		background: var(--color-bg-secondary);
-		border-top: 1px solid var(--color-border);
-		border-radius: var(--radius-md) var(--radius-md) 0 0;
-		padding: var(--space-md);
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-md);
-		max-height: 80dvh;
-		overflow-y: auto;
-	}
-
 	.sheet-head {
 		display: flex;
 		align-items: center;
@@ -379,7 +343,6 @@
 
 	.sheet-title {
 		font-size: var(--font-size-base);
-		font-weight: 600;
 		color: var(--color-text-primary);
 	}
 
@@ -505,7 +468,6 @@
 		background: var(--color-accent-primary);
 		color: var(--color-text-inverse);
 		font-size: var(--font-size-sm);
-		font-weight: 500;
 		cursor: pointer;
 	}
 

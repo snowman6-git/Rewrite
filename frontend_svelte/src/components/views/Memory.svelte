@@ -93,7 +93,6 @@
 	.usage-value {
 		font-size: var(--font-size-sm);
 		color: var(--color-text-primary);
-		font-weight: 500;
 		font-variant-numeric: tabular-nums;
 	}
 

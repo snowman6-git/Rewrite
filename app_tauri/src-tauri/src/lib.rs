@@ -22,9 +22,19 @@ fn mime_for(path: &str) -> &'static str {
 }
 
 /// 요청 경로 정규화: "/local/index.html" → "index.html" (호스트 잔재 제거)
+/// + "hp{N}/" 버전 접두 제거 — WebView가 커스텀 스킴에서 Cache-Control을 무시해
+/// (opaque origin) index.html이 버전간 캐싱됨 → 버전별 새 경로로 캐시 미스 강제 (2026-10-29)
 fn normalize_path(raw: &str) -> String {
     let p = raw.trim_start_matches('/');
-    p.strip_prefix("local/").unwrap_or(p).to_string()
+    let p = p.strip_prefix("local/").unwrap_or(p);
+    // hp123/index.html → index.html (hp + 숫자 + / 형태만)
+    if let Some(rest) = p.strip_prefix("hp") {
+        let digits = rest.bytes().take_while(|b| b.is_ascii_digit()).count();
+        if digits > 0 && rest.as_bytes().get(digits) == Some(&b'/') {
+            return rest[digits + 1..].to_string();
+        }
+    }
+    p.to_string()
 }
 
 /// 에셋 미스 디버그 페이지 — "404"가 Tauri 기본인지 자식 핸들러인지 구별 + 요청 경로 확인
@@ -38,6 +48,22 @@ fn not_found_html(raw: &str) -> Vec<u8> {
         normalize_path(raw)
     )
     .into_bytes()
+}
+
+/// index.html 서빙 시 SvelteKit 시작 전에 pathname을 루트로 정규화 —
+/// 패치 캐시 버스트용 버전 경로(hp{N}/index.html)는 어떤 라우트에도 안 맞아 SPA 404 (2026-11-01 AVD 재현).
+/// 헤드 인라인 스크립트는 body의 모듈 스크립트(SvelteKit start)보다 먼저 실행 → race 없음.
+fn normalize_index(bytes: Vec<u8>) -> Vec<u8> {
+    const FIX: &str = "<script>try{history.replaceState(null,'','/')}catch(e){}</script>";
+    match String::from_utf8(bytes) {
+        Ok(mut s) => {
+            if let Some(pos) = s.find("</head>") {
+                s.insert_str(pos, FIX);
+            }
+            s.into_bytes()
+        }
+        Err(e) => e.as_bytes().to_vec(),
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -58,11 +84,16 @@ pub fn run() {
                         };
                         // 1) 핫패치 active/  2) 임베드 에셋  3) 미스 = 디버그 404
                         // 동기 핸들러: 안드로이드는 비동기 responder가 JNI 경계에서 죽는걸로 확인(검은화면) — wry 0.55+는 동기 안전
-                        let found: Option<Vec<u8>> = hotpatch::resolve_asset(&path).or_else(|| {
-                            ctx.app_handle().asset_resolver().get(path).map(|a| a.bytes)
-                        });
+                        let is_index = path == "index.html";
+                        let found: Option<Vec<u8>> =
+                            hotpatch::resolve_asset(ctx.app_handle(), &path).or_else(|| {
+                                ctx.app_handle().asset_resolver().get(path).map(|a| a.bytes)
+                            });
                         let (status, bytes) = match found {
-                            Some(b) => (http::StatusCode::OK, b),
+                            Some(b) => (
+                                http::StatusCode::OK,
+                                if is_index { normalize_index(b) } else { b },
+                            ),
                             None => (http::StatusCode::NOT_FOUND, not_found_html(&raw)),
                         };
                         let mut resp = http::Response::new(bytes);
@@ -70,6 +101,12 @@ pub fn run() {
                         resp.headers_mut().insert(
                             http::header::CONTENT_TYPE,
                             http::HeaderValue::from_static(mime_for(&raw)),
+                        );
+                        // opaque origin(커스텀 스킴)에서 WebView가 쿼리 무시로 index.html을 캐싱 —
+                        // 패치 리로드(?hotpatch=1&t=)가 구 index를 다시 받아 갱신이 안 걸림 (2026-10-29)
+                        resp.headers_mut().insert(
+                            http::header::CACHE_CONTROL,
+                            http::HeaderValue::from_static("no-store"),
                         );
                         resp
                     },

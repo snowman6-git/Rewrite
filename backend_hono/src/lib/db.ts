@@ -109,7 +109,8 @@ export class ReadBook {
 			`)
 			.all(book_id);
 
-		const header_combine = SYSTEM_HEADER! + '\n' + ReadBook.system(book_id);
+		// SYSTEM_HEADER를 뒤에 배치: 모델은 마지막 지시를 더 강하게 따라 책별 헤더에 묻히면 안 됨
+		const header_combine = ReadBook.system(book_id) + '\n' + SYSTEM_HEADER!;
 		return header_combine;
 	}
 	static system(book_id: string) {
@@ -366,7 +367,7 @@ export async function clone_book(origin_id: string, point_id: string) {
 				WHERE
 					point_id = ?
 					AND id = ?
-			`).run(book_id, page_id, 'system', point_id, origin_id);
+			`).run(book_id, page_id, 'assistant', point_id, origin_id);
 			// 3. I_Header 삽입
 			db.prepare(sql`
 				INSERT INTO

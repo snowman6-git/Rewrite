@@ -29,7 +29,10 @@
 			'<line x1="3" y1="20" x2="21" y2="20"/><line x1="6" y1="20" x2="6" y2="9"/><line x1="10" y1="20" x2="10" y2="7"/><line x1="14" y1="20" x2="14" y2="10"/><path d="m17 20 3-10"/>',
 		//📚 이모지 재현: 불규칙 각도로 쌓인 스파인 3권
 		books:
-			'<rect x="2.5" y="15" width="19" height="4.2" rx="1.2" transform="rotate(-2 12 17.1)"/><rect x="4" y="10.4" width="16" height="4.2" rx="1.2" transform="rotate(3.5 12 12.5)"/><rect x="5.5" y="5.8" width="13" height="4.2" rx="1.2" transform="rotate(-5 12 7.9)"/>'
+			'<rect x="2.5" y="15" width="19" height="4.2" rx="1.2" transform="rotate(-2 12 17.1)"/><rect x="4" y="10.4" width="16" height="4.2" rx="1.2" transform="rotate(3.5 12 12.5)"/><rect x="5.5" y="5.8" width="13" height="4.2" rx="1.2" transform="rotate(-5 12 7.9)"/>',
+		// 공지/알림 (feather bell)
+		bell:
+			'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'
 	};
 	// UI 기본 컨트롤 (feather)
 	const controls: Record<string, string> = {
@@ -50,7 +53,12 @@
 		// 재생성: 반시계 방향 원호 + 화살 (버블 액션용)
 		reload: '<path d="M21 12a9 9 0 1 1-3.1-6.8"/><polyline points="21 3 21 9 15 9"/>',
 		// 세로 세 점 (버블 메뉴): 자식 fill가 루트 stroke 기본값을 덮음
-		more: '<circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/>'
+		more: '<circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
+		// feather copy / bookmark (버블 액션용)
+		copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+		bookmark: '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+		// 스트림 정지: 정지 표시 (feather square 계열)
+		stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>'
 	};
 	const all = { ...icons, ...controls };
 

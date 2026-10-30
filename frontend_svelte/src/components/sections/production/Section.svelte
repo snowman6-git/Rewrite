@@ -83,7 +83,7 @@
 				// 스타일 인라인 — 클래스는 {@html} 문자열 안에만 존재해서 CSS 분석기가 항상 false positive
 				const base = 'display:block;min-height:1.7em';
 				return l.kind === 'section'
-					? `<span style="${base};color:var(--color-text-primary);font-weight:600">${esc(l.text)}</span>`
+					? `<span style="${base};color:var(--color-text-primary)">${esc(l.text)}</span>`
 					: l.kind === 'kv'
 						? `<span style="${base}"><span style="color:var(--color-text-secondary)">${esc(l.key)}</span>${esc(l.rest)}</span>`
 						: `<span style="${base}">${esc(l.text)}</span>`;
@@ -457,7 +457,6 @@
 		min-height: 26px;
 		border-radius: var(--radius-sm);
 		font-size: var(--font-size-sm);
-		font-weight: 500;
 		transition:
 			background var(--transition-fast),
 			border-color var(--transition-fast),
@@ -524,7 +523,6 @@
 
 	.group-title {
 		font-size: var(--font-size-sm);
-		font-weight: 600;
 		color: var(--color-text-secondary);
 	}
 

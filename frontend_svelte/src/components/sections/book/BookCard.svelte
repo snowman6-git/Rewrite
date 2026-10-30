@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '$components/Common/Icon.svelte';
+	import { showcase } from '$lib/stores/showcase.svelte';
 	import type { Book } from '$lib/types';
 
 	let { book, onClick }: { book: Book; onClick?: (book: Book) => void } = $props();
@@ -20,11 +21,11 @@
 	}}
 >
 	<div class="book-cover">
-		<span class="cover-stack"><Icon name="book-stack" size={48} /></span>
+		<span class="cover-stack"><Icon name="book" size={48} /></span>
 	</div>
 	<div class="book-info">
-		<h3 class="book-title">{book.title}</h3>
-		{#if book.author}<p class="book-author">{book.author}</p>{/if}
+		<h3 class="book-title">{showcase.text(book.title)}</h3>
+		{#if book.author}<p class="book-author">{showcase.text(book.author)}</p>{/if}
 	</div>
 </div>
 
@@ -32,7 +33,7 @@
 	.book-card {
 		background: var(--color-bg-tertiary);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border-radius: 4px;
 		overflow: hidden;
 		cursor: pointer;
 		display: flex;
@@ -46,7 +47,7 @@
 		}
 	}
 
-	/* 표지 = 향후 실제 사진 슬롯. 3:4(실제 책 비율) */
+	/* 표지 = 향후 실제 사진 슬롯. 3:4(실제 책 비율) — 원고지 시안(2026-10-27)과 동일: 평면 배경+스파인+내부 프레임 */
 	.book-cover {
 		position: relative;
 		width: 100%;
@@ -55,11 +56,27 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: linear-gradient(
-			135deg,
-			var(--color-bg-elevated) 0%,
-			var(--color-bg-secondary) 100%
-		);
+		background: var(--color-bg-elevated);
+	}
+
+	/* 왼쪽 스파인(6px) */
+	.book-cover::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0;
+		bottom: 0;
+		width: 6px;
+		background: rgba(0, 0, 0, 0.28);
+	}
+
+	/* 내부 프레임(인셋 8px) */
+	.book-cover::after {
+		content: '';
+		position: absolute;
+		inset: 8px;
+		border: 1px solid rgba(128, 128, 128, 0.18);
+		pointer-events: none;
 	}
 
 	.cover-stack {
@@ -72,11 +89,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
+		border-top: 1px solid var(--color-border);
 	}
 
 	.book-title {
 		font-size: var(--font-size-sm);
-		font-weight: 600;
 		color: var(--color-text-primary);
 		margin: 0;
 		line-height: 1.4;

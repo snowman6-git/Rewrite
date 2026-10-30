@@ -21,20 +21,28 @@ body::-webkit-scrollbar {
 }
 
 :root {
-	--color-bg-primary: #0a0a0a;
-	--color-bg-secondary: #111111;
-	--color-bg-tertiary: #1a1a1a;
-	--color-bg-elevated: #222222;
-	--color-bg-hover: #2a2a2a;
+	/* 원고지 + 심야(2026-10-27 선택 디자인) — 심야색 테마 */
+	/* 전역 z 스케일 — 신규 레이어는 토큰 사용, 맨날 숫자 금지 (2026-10-29) */
+	--z-content: 1; /* 일반 플로우 위 오버레이(그립 등) */
+	--z-fab: 5; /* 최하단/최상단 점프 버튼 */
+	--z-sheet-backdrop: 998; /* 시트·햄메뉴 백드롭 */
+	--z-sheet: 999; /* 하단 시트 계열: 모델 메뉴·버블·선택바·햄메뉴 (인풋보다 front) */
+	--z-panel: 1000; /* BookPreview류 패널 */
+	--z-modal: 9999; /* 모달·토스트·컨텍스트·스플래시 */
+	--color-bg-primary: #14161c; /* 방 */
+	--color-bg-secondary: #181b21;
+	--color-bg-tertiary: #1c1f27; /* 패널 */
+	--color-bg-elevated: #22262f;
+	--color-bg-hover: #262a34;
 
-	--color-text-primary: #ededed;
-	--color-text-secondary: #a0a0a0;
-	--color-text-tertiary: #666666;
-	--color-text-inverse: #0a0a0a;
+	--color-text-primary: #e6e1d6; /* 글자(따뜻한 흰) */
+	--color-text-secondary: #a29c8f;
+	--color-text-tertiary: #8a8578; /* 댐 */
+	--color-text-inverse: #241a05; /* 램프(금) 위 텍스트 */
 
-	--color-accent-primary: #ededed;
-	--color-accent-secondary: #a0a0a0;
-	--color-accent-glow: rgba(255, 255, 255, 0.1);
+	--color-accent-primary: #d9a441; /* 램프 */
+	--color-accent-secondary: #c08f32;
+	--color-accent-glow: rgba(217, 164, 65, 0.15);
 
 	/* 시트·모달 오버레이 (7개 화면이 0.5/0.6/0.7 제각각 → 단일 규범) */
 	--color-scrim: rgba(0, 0, 0, 0.6);
@@ -43,17 +51,20 @@ body::-webkit-scrollbar {
 	--color-warning: #f59e0b;
 	--color-error: #ef4444;
 
-	--color-code-bg: #161616;
-	--color-code-border: #2a2a2a;
-	--color-code-text: rgba(255, 255, 255, 0.75);
-	--color-code-header-bg: #111111;
-	--color-code-header-text: #a0a0a0;
+	--color-code-bg: #191c22;
+	--color-code-border: #262a34;
+	--color-code-text: rgba(230, 225, 214, 0.75);
+	--color-code-header-bg: #14161c;
+	--color-code-header-text: #8a8578;
 
-	--color-border: #2a2a2a;
-	--color-border-strong: #3a3a3a;
-	--color-border-subtle: #1f1f1f;
+	--color-border: #262a34;
+	--color-border-strong: #343a46;
+	--color-border-subtle: #1f232b;
 
-	--font-family: 'NxMaple', sans-serif;
+	/* 원고지 격자 라인 (종이색에 50% 근접 — 노이즈 방지) */
+	--color-grid: #1b1f26;
+
+	--font-family: 'MapleStory', sans-serif;
 	--font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
 	--font-size-xs: 0.7rem;
 	--font-size-sm: 0.85rem;
@@ -133,12 +144,18 @@ body {
 	font-family: var(--font-family);
 	color: var(--color-text-primary);
 	background-color: var(--color-bg-primary);
+	/* 원고지 종이 질감 — 전 화면 공통 */
+	background-image:
+		linear-gradient(var(--color-grid) 1px, transparent 1px),
+		linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
+	background-size: 28px 28px;
 	line-height: 1.6;
 }
 
 @font-face {
-	font-family: 'NxMaple';
-	src: url('$lib/assets/Maplestory OTF Light.woff2') format('woff2');
+	font-family: 'MapleStory';
+	src: url('/fonts/maplestory-light.woff2') format('woff2');
+	font-weight: 300 700; /* bold 파일 제거 — 600/700 지정처(ink-pay·에러)도 라이트로 커버 */
 	font-display: swap;
 }
 
@@ -241,7 +258,6 @@ button {
 
 .section-label {
 	font-size: var(--font-size-sm);
-	font-weight: 600;
 	color: var(--color-text-secondary);
 	text-transform: uppercase;
 	letter-spacing: 1px;
@@ -303,7 +319,6 @@ button {
 	cursor: pointer;
 	transition: all var(--transition-fast);
 	font-size: var(--font-size-sm);
-	font-weight: 500;
 	background: transparent;
 	border: none;
 	width: 100%;
@@ -327,7 +342,6 @@ button {
 }
 
 .nav-label {
-	font-weight: 500;
 }
 
 @media (max-width: 1024px) {

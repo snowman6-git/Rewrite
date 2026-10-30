@@ -1,10 +1,6 @@
 <script lang="ts">
-	import { modelsState } from '$lib/states/models.svelte';
 	import { chatState } from '$lib/states/chat.svelte';
 	import ChatTools from '$components/ChatTools.svelte';
-
-	// 인풋 개방 = 채팅 히스토리가 왔고 모델이 선택된 상태 (Slow 3G 실측: 로딩 중 disabled + 52px 일정)
-	const ready = $derived(chatState.historyPending === false && !!modelsState.selectedModel);
 
 	// 그립 드래그로 높이를 잡는다 — 값만 유지(페이지 리로드 시 초기화)
 	let taEl = $state<HTMLTextAreaElement | undefined>();
@@ -24,16 +20,24 @@
 			// 하한은 JS가 안 잡는다 — CSS min-height(라인 1개)가 클램프해서 휴일 높이까지 내려간다
 			height = `${Math.min(Math.max(next, 0), Math.floor(window.innerHeight * 0.6))}px`;
 		};
-		const up = () => {
+		const detach = () => {
 			dragging = false;
 			window.removeEventListener('pointermove', move);
 			window.removeEventListener('pointerup', up);
+			window.removeEventListener('pointercancel', cancel);
+		};
+		const up = () => {
+			detach();
 			// 휴일 높이까지 줄면 인라인 높이를 지우고 CSS에 넘긴다 (40px 같은 옛 하한에 갇히지 않음)
 			const min = taEl ? parseFloat(getComputedStyle(taEl).minHeight) || 0 : 0;
 			if (taEl && taEl.offsetHeight <= Math.ceil(min)) height = '';
 		};
+		// Android는 시스템 제스처(알림 내리기·앱 전환)에서 pointerup을 안 보낸다. 여기가 없으면
+		// dragging=true가 남고 창 전역 pointermove가 채팅 스크롤만으로도 인풋 높이를 바꾼다.
+		const cancel = () => detach();
 		window.addEventListener('pointermove', move);
 		window.addEventListener('pointerup', up);
+		window.addEventListener('pointercancel', cancel);
 	}
 </script>
 
@@ -43,12 +47,12 @@
 			class="user-input"
 			name="chat-input"
 			style:height
-			placeholder={ready ? '메시지를 입력하세요...' : '불러오는중...'}
+			placeholder={chatState.ready ? '메시지를 입력하세요...' : '불러오는중...'}
 			autocomplete="off"
 			bind:value={chatState.user_input}
 			bind:this={taEl}
 			rows={1}
-			disabled={!ready}
+			disabled={!chatState.ready}
 		></textarea>
 		<!-- 툴즈·그립은 로딩 중에도 렌더: 행 높이가 툴즈에서 나오므로 빠지면 패널이 12px 줄었다가 돌아온다 -->
 		<div class="composer-tools">
@@ -67,16 +71,16 @@
 
 <style>
 	.input-area {
-		/* 채팅 위에 얹는 고정 레이어 — 크기는 인풋+툴즈에 맞춤 (.chat-body 하단 패딩이 이 높이만큼 비움) */
+		/* 채팅 위에 얹는 고정 레이어 — 폭은 .chat-body의 62ch 본문 열과 동일 (가운데 정렬) */
 		position: absolute;
-		left: var(--space-md);
-		right: var(--space-md);
+		left: 50%;
+		transform: translateX(-50%);
 		bottom: var(--space-xl); /* 지금 위치 (하단에서 띄운 그대로) */
-		width: auto;
-		max-width: 100%;
+		width: calc(100% - 2 * var(--space-md));
+		max-width: 62ch;
 		box-sizing: border-box;
 		padding: var(
-			--space-xs
+			--space-2xs
 		); /* 그립은 패널 바깥에 있으므로 패딩은 사방 동일 (그립 자리로 상단을 벌리지 않음) */
 		background: var(--color-bg-secondary);
 		/* 2px 테두리는 이 패널 하나에만 있다 (인풋·툴즈는 테두리 없음) */
@@ -124,7 +128,7 @@
 		background: transparent;
 		border: none;
 		color: var(--color-text-primary);
-		font-size: var(--font-size-base);
+		font-size: var(--font-size-sm);
 		resize: none;
 		outline: none;
 		line-height: 1.5;
@@ -162,15 +166,5 @@
 
 	.resize-grip:active::after {
 		background: var(--color-text-tertiary);
-	}
-
-	@media (max-width: 640px) {
-		.input-area {
-			padding: var(--space-2xs); /* 전역과 동일 (띄움은 bottom이 담당) */
-		}
-
-		.user-input {
-			font-size: var(--font-size-sm);
-		}
 	}
 </style>

@@ -13,8 +13,8 @@ class MainActivity : TauriActivity() {
     super.onCreate(savedInstanceState)
 
     findViewById<android.view.View>(android.R.id.content)?.let { rootView ->
-      // 인셋 스트립(상태바/내비게이션바 영역) 배경 = 앱 bg (#0a0a0a, 모든 테마 동일)
-      rootView.setBackgroundColor(android.graphics.Color.parseColor("#0A0A0A"))
+      // 인셋 스트립(상태바/내비게이션바 영역) 배경 = 심야 테마 bg #14161c (2026-10-27)
+      rootView.setBackgroundColor(android.graphics.Color.parseColor("#14161C"))
       ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
         val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
         view.setPadding(view.paddingLeft, insets.top, view.paddingRight, insets.bottom)

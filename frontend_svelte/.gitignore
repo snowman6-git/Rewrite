@@ -7,6 +7,7 @@ node_modules
 .wrangler
 /.svelte-kit
 /build
+/hotpatch-out
 
 # OS
 .DS_Store
@@ -22,7 +23,12 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# MapleStory 폰트 — 라이선스(임의 수정·재배포 불가)로 커밋 금지, 로컬 에셋으로만 사용 (2026-10-30)
+static/fonts/
+
 vitest-examples
 
 test/*
 .pi
+# C안: 백엔드 서빙용 /ui 빌드 산출물
+build-ui/

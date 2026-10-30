@@ -18,16 +18,15 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-sm);
-		z-index: 9999;
+		z-index: var(--z-modal);
 	}
 
 	@media (max-width: 640px) {
 		.toast-container {
 			top: var(--space-md);
-			left: var(--space-md);
-			right: var(--space-md);
-			transform: none;
-			width: auto;
+			left: 50%;
+			transform: translateX(-50%);
+			align-items: center;
 		}
 	}
 </style>

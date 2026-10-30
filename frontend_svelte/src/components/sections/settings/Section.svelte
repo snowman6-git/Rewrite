@@ -10,6 +10,12 @@
 		SCALE_MIN
 	} from '$lib/assets/scale';
 	import {
+		readStreamFx,
+		STREAM_FX_KEY,
+		STREAM_FX_LABELS,
+		type StreamFx
+	} from '$lib/assets/stream-fx';
+	import {
 		checkHotpatch,
 		hotpatchEnabled,
 		installedVersion,
@@ -18,6 +24,7 @@
 		setHotpatchEnabled
 	} from '$lib/hotpatch/loader.svelte';
 	import { toast } from '$lib/stores/toast.svelte';
+	import { showcase } from '$lib/stores/showcase.svelte';
 	import Btn from '$components/Common/Btn.svelte';
 	import Switch from '../../Common/Switch.svelte';
 
@@ -43,6 +50,31 @@
 					: 'mono') as ThemeKey)
 	);
 	let scale = $state(String(readScale()));
+	let streamFx = $state<StreamFx>(typeof window === 'undefined' ? 'fade' : readStreamFx());
+
+	// 스트림 효과 미리보기 — 청크씩 샘플 스트림 재생, 효과 변경 시 재재생 (ChatBlock과 같은 토큰 단위 동작)
+	const FX_SAMPLE = '미리보기입니다. 토큰이 이렇게 들어와요.';
+	let fxSample = $state('');
+	let fxDone = $state(false);
+	$effect(() => {
+		fxSample = '';
+		fxDone = false;
+		if (streamFx === 'none') {
+			fxSample = FX_SAMPLE;
+			fxDone = true;
+			return;
+		}
+		let i = 0;
+		const id = setInterval(() => {
+			i += 2;
+			fxSample = FX_SAMPLE.slice(0, i);
+			if (i >= FX_SAMPLE.length) {
+				clearInterval(id);
+				fxDone = true;
+			}
+		}, 90);
+		return () => clearInterval(id);
+	});
 	// range 입력의 bind:value는 문자열로 온다 — 클램프는 여기서 한 번만
 	const scaleNum = $derived(clampScale(Number(scale) || 1));
 
@@ -52,7 +84,10 @@
 			toast.error('주소를 입력하세요.');
 			return;
 		}
-		setApiBase(v);
+		if (!setApiBase(v)) {
+			toast.error('저장 안 됨 — 원거리는 https, 로컬(localhost·10.x·192.168.x)만 http 허용');
+			return;
+		}
 		saved = true;
 		toast.success('저장됨 — 새로고침 시 반영');
 	}
@@ -188,6 +223,47 @@
 	</div>
 
 	<div class="card">
+		<p class="card-label">쇼케이스 모드</p>
+		<p class="card-hint">ON이면 모든 책·서재 타이틀과 텍스트가 example으로 표시된다. UI 시연용.</p>
+		<div class="card-row switch-row">
+			<span class="switch-label">쇼케이스 모드</span>
+			<Switch checked={showcase.on} label="쇼케이스 모드" onToggle={() => showcase.toggle()} />
+		</div>
+	</div>
+
+	<div class="card">
+		<label class="card-label" for="stream-fx">채팅 스트림 효과</label>
+		<p class="card-hint">채팅 스트림 중 새 토큰이 도착할 때 효과. 다음 채팅 화면부터 반영.</p>
+		<div class="card-row">
+			<select
+				id="stream-fx"
+				class="theme-select"
+				bind:value={streamFx}
+				onchange={() => {
+					localStorage.setItem(STREAM_FX_KEY, streamFx);
+					toast.success(`스트림 효과: ${STREAM_FX_LABELS[streamFx]}`);
+				}}
+			>
+				<option value="fade">페이드 인(기본)</option>
+				<option value="none">효과 없음</option>
+				<option value="pop">튀어오름</option>
+			</select>
+		</div>
+		<div class="fx-preview">
+			<span class="fx-bubble">
+				{fxSample.slice(0, Math.max(0, fxSample.length - (fxDone ? 0 : 2)))}
+				{#if !fxDone && fxSample.length > 0}
+					<span
+						class="fx-delta"
+						class:fx-fade={streamFx === 'fade'}
+						class:fx-pop={streamFx === 'pop'}>{fxSample.slice(-2)}</span
+					>
+				{/if}
+			</span>
+		</div>
+	</div>
+
+	<div class="card">
 		<label class="card-label" for="theme-select">테마</label>
 		<div class="card-row">
 			<select
@@ -253,7 +329,6 @@
 
 	.section-title {
 		font-size: var(--font-size-lg);
-		font-weight: 600;
 		color: var(--color-text-primary);
 		margin: 0;
 	}
@@ -270,7 +345,6 @@
 
 	.card-label {
 		font-size: var(--font-size-sm);
-		font-weight: 600;
 		color: var(--color-text-primary);
 	}
 
@@ -343,6 +417,60 @@
 
 	.theme-select:focus {
 		border-color: var(--color-accent-primary);
+	}
+
+	/* 스트림 효과 미리보기 — ChatBlock.svelte와 동일한 keyframes (scoped 스타일 공유 불가라 고의 중복) */
+	.fx-preview {
+		margin-top: var(--space-sm);
+	}
+
+	.fx-bubble {
+		display: inline-block;
+		max-width: 100%;
+		padding: var(--space-sm) var(--space-md);
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		color: var(--color-text-primary);
+		font-size: var(--font-size-sm);
+		line-height: 1.6;
+	}
+
+	.fx-delta.fx-pop {
+		display: inline-block;
+	}
+
+	.fx-delta.fx-fade {
+		animation: fx-token-fade 200ms ease-out both;
+	}
+
+	.fx-delta.fx-pop {
+		animation: fx-token-pop 380ms ease-in-out both;
+	}
+
+	@keyframes fx-token-fade {
+		from {
+			opacity: 0;
+		}
+	}
+
+	/* 파도: 밀물(crest) → 물러남 → 잔물결 정지 (ChatBlock과 동일) */
+	@keyframes fx-token-pop {
+		0% {
+			opacity: 0;
+			transform: translateY(6px) scale(0.9);
+		}
+		55% {
+			opacity: 1;
+			transform: translateY(-2px) scale(1.04);
+		}
+		80% {
+			transform: translateY(1px) scale(0.99);
+		}
+		100% {
+			opacity: 1;
+			transform: none;
+		}
 	}
 
 	@media (max-width: 768px) {

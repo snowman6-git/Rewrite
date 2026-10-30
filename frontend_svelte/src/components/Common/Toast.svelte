@@ -47,7 +47,6 @@
 
 	.toast-icon {
 		font-size: var(--font-size-lg);
-		font-weight: bold;
 		flex-shrink: 0;
 	}
 
@@ -84,8 +83,8 @@
 	@media (max-width: 640px) {
 		.toast {
 			min-width: unset;
-			width: calc(100vw - var(--space-lg) * 2);
-			max-width: unset;
+			width: auto;
+			max-width: calc(100vw - var(--space-lg) * 2);
 		}
 	}
 </style>

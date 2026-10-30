@@ -58,7 +58,7 @@
 	.splash {
 		position: fixed;
 		inset: 0;
-		z-index: 9999;
+		z-index: var(--z-modal);
 		background: var(--color-bg-primary);
 		display: flex;
 		flex-direction: column;
@@ -76,7 +76,6 @@
 	.title {
 		margin: 0;
 		font-size: var(--font-size-sm);
-		font-weight: 500;
 	}
 
 	.pct {

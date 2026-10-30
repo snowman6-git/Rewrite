@@ -6,6 +6,8 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && bun ../hotpatch-hub/hash.mjs build > build/.hp-hash",
+		"build:ui": "UI_BASE=/ui vite build && rm -rf build-ui && mv build build-ui && bun ../hotpatch-hub/hash.mjs build-ui > build-ui/.hp-hash",
+		"publish:app": "bun scripts/publish-hotpatch.mjs",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",

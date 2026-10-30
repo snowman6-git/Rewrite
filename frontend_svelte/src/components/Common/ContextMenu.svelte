@@ -87,7 +87,7 @@
 <style>
 	.context-menu {
 		position: fixed;
-		z-index: 9999;
+		z-index: var(--z-modal);
 		min-width: 180px;
 		padding: var(--space-xs);
 		background: var(--color-bg-tertiary);

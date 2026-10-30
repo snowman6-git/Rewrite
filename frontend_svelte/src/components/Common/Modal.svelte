@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { backEntry } from '$lib/utils/back-entry';
 	interface Props {
 		title: string;
 		message: string;
@@ -34,6 +35,8 @@
 
 	onMount(() => {
 		inputEl?.focus();
+		// 뒤로가기 = 취소(닫기) — 히스토리 entry (2026-10-27)
+		backEntry(onCancel);
 	});
 
 	function handleOverlayClick() {
@@ -106,7 +109,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		z-index: 9999;
+		z-index: var(--z-modal);
 		backdrop-filter: blur(4px);
 		animation: fadeIn 0.15s ease-out;
 	}
@@ -121,7 +124,7 @@
 	}
 
 	.modal {
-		background: var(--color-bg-tertiary);
+		background: var(--color-bg-secondary); /* 플로팅 표준: Sheet·HamMenu와 동일 (2026-11-01 색계열 감사) */
 		border-radius: var(--radius-lg);
 		padding: var(--space-xl);
 		min-width: 320px;
@@ -147,7 +150,6 @@
 
 	.modal-title {
 		font-size: var(--font-size-lg);
-		font-weight: 600;
 		color: var(--color-text-primary);
 		margin: 0 0 var(--space-md);
 	}
@@ -187,7 +189,6 @@
 		padding: var(--space-sm) var(--space-lg);
 		border-radius: var(--radius-md);
 		font-size: var(--font-size-sm);
-		font-weight: 500;
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		border: none;

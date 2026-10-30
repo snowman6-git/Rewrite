@@ -1,10 +1,6 @@
 <script lang="ts">
 	import Icon from '$components/Common/Icon.svelte';
 	import { chatState } from '$lib/states/chat.svelte';
-	import { modelsState } from '$lib/states/models.svelte';
-
-	// ChatComposer와 동일한 개방 조건 (히스토리 완료 + 모델 선택)
-	const ready = $derived(chatState.historyPending === false && !!modelsState.selectedModel);
 </script>
 
 <div class="chat-tools">
@@ -12,7 +8,7 @@
 	<button
 		class="logic-plus-btn icon-btn"
 		class:active={chatState.logic_plus}
-		disabled={!ready}
+		disabled={!chatState.ready}
 		onclick={() => (chatState.logic_plus = !chatState.logic_plus)}
 		aria-pressed={chatState.logic_plus}
 		aria-label="Logic+ 토글"
@@ -21,29 +17,23 @@
 	</button>
 
 	<!-- 메모리 바 (사용 안 함) -->
-	<!-- <div class="mem-bar">
-		<MinMaxPercent
-			class="mem-percent"
-			min={memoryTools.safeMemoryUsage}
-			max={memoryTools.safeContextSize}
-		/>
-		<progress
-			class="progress-bar"
-			value={memoryTools.safeMemoryUsage}
-			max={memoryTools.safeContextSize}
-		></progress>
-	</div> -->
 
-	<!-- 전송 버튼 -->
-	<button
-		class="send-btn icon-btn"
-		class:active={chatState.user_input.trim() !== '' && !chatState.isModelResponding}
-		disabled={chatState.isModelResponding || !ready}
-		aria-label="전송"
-		onclick={() => chatState.sendMessage()}
-	>
-		<Icon name="edit" size={16} />
-	</button>
+	<!-- 전송/정지 버튼: 응답 중 = 정지 (부분 내용 보존, 2026-11-01) -->
+	{#if chatState.isModelResponding}
+		<button class="send-btn stop-btn icon-btn" aria-label="스트림 정지" onclick={() => chatState.stopStream()}>
+			<Icon name="stop" size={16} />
+		</button>
+	{:else}
+		<!-- 빈 입력도 활성: 빈 전송 = 모델이 이어 쓰게 하는 "계속" (2026-10-30) -->
+		<button
+			class="send-btn icon-btn active"
+			disabled={!chatState.ready}
+			aria-label="전송 (빈 입력 시 계속)"
+			onclick={() => chatState.sendMessage()}
+		>
+			<Icon name="edit" size={16} />
+		</button>
+	{/if}
 </div>
 
 <style>
@@ -91,6 +81,14 @@
 	.send-btn:disabled {
 		opacity: 0.3;
 		cursor: not-allowed;
+	}
+
+	/* 정지: 응답 중 항상 액티브 (pressable) */
+	.stop-btn {
+		color: var(--color-text-inverse);
+		opacity: 1;
+		border-color: var(--color-bg-primary);
+		background: var(--color-accent-primary);
 	}
 
 	/* ---------- Mobile ---------- */

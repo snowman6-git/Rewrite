@@ -21,10 +21,9 @@ class ManageBook {
 			const chat = db
 				.prepare('DELETE FROM G_Pages WHERE session_id = ? AND pid = ?;')
 				.run(session_id, pid);
-			console.log(chat);
 			return true;
 		} catch (error) {
-			return error;
+			return false;
 		}
 	}
 }

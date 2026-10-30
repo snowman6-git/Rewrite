@@ -5,8 +5,8 @@
 /* ---------- Chat Body Container ---------- */
 .chat-body {
 	width: 100%;
-	max-width: 100%; /* 열은 화면을 다 쓴다 (측정: 500px에서 말풍선이 90% 캡에 걸려 48px이 놀고 있었음) */
-	margin-inline: auto;
+	/* 62ch 가독 열은 스크롤러가 아닌 콘텐츠(.msg-row 등)로 이동 — gutter 없애기: 열 밖 휠도 네이티브 스크롤
+		(js 휠 전달은 scroll-behavior:smooth와 중복 애니메이션이라 둔함) 2026-10-27 */
 	flex: 1;
 	overflow-y: auto;
 	display: flex;
@@ -24,10 +24,18 @@
 /* 시스템 안내: .chat-body가 align-items:flex-start라 폭 명시 필수, 문구는 열 가운데로 */
 .window-note {
 	width: 100%;
-	margin: 0;
+	max-width: 62ch;
+	margin-inline: auto;
+	margin-top: 0;
+	margin-bottom: 0;
 	font-size: var(--font-size-sm);
 	color: var(--color-text-secondary);
 	text-align: center;
+}
+
+/* flex column의 기본 flex-shrink:1이 긴 대화가 오버플로 대신 행을 압축해 스크롤이 안 된다는 결함 — 자식 전부를 축소 불가로 */
+.chat-body > * {
+	flex-shrink: 0;
 }
 
 /* ---------- Message Bubbles ---------- */
@@ -37,10 +45,7 @@
 	animation: messageSlideIn var(--transition-base) ease-out;
 }
 
-.message-row.user {
-	justify-content: flex-end;
-}
-
+/* 모든 버블 동일 위치(좌측 정렬) — user/assistant 좌우 구분 제거 (2026-10-27 유저 지시) */
 .message-row.assistant {
 	justify-content: flex-start;
 }
@@ -148,7 +153,6 @@
 	margin-top: var(--space-md);
 	margin-bottom: var(--space-xs);
 	color: var(--color-text-primary);
-	font-weight: 600;
 	line-height: 1.3;
 }
 .markdown-content h1 {
@@ -168,7 +172,6 @@
 
 .markdown-content strong {
 	color: var(--color-text-primary);
-	font-weight: 600;
 }
 
 .markdown-content em {
@@ -221,7 +224,7 @@
 	padding: 2px 6px;
 	border-radius: var(--radius-xs);
 	font-size: 0.9em;
-	font-family: 'NxMaple', monospace;
+	font-family: monospace;
 }
 
 /* ---------- Code Block (투톤 디자인) ---------- */
@@ -261,7 +264,6 @@
 	background: var(--color-bg-elevated);
 	padding: var(--space-xs) var(--space-sm);
 	text-align: left;
-	font-weight: 600;
 	border: 1px solid var(--color-border);
 }
 .markdown-content td {

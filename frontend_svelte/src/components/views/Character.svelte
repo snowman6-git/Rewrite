@@ -80,7 +80,6 @@
 
 	.active-name {
 		font-size: var(--font-size-sm);
-		font-weight: 500;
 		color: var(--color-text-primary);
 	}
 
@@ -121,7 +120,6 @@
 
 	.char-name {
 		font-size: var(--font-size-base);
-		font-weight: 500;
 	}
 
 	.char-setting {

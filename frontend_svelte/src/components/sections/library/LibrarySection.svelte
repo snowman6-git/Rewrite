@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Modal from '$components/Common/Modal.svelte';
 	import Icon from '$components/Common/Icon.svelte';
+	import { showcase } from '$lib/stores/showcase.svelte';
 	import { goto } from '$app/navigation';
 	import ContextMenu from '$components/Common/ContextMenu.svelte';
 	import Btn from '$components/Common/Btn.svelte';
@@ -179,13 +180,13 @@
 				>
 					<div class="item-content">
 						<div class="item-top">
-							<h3 class="item-title">{book.title}</h3>
+							<h3 class="item-title">{showcase.text(book.title)}</h3>
 							{#if book.label}
-								<span class="item-label">{book.label}</span>
+								<span class="item-label">{showcase.text(book.label)}</span>
 							{/if}
 						</div>
 						{#if book.lastLine}
-							<p class="item-last-line">{book.lastLine}</p>
+							<p class="item-last-line">{showcase.text(book.lastLine)}</p>
 						{/if}
 					</div>
 					<span class="item-arrow">›</span>
@@ -263,7 +264,6 @@
 
 	.lib-title {
 		font-size: var(--font-size-lg);
-		font-weight: 600;
 		color: var(--color-text-primary);
 		margin: 0;
 		display: flex;
@@ -273,7 +273,6 @@
 
 	.lib-count {
 		font-size: var(--font-size-sm);
-		font-weight: 500;
 		color: var(--color-text-tertiary);
 	}
 
@@ -343,7 +342,6 @@
 
 	.item-title {
 		font-size: var(--font-size-sm);
-		font-weight: 600;
 		color: var(--color-text-primary);
 		margin: 0;
 		line-height: 1.3;
@@ -374,7 +372,6 @@
 	.item-arrow {
 		font-size: var(--font-size-lg);
 		color: var(--color-text-tertiary);
-		font-weight: 300;
 		flex-shrink: 0;
 	}
 

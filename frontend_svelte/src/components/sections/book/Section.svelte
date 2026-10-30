@@ -1,5 +1,6 @@
 <script lang="ts">
 	import UploadModal from '$components/Common/UploadModal.svelte';
+	import Icon from '$components/Common/Icon.svelte';
 	import EmptyState from '$components/Common/EmptyState.svelte';
 	import ContextMenu from '$components/Common/ContextMenu.svelte';
 	import Btn from '$components/Common/Btn.svelte';
@@ -159,6 +160,13 @@
 </script>
 
 <div class="book-section">
+	<!-- 공지/업데이트 배너 -->
+	<div class="notice-banner">
+		<span class="notice-icon"><Icon name="bell" size={18} /></span>
+		<span class="notice-title">공지</span>
+		<p class="notice-text">example</p>
+	</div>
+
 	<!-- 컨트롤: 검색 + 정렬 + 업로드 -->
 	<div class="controls">
 		<input
@@ -301,6 +309,41 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-md);
+	}
+
+	.notice-banner {
+		display: flex;
+		align-items: center;
+		gap: var(--space-md);
+		padding: var(--space-md) var(--space-lg);
+		border: 1px solid var(--color-border);
+		border-left: 3px solid var(--color-accent-primary);
+		border-radius: var(--radius-sm);
+		background:
+			linear-gradient(90deg, var(--color-accent-glow) 0%, transparent 70%),
+			var(--color-bg-secondary);
+	}
+
+	.notice-icon {
+		flex-shrink: 0;
+		display: flex;
+		color: var(--color-accent-primary);
+	}
+
+	.notice-title {
+		flex-shrink: 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-primary);
+	}
+
+	.notice-text {
+		margin: 0;
+		min-width: 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.controls {

@@ -14,10 +14,25 @@ export async function loadBooks(): Promise<Book[]> {
 	return response.data;
 }
 
-export async function loadBook_detail(book_id: string): Promise<Book[]> {
+export interface BookDetail {
+	id?: string;
+	desc?: string;
+	starting?: { point_id: string; name: string }[];
+}
+
+export async function loadBook_detail(book_id: string): Promise<BookDetail> {
 	const response = await axios.get(`${apiBase()}/book_detail?id=${book_id}`, {
 		withCredentials: true
 	});
+	return response.data;
+}
+
+export async function unfoldBook(book_id: string, point_id: string): Promise<{ table_id: string }> {
+	const response = await axios.post(
+		`${apiBase()}/book_unfolds`,
+		{ book_id, point_id },
+		{ withCredentials: true }
+	);
 	return response.data;
 }
 

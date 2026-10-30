@@ -45,7 +45,7 @@
 		align-items: center;
 		justify-content: space-between;
 		border-bottom: 1px solid var(--color-border);
-		background: var(--color-bg-secondary);
+		background: var(--color-bg-primary); /* 크롬 표준: app-header·app-nav와 동일 (2026-11-01 색계열 감사) */
 		backdrop-filter: blur(10px);
 		flex-shrink: 0;
 		z-index: 100;
@@ -62,7 +62,6 @@
 
 	.book-title {
 		font-size: var(--font-size-lg);
-		font-weight: 600;
 		color: var(--color-text-primary);
 		white-space: nowrap;
 		overflow: hidden;

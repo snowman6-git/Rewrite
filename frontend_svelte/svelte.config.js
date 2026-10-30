@@ -22,6 +22,11 @@ const config = {
 		adapter: adapter({
 			fallback: 'index.html'
 		}),
+		// base: Tauri 임베드=''(루트), 백엔드 서빙='/ui' — 클라이언트 라우터와 asset URL이 같이 붙는다
+		// SvelteKit: '/'는 무효 — 루트는 빈 문자열
+		paths: {
+			base: process.env.UI_BASE || ''
+		},
 		alias: {
 			$components: 'src/components',
 			$api: 'src/lib/api'

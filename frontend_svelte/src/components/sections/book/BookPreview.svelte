@@ -1,7 +1,7 @@
 <script lang="ts">
-	import axios from 'axios';
-	import { apiBase } from '$api/client';
 	import { toast } from '$lib/stores/toast.svelte';
+	import { loadBook_detail, unfoldBook, type BookDetail } from '$lib/api/book';
+	import { showcase } from '$lib/stores/showcase.svelte';
 	import Icon from '$components/Common/Icon.svelte';
 	import BookMeta from './BookMeta.svelte';
 	import { onMount } from 'svelte';
@@ -10,56 +10,52 @@
 
 	let { book, onClose }: { book: Book; onClose: () => void } = $props();
 
-	interface BookDetail {
-		id?: string;
-		desc?: string;
-		starting?: { point_id: string; name: string }[];
-	}
-
 	let book_detail = $state<BookDetail | null>(null);
 	let selectedPoint = $state<string>('1');
+	// 뒤로가기 = 모달 1개 히스토리 entry로 취급 (Android 백버튼/웹 백, 2026-10-27)
+	let navigating = false;
+	let consumed = false;
 
 	onMount(() => {
 		handlebookPreview();
+		history.pushState({ bookPreview: true }, '');
+		window.addEventListener('popstate', onPop);
+		return () => {
+			window.removeEventListener('popstate', onPop);
+			// X/오버레이 닫힘 시 남긴 entry 정리 (팝 발생 시·goto 전환 중이면 제외 — 이중 back 방지)
+			if (!consumed && !navigating) history.back();
+		};
 	});
 
+	function onPop() {
+		// 백버튼(히스토리 팝) = 모달 닫기 — consumed로 cleanup의 이중 back() 차단
+		consumed = true;
+		onClose();
+	}
+
 	async function handlebookPreview() {
-		let loadBook_detail = await axios.get(`${apiBase()}/book_detail?id=${book.id}`, {
-			withCredentials: true
-		});
-		if (loadBook_detail.status >= 200 && loadBook_detail.status < 300) {
-			book_detail = loadBook_detail.data;
-		} else {
+		try {
+			book_detail = await loadBook_detail(book.id);
+		} catch {
 			toast.error('생성에 실패했어요');
 		}
 	}
 
 	async function handleStart() {
-		let story_unfolds = await axios.post(
-			`${apiBase()}/book_unfolds`,
-			{
-				book_id: book.id,
-				point_id: selectedPoint
-			},
-			{
-				withCredentials: true
-			}
-		);
-
-		if (story_unfolds.status >= 200 && story_unfolds.status < 300) {
-			goto(`/book/${story_unfolds.data['table_id']}`);
-		} else {
+		try {
+			const result = await unfoldBook(book.id, selectedPoint);
+			navigating = true;
+			goto(`/book/${result.table_id}`);
+		} catch {
 			toast.error('생성에 실패했어요');
 		}
-
-		// onClose();
 	}
 </script>
 
 <div class="modal-overlay" role="presentation" onclick={onClose}>
 	<div class="modal" role="presentation" onclick={(e) => e.stopPropagation()}>
 		<div class="modal-header">
-			<h3 class="modal-title">{book.title}</h3>
+			<h3 class="modal-title">{showcase.text(book.title)}</h3>
 			<button class="close-btn" onclick={onClose} aria-label="닫기">✕</button>
 		</div>
 
@@ -76,7 +72,7 @@
 			<div class="book-preview">
 				{#if book.content}
 					<div class="content-display">
-						<pre class="content-text">{book.content}</pre>
+						<pre class="content-text">{showcase.text(book.content)}</pre>
 					</div>
 				{:else}
 					<div class="preview-placeholder">
@@ -85,13 +81,7 @@
 				{/if}
 			</div>
 
-			<BookMeta
-				desc={book_detail?.desc ?? ''}
-				author={book.author}
-				category={book.category}
-				usageCount={book.usageCount}
-				createdAt={book.createdAt}
-			/>
+			<BookMeta desc={showcase.text(book_detail?.desc ?? '')} createdAt={book.createdAt} />
 		</div>
 
 		<div class="modal-footer">
@@ -111,13 +101,15 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		z-index: 1000;
+		z-index: var(--z-panel);
 		padding: var(--space-md);
+		animation: fadeIn 0.15s ease-out;
 	}
 
 	.modal {
 		background: var(--color-bg-secondary);
 		border-radius: var(--radius-lg);
+		animation: popIn 0.18s ease-out;
 		max-width: 900px;
 		width: 100%;
 		max-height: 90vh;
@@ -136,7 +128,6 @@
 
 	.modal-title {
 		font-size: var(--font-size-lg);
-		font-weight: 600;
 		color: var(--color-text-primary);
 		margin: 0;
 	}
@@ -179,7 +170,6 @@
 
 	.selector-label {
 		font-size: var(--font-size-sm);
-		font-weight: 600;
 		color: var(--color-text-primary);
 	}
 
@@ -209,7 +199,7 @@
 	.book-preview {
 		width: 100%;
 		aspect-ratio: 16 / 9;
-		background: var(--color-bg-elevated);
+		background: transparent;
 		border-radius: var(--radius-md);
 		display: flex;
 		align-items: center;
@@ -224,11 +214,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: linear-gradient(
-			135deg,
-			var(--color-bg-elevated) 0%,
-			var(--color-bg-secondary) 100%
-		);
+		background: transparent;
 	}
 
 	.preview-icon {
@@ -272,7 +258,6 @@
 		border: none;
 		border-radius: var(--radius-md);
 		font-size: var(--font-size-sm);
-		font-weight: 600;
 		cursor: pointer;
 		transition: all var(--transition-fast);
 	}
@@ -309,6 +294,25 @@
 		.book-preview {
 			aspect-ratio: 16 / 9;
 			height: auto;
+		}
+	}
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes popIn {
+		from {
+			opacity: 0;
+			transform: scale(0.94);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
 		}
 	}
 </style>
