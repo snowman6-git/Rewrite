@@ -9,6 +9,7 @@ import {
 	book_unfolds,
 	book_detail,
 	library_listup,
+	book_stats,
 } from './handlers/book';
 import { login } from './handlers/user';
 // 프론트 에러를 동의 없이 수집해도 되는지 알아보기
@@ -46,24 +47,30 @@ app.use('/ui/*', async (c, next) => {
 		c.res.headers.set('cache-control', 'no-cache');
 	}
 });
-app.use('/ui/*', serveStatic({
-	root: UI_BUILD,
-	// serveStatic은 마운트 접두를 안 잘라줘 (root + 전체경로 조회) — /ui 접두를 여기서 제거
-	rewriteRequestPath: (p) => p.replace(/^\/ui/, '')
-}));
+app.use(
+	'/ui/*',
+	serveStatic({
+		root: UI_BUILD,
+		// serveStatic은 마운트 접두를 안 잘라줘 (root + 전체경로 조회) — /ui 접두를 여기서 제거
+		rewriteRequestPath: (p) => p.replace(/^\/ui/, ''),
+	}),
+);
 app.get('/ui/*', async (c) => {
 	// SPA 폴백 — index는 캐시하지 않는다: build-ui 재빌드 시 해시가 바뀌는데 프로세스 메모에
 	// 구 index가 남으면 asset 404 (몇 KB 로컬 읽기라 매 요청 읽기가 더 안전)
 	return c.html(await Bun.file(`${UI_BUILD}/index.html`).text(), 200, {
-		'cache-control': 'no-cache'
+		'cache-control': 'no-cache',
 	});
 });
 
 // 앱 핫패치 hub: version.json + ui-v{N}.zip — `bun run publish:app`이 발행 (doc/hotpatch-doc.md)
-app.use('/hotpatch/*', serveStatic({
-	root: '../frontend_svelte/hotpatch-out',
-	rewriteRequestPath: (p) => p.replace(/^\/hotpatch/, '')
-}));
+app.use(
+	'/hotpatch/*',
+	serveStatic({
+		root: '../frontend_svelte/hotpatch-out',
+		rewriteRequestPath: (p) => p.replace(/^\/hotpatch/, ''),
+	}),
+);
 
 app.use('/api/files/*', authMiddleware);
 
@@ -83,6 +90,7 @@ app.get('/book_listup', book_listup);
 app.get('/library_listup', library_listup);
 app.get('/book_detail', book_detail);
 app.get('/character', m_character.get_character);
+app.get('/book_stats', book_stats);
 
 // POST
 app.post('/chat', chat);
@@ -90,16 +98,18 @@ app.post('/api/chat/send', chatSSE_announcement);
 app.post('/auto_report/:type', auto_report);
 app.post('/book_upload', book_upload);
 app.post('/book_unfolds', book_unfolds);
-app.get('/character', m_character.add_character);
+app.post('/character', m_character.add_character);
 
 app.post('/api/user/login', login);
 
 // DELETE
 app.delete('/book_delete', book_remove);
 app.delete('/message/delete', chat_delete);
+app.delete('/character', m_character.delete_character);
 
-// UPDATE
+// PATCH
 app.patch('/world_edit', update_world_edit);
+app.patch('/character', m_character.update_character);
 
 export default {
 	port: 3000,

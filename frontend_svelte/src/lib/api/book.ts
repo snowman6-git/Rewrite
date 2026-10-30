@@ -14,6 +14,24 @@ export async function loadBooks(): Promise<Book[]> {
 	return response.data;
 }
 
+export interface BookStats {
+	books: number;
+	sessions: number;
+	pages: number;
+}
+
+// 설정→대시보드용. 백엔드 미구현(404) 시 null — doc/book-stats-doc.md
+export async function loadBookStats(): Promise<BookStats | null> {
+	try {
+		const response = await axios.get(`${apiBase()}/book_stats`, {
+			withCredentials: true
+		});
+		return response.data;
+	} catch {
+		return null;
+	}
+}
+
 export interface BookDetail {
 	id?: string;
 	desc?: string;
@@ -27,10 +45,14 @@ export async function loadBook_detail(book_id: string): Promise<BookDetail> {
 	return response.data;
 }
 
-export async function unfoldBook(book_id: string, point_id: string): Promise<{ table_id: string }> {
+export async function unfoldBook(
+	book_id: string,
+	point_id: string,
+	persona_id?: string
+): Promise<{ table_id: string }> {
 	const response = await axios.post(
 		`${apiBase()}/book_unfolds`,
-		{ book_id, point_id },
+		{ book_id, point_id, ...(persona_id ? { persona_id } : {}) },
 		{ withCredentials: true }
 	);
 	return response.data;

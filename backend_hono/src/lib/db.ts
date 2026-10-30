@@ -185,8 +185,8 @@ export async function init() {
 
 		CREATE TABLE IF NOT EXISTS J_Characters (
 			c_id TEXT NOT NULL,
-			c_name TEXT NOT NULL,
-			c_lore TEXT NOT NULL
+			name TEXT NOT NULL,
+			lore TEXT NOT NULL
 		);
 	`);
 }

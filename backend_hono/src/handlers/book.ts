@@ -10,6 +10,20 @@ import {
 	clone_book,
 	read_bookdetail,
 } from '../lib/db';
+import { Database } from 'bun:sqlite';
+const db = new Database('main.db');
+// 이참에 리팩토링 해서 소스 분할 좀 하자
+
+export async function book_stats(c: Context) {
+	const { ['COUNT(*)']: books } = db.prepare(`SELECT COUNT(*) FROM C_Bookspine;`).get();
+	const { ['COUNT(*)']: sessions } = db.prepare(`SELECT COUNT(*) FROM F_Book;`).get();
+	const { ['COUNT(*)']: pages } = db.prepare(`SELECT COUNT(*) FROM G_Pages;`).get();
+	return c.json({
+		books: books,
+		sessions: sessions,
+		pages: pages,
+	});
+}
 
 export async function book_listup(c: Context) {
 	const bookshelf = await bookshelf_listup();

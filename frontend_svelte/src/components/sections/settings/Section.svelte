@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { apiBase, setApiBase } from '$lib/api/client';
+	import { library_listup, loadBookStats, loadBooks } from '$lib/api/book';
 	import { applyTheme, isThemeKey, type ThemeKey } from '$lib/assets/theme';
 	import {
 		applyScale,
@@ -51,6 +52,32 @@
 	);
 	let scale = $state(String(readScale()));
 	let streamFx = $state<StreamFx>(typeof window === 'undefined' ? 'fade' : readStreamFx());
+
+	// 대시보드 — /book_stats 있으면 1회, 없으면 book_listup+library_listup 폴백 (pages는 미구현 표시)
+	let dash = $state<{ books: number | null; sessions: number | null; pages: number | null }>({
+		books: null,
+		sessions: null,
+		pages: null
+	});
+	$effect(() => {
+		void (async () => {
+			const stats = await loadBookStats();
+			if (stats) {
+				dash = { books: stats.books, sessions: stats.sessions, pages: stats.pages };
+				return;
+			}
+			const [books, sessions] = await Promise.all([
+				loadBooks().catch(() => null),
+				library_listup().catch(() => null)
+			]);
+			dash = {
+				books: books?.length ?? null,
+				sessions: sessions?.length ?? null,
+				pages: null
+			};
+		})();
+	});
+	const fmt = (n: number | null) => (n === null ? '—' : n.toLocaleString());
 
 	// 스트림 효과 미리보기 — 청크씩 샘플 스트림 재생, 효과 변경 시 재재생 (ChatBlock과 같은 토큰 단위 동작)
 	const FX_SAMPLE = '미리보기입니다. 토큰이 이렇게 들어와요.';
@@ -142,6 +169,25 @@
 <div class="settings-section">
 	<div class="section-head">
 		<h2 class="section-title">설정</h2>
+	</div>
+
+	<div class="card">
+		<p class="card-label">대시보드</p>
+		<p class="card-hint">읽기 전용 집계. 페이지 수는 백엔드 /book_stats 구현 후 표시된다.</p>
+		<div class="dash-row">
+			<div class="dash-tile">
+				<span class="dash-num">{fmt(dash.books)}</span>
+				<span class="dash-cap">총 책</span>
+			</div>
+			<div class="dash-tile">
+				<span class="dash-num">{fmt(dash.sessions)}</span>
+				<span class="dash-cap">세션</span>
+			</div>
+			<div class="dash-tile">
+				<span class="dash-num">{fmt(dash.pages)}</span>
+				<span class="dash-cap">페이지</span>
+			</div>
+		</div>
 	</div>
 
 	<div class="card">
@@ -386,6 +432,34 @@
 		font-size: var(--font-size-xs);
 		color: var(--color-text-tertiary);
 		margin: 0;
+	}
+
+	.dash-row {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: var(--space-xs);
+	}
+
+	.dash-tile {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		padding: var(--space-sm) var(--space-md);
+		min-width: 0;
+	}
+
+	.dash-num {
+		font-size: var(--font-size-lg);
+		color: var(--color-text-primary);
+		line-height: 1.2;
+	}
+
+	.dash-cap {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
 	}
 
 	.switch-row {

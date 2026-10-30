@@ -2,11 +2,12 @@
 	import { page } from '$app/stores';
 
 	// WebView opaque-origin 캐시 키는 기기/버전마다 다름 — hp{N} 경로로도 구 index가 서빙될 수 있어.
-	// 구조: 매번 다른 신규 경로로 문서 재로드 → 캐시 미스 보장 → 핸들러가 현재 active 패치 index 서빙 →
-	// catch-all 라우트가 미매칭 경로를 잡아 홈으로. 404가 dead-end가 아닌 재시작 버튼 (2026-11-01)
+	// 구조: 재시작 = 세션 내 최신 문서로 복귀 — local/index.html은 이번 부팅에서 막 받아온
+	// active 패치 문서라 pathname '/'로 SvelteKit이 정상 부팅 (hp{N}/은 SPA 404)
+	// (구: /local/rescue-{ts}/ 경로 — 핸들러 미매칭 → 서버 404 dead-end. 2026-11-01 수정)
 	function rescue() {
 		const ts = Date.now();
-		location.replace(`${location.protocol}//${location.host}/local/rescue-${ts}/index.html`);
+		location.replace(`${location.protocol}//${location.host}/local/index.html?rescue=${ts}`);
 	}
 </script>
 

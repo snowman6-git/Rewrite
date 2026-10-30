@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { toast } from '$lib/stores/toast.svelte';
 	import { loadBook_detail, unfoldBook, type BookDetail } from '$lib/api/book';
+	import { listCharacters } from '$lib/api/character';
+	import { mapCharacterRow, type Persona } from '$lib/personas';
 	import { showcase } from '$lib/stores/showcase.svelte';
 	import Icon from '$components/Common/Icon.svelte';
 	import BookMeta from './BookMeta.svelte';
@@ -12,12 +14,23 @@
 
 	let book_detail = $state<BookDetail | null>(null);
 	let selectedPoint = $state<string>('1');
+	let personas = $state<Persona[]>([]); // 원천 = API (2026-10-30 LS 전환)
+	let selectedPersona = $state('');
 	// 뒤로가기 = 모달 1개 히스토리 entry로 취급 (Android 백버튼/웹 백, 2026-10-27)
 	let navigating = false;
 	let consumed = false;
 
 	onMount(() => {
 		handlebookPreview();
+		// 캐릭터 드롭다운 물들임 — 부수 기능이라 실패 시 빈 목록 유지
+		void (async () => {
+				try {
+				const rows = await listCharacters();
+				personas = rows.map(mapCharacterRow);
+			} catch {
+				// 드롭다운은 부수 기능
+			}
+		})();
 		history.pushState({ bookPreview: true }, '');
 		window.addEventListener('popstate', onPop);
 		return () => {
@@ -43,7 +56,7 @@
 
 	async function handleStart() {
 		try {
-			const result = await unfoldBook(book.id, selectedPoint);
+			const result = await unfoldBook(book.id, selectedPoint, selectedPersona || undefined);
 			navigating = true;
 			goto(`/book/${result.table_id}`);
 		} catch {
@@ -60,13 +73,25 @@
 		</div>
 
 		<div class="modal-content">
-			<div class="starting-point-selector">
-				<label class="selector-label" for="starting-point">시작 지점</label>
-				<select class="selector-dropdown" id="starting-point" bind:value={selectedPoint}>
-					{#each book_detail?.starting ?? [] as starting (starting.point_id)}
-						<option value={starting.point_id}>{starting.name}</option>
-					{/each}
-				</select>
+			<div class="selector-row">
+				<div class="starting-point-selector">
+					<label class="selector-label" for="starting-point">시작 지점</label>
+					<select class="selector-dropdown" id="starting-point" bind:value={selectedPoint}>
+						{#each book_detail?.starting ?? [] as starting (starting.point_id)}
+							<option value={starting.point_id}>{starting.name}</option>
+						{/each}
+					</select>
+				</div>
+
+				<div class="starting-point-selector">
+					<label class="selector-label" for="persona-select">캐릭터</label>
+					<select class="selector-dropdown" id="persona-select" bind:value={selectedPersona}>
+						<option value="">— 없음 —</option>
+						{#each personas as p (p.id)}
+							<option value={p.id}>{p.name}</option>
+						{/each}
+					</select>
+				</div>
 			</div>
 
 			<div class="book-preview">
@@ -160,6 +185,16 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-lg);
+	}
+
+	.selector-row {
+		display: flex;
+		gap: var(--space-md);
+	}
+
+	.selector-row .starting-point-selector {
+		flex: 1;
+		min-width: 0;
 	}
 
 	.starting-point-selector {

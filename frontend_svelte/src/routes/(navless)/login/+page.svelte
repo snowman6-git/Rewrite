@@ -1,5 +1,6 @@
 <script lang="ts">
 	import axios from 'axios';
+	import { goto } from '$app/navigation';
 	import { toast } from '$lib/stores/toast.svelte';
 	import InputField from '$components/Common/InputField.svelte';
 	import Btn from '$components/Common/Btn.svelte';
@@ -31,7 +32,8 @@
 
 			if (response.status >= 200 && response.status < 300) {
 				toast.success('로그인 성공!');
-				window.location.href = '/book';
+				// full navigation(location.href)은 base('/ui')를 못 담아 404 — base 인식이 되는 goto로
+				await goto('/book');
 			} else {
 				toast.error('로그인 실패!');
 			}

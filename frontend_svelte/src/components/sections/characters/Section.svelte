@@ -1,57 +1,53 @@
 <script lang="ts">
 	import { v4 as uuidv4 } from 'uuid';
+	import { addCharacter, deleteCharacter, listCharacters, updateCharacter } from '$lib/api/character';
+	import type { Persona, PersonaImage } from '$lib/personas';
+	import { mapCharacterRow } from '$lib/personas';
+	import { toast } from '$lib/stores/toast.svelte';
 	import InputField from '$components/Common/InputField.svelte';
 	import InputGroup from '$components/Common/InputGroup.svelte';
 	import Icon from '$components/Common/Icon.svelte';
 	import EmptyState from '$components/Common/EmptyState.svelte';
 	import Modal from '$components/Common/Modal.svelte';
 	import Sheet from '$components/Common/Sheet.svelte';
+	import { onMount } from 'svelte';
 
-	type PersonaImage = { id: string; dataUrl: string; name: string };
-	type Persona = { id: string; name: string; setting: string; images: PersonaImage[] };
-
-	type RawImage = { id?: unknown; name?: unknown; dataUrl?: unknown };
-	type RawPersona = { id?: unknown; name?: unknown; setting?: unknown; images?: RawImage[] };
-
-	const LS = 'rewrite_personas';
-	function load(): Persona[] {
-		try {
-			return (JSON.parse(localStorage.getItem(LS) ?? '[]') as RawPersona[]).map((c) => ({
-				id: String(c.id ?? ''),
-				name: String(c.name ?? ''),
-				setting: String(c.setting ?? ''),
-				images: Array.isArray(c.images)
-					? c.images.map((i: RawImage) => ({
-							id: String(i.id ?? ''),
-							name: String(i.name ?? ''),
-							dataUrl: String(i.dataUrl ?? '')
-						}))
-					: []
-			}));
-		} catch {
-			return [];
-		}
-	}
-	function save(list: Persona[]) {
-		localStorage.setItem(LS, JSON.stringify(list));
-	}
-
-	let list = $state<Persona[]>(load());
+	let list = $state<Persona[]>([]);
 	let open = $state(false);
+	let editTarget = $state<Persona | null>(null);
 	let draftName = $state('');
-	let draftSetting = $state('');
+	let draftLore = $state('');
 	let draftImages = $state<PersonaImage[]>([]);
 	let delTarget: Persona | null = $state(null);
 	let fileEl = $state<HTMLInputElement | undefined>();
 
+	// 원천 = API (2026-10-30 LS 전환) — DB row(c_id·c_name·c_lore) → Persona 매핑, images는 컬럼 미구현까지 빈 배열
+	onMount(async () => {
+		try {
+			const rows = await listCharacters();
+			list = rows.map(mapCharacterRow);
+		} catch {
+			toast.error('등장인물 불러오기 실패');
+		}
+	});
+
 	function openAdd() {
+		editTarget = null;
 		draftName = '';
-		draftSetting = '';
+		draftLore = '';
 		draftImages = [];
+		open = true;
+	}
+	function openEdit(p: Persona) {
+		editTarget = p;
+		draftName = p.name;
+		draftLore = p.lore;
+		draftImages = [...p.images];
 		open = true;
 	}
 	function close() {
 		open = false;
+		editTarget = null;
 	}
 
 	const canSave = $derived(
@@ -74,25 +70,50 @@
 	function removeImage(id: string) {
 		draftImages = draftImages.filter((i) => i.id !== id);
 	}
-	function savePersona() {
+	async function savePersona() {
 		if (!canSave) return;
-		const next = [
-			...list,
-			{ id: uuidv4(), name: draftName.trim(), setting: draftSetting, images: draftImages }
-		];
-		list = next;
-		save(next);
-		close();
+		// 원천 = API (추가 POST·수정 PATCH) — 계약: doc/character-doc.md
+		const payload = {
+			name: draftName.trim(),
+			lore: draftLore,
+			images: draftImages.map((i) => ({ name: i.name.trim(), data: i.dataUrl }))
+		};
+		try {
+			if (editTarget) {
+				const t = editTarget; // 클로저에서 narrowing 유지용
+				await updateCharacter(t.id, payload);
+				list = list.map((x) =>
+					x.id === t.id
+						? { ...x, name: payload.name, lore: payload.lore, images: draftImages }
+						: x
+				);
+				toast.success('등장인물 수정됨');
+				close();
+				return;
+			}
+			const res = await addCharacter(payload);
+			// 서버가 c_id를 주면 그걸로, 아직 안 주면 로컬 id로
+			const id = typeof res.c_id === 'string' ? res.c_id : uuidv4();
+			list = [...list, { id, name: payload.name, lore: payload.lore, images: draftImages }];
+			toast.success('등장인물 저장됨');
+			close();
+		} catch {
+			toast.error('저장 실패 — 백엔드 반응이 없어요');
+		}
 	}
 	function askDelete(p: Persona) {
 		delTarget = p;
 	}
-	function deletePersona() {
+	async function deletePersona() {
 		const t = delTarget;
 		if (!t) return;
-		const next = list.filter((p) => p.id !== t.id);
-		list = next;
-		save(next);
+		try {
+			await deleteCharacter(t.id);
+			list = list.filter((p) => p.id !== t.id);
+			toast.success('등장인물 삭제됨');
+		} catch {
+			toast.error('삭제 실패 — 백엔드 DELETE 미반영');
+		}
 		delTarget = null;
 	}
 </script>
@@ -110,7 +131,8 @@
 	{:else}
 		<div class="char-list">
 			{#each list as p (p.id)}
-				<div class="char-card">
+				<div class="char-card" role="button" tabindex="0" onclick={() => openEdit(p)}
+					onkeydown={(e) => e.key === 'Enter' && openEdit(p)}>
 					{#if p.images[0]?.dataUrl}
 						<img class="cover" src={p.images[0].dataUrl} alt={p.name} />
 					{:else}
@@ -122,7 +144,8 @@
 							{p.images.length > 0 ? `${p.images.length}개 이미지` : '이미지 없음'}
 						</p>
 					</div>
-					<button class="del-btn" onclick={() => askDelete(p)} aria-label="{p.name} 삭제">
+					<button class="del-btn" onclick={(e) => { e.stopPropagation(); askDelete(p); }}
+						aria-label="{p.name} 삭제">
 						<Icon name="x" size={16} />
 					</button>
 				</div>
@@ -134,7 +157,7 @@
 {#if open}
 	<Sheet onClose={close}>
 		<div class="sheet-head">
-			<span class="sheet-title">등장인물 추가</span>
+			<span class="sheet-title">{editTarget ? '등장인물 수정' : '등장인물 추가'}</span>
 			<button class="sheet-close" onclick={close} aria-label="닫기">
 				<Icon name="x" size={18} />
 			</button>
@@ -149,11 +172,11 @@
 			/>
 		</InputGroup>
 
-		<InputGroup label="설정" for="persona-setting-add">
+		<InputGroup label="로어" for="persona-lore-add">
 			<InputField
-				id="persona-setting-add"
+				id="persona-lore-add"
 				type="textarea"
-				bind:value={draftSetting}
+				bind:value={draftLore}
 				placeholder="성격, 말투, 행동 원칙 등"
 				rows="5"
 			/>
@@ -190,7 +213,9 @@
 
 		<div class="sheet-foot">
 			<button class="btn-cancel" onclick={close}>취소</button>
-			<button class="btn-save" onclick={savePersona} disabled={!canSave}>저장</button>
+			<button class="btn-save" onclick={savePersona} disabled={!canSave}>
+				{editTarget ? '수정' : '저장'}
+			</button>
 		</div>
 	</Sheet>
 {/if}
